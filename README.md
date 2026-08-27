@@ -20,7 +20,7 @@ Static cost of both legs together, and the same with the central labour supply r
 
 The legs do not sum to the combined figure: free hours displace paid care, which shrinks the base the subsidy applies to.
 
-**Read the subsidy leg as an upper bound.** Two model-versus-outturn gaps both push it up, and both are reported in the dashboard's Benchmarks tab rather than corrected away. The model assumes full take-up of Tax-Free Childcare, where real take-up is about 46%; and its childcare-spending aggregate is roughly three times the out-of-pocket fee base implied by the CMA's estimate of England's early years sector income. Restating the subsidy leg on that smaller base puts the combined static cost nearer £3.7bn. The truth is somewhere between: some of the gap is geography (the model is UK-wide, the CMA figure England-only) rather than overstatement.
+**Read the subsidy leg as an upper bound.** The model pays £1.24bn of Tax-Free Childcare against HMRC's £600m outturn. The gap decomposes into two roughly equal parts: **1.52× too many claimants** (914,000 against HMRC's 601,000) and **1.36× too large an average award** (£1,353 against about £998). The second half is the childcare fee base, so the two are one problem, not two. Restating the subsidy leg on the benchmark fee base is reported in the dashboard's Benchmarks tab as a sensitivity. See *Correcting the baseline* below for what would actually fix it.
 
 **The labour supply response is small and its sign is genuinely ambiguous.** Two forces pull against each other:
 
@@ -80,9 +80,21 @@ bun install
 bun run dev
 ```
 
+## Correcting the baseline
+
+Neither gap above is a defect in this repo to patch here, and neither should be closed with a scalar applied to the results. Both are dataset properties, and the house pattern — the one the sibling `bus-fare-cap` analysis follows for `bus_fare_spending` — is to calibrate in `policyengine-uk-data` and consume the calibrated dataset downstream. Two upstream changes would close them.
+
+**1. Retarget `would_claim_tfc` to the HMRC caseload.** Take-up is already modelled, contrary to first appearances: the variable's default is `True`, but the Enhanced FRS carries `would_claim_tfc` at about 87%, so the data build already applies a haircut. It is simply targeted too high. HMRC reports 601,000 families using Tax-Free Childcare in March 2026 against the model's 914,000 claimants from about 1,046,000 eligible, implying true take-up nearer **57%** of the model's eligible population. Because the imputation should be correlated with the value of the award rather than uniform — the families who do not claim are disproportionately those with least to gain — this belongs in the data build's take-up routine, not in a random mask applied here.
+
+**2. Add a calibration target for `childcare_expenses`.** The comparison has to be like-for-like, which the first version of this analysis got wrong. The CMA's figure covers **England and the under-5s**; the model's £11.4bn aggregate is **UK and all ages**, and about a third of it is school-age wraparound and holiday childcare, a separate market the CMA number excludes. On the comparable slice the model is **£6.35bn against a benchmark of about £3.75bn — a gap of roughly 1.7×, not 3×**. That is still a real gap, and it is corroborated independently by the 1.36× average-award gap in Tax-Free Childcare, which is the same overstatement seen through a different variable. There is no published aggregate for school-age childcare spend, so that part of the base cannot be calibrated in either direction and should be left alone.
+
+**Do not carry baseline take-up into the reform.** A 75% subsidy with no work test and no cap is a far more valuable and far simpler benefit than a 20% top-up capped at £2,000 with a work test and a £100,000 cliff. Modelling it at the baseline's 57% take-up would understate its cost as badly as 87% overstates it. Take-up under the reform is a separate assumption that has to be stated and defended on its own — the honest range is probably 80-95%, and the cost is close to linear in it.
+
+Until those land, the Benchmarks tab reports the rebased figure as a sensitivity, rebasing only the under-5 slice: the subsidy leg falls from £4.46bn to **£3.23bn** and the combined static cost from £6.60bn to **£5.40bn** in 2027. That is the honest lower bound. An earlier version of this analysis rebased the whole base against an England under-5 benchmark and reported £3.70bn, which was too aggressive by roughly £1.7bn.
+
 ## Caveats
 
-- **Take-up is assumed complete**, which pushes the cost up — and assumed unresponsive, which pushes it down. The 2024-25 expansion came in 26-28% above forecast on take-up alone.
+- **Take-up is modelled but targeted too high in the baseline, and assumed unchanged by the reform.** Both are addressed under *Correcting the baseline*. The 2024-25 expansion came in 26-28% above forecast on take-up alone, so an unresponsive take-up assumption understates an expansion's cost.
 - **Childcare supply is assumed to accommodate demand.** No capacity constraint and no fee response to a 75% subsidy, which would be expected to raise prices.
 - **Free hours are valued at the DfE funding rate**, not the market price, so a family's true gain is larger where providers charge above it. There is no regional variation in the rate.
 - **The entitlements are England-only** in law and in the model; Barnett consequentials are not costed. Tax-Free Childcare and its replacement are UK-wide.

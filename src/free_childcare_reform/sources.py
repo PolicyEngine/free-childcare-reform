@@ -81,21 +81,32 @@ RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE = True
 # None of these is an input to the estimate. Two of them matter enough to change
 # how the results should be read, and both are flagged in the results JSON:
 #
-#  * Tax-Free Childcare. HMRC paid £600m of top-ups in 2025-26 to 601,000
-#    families, against roughly 1.3 million estimated eligible — about 46%
-#    take-up. policyengine-uk's would_claim_tfc defaults to true, so the model
-#    assumes full take-up and its TFC baseline is roughly double the outturn.
-#    The 75% subsidy replaces TFC, so this carries into the reform: the
-#    subsidy leg is costed on a fully-taking-up population.
+#  * Tax-Free Childcare. The model pays £1.24bn against HMRC's £600m outturn.
+#    Take-up is not the whole story and is already modelled: the Enhanced FRS
+#    carries would_claim_tfc at about 87% (it is *not* left at its default of
+#    true). The gap decomposes almost exactly into two roughly equal parts —
+#    1.52x too many claimants (914,000 against HMRC's 601,000, implying true
+#    take-up nearer 57% of the model's eligible population than 87%) and 1.36x
+#    too large an average award (£1,353 against HMRC's ~£998). The second half
+#    is the fee base below, so the two diagnoses are consistent rather than
+#    independent.
 #
 #  * The childcare fee base. The CMA puts England's early years sector income
 #    at about £14bn in 2025-26, of which £8.9bn is funded entitlements; netting
-#    off TFC and the UC childcare element leaves roughly £3.5-4bn of true
-#    out-of-pocket parent spend. The model's childcare_expenses aggregate is
-#    substantially larger. A cost-share subsidy is linear in this base, so the
-#    subsidy leg scales directly with it.
+#    off TFC and the UC childcare element leaves roughly £3.5-4bn of
+#    out-of-pocket parent spend on the under-5s.
+#
+#    That benchmark covers England and the under-5s only, so it must be
+#    compared against the same slice of the model — not the £11.4bn UK,
+#    all-ages aggregate, which also contains school-age wraparound and holiday
+#    childcare (a separate market the CMA figure excludes) and the devolved
+#    nations. On the comparable basis the model is about 1.7x the benchmark,
+#    not 3x. There is no published aggregate at all for school-age childcare
+#    spend, so that part of the base is unbenchmarked in either direction.
 #
 # Both point the same way: the subsidy leg's headline cost is an upper bound.
+# Neither is a defect of this analysis to patch here — see README, "Correcting
+# the baseline".
 BENCHMARKS = [
     {
         "measure": "Free early years entitlements, total",
@@ -128,11 +139,14 @@ BENCHMARKS = [
         "official_label": "HMRC £600m top-ups paid, UK, 2025-26",
         "geography": "UK",
         "period": "2025-26",
-        "kind": "Take-up gap",
+        "kind": "Caseload and award gap",
         "note": (
-            "601,000 families used TFC against roughly 1.3 million eligible, about "
-            "46% take-up. The model assumes full take-up (would_claim_tfc defaults "
-            "to true), so its TFC baseline is roughly double the outturn."
+            "Take-up is already modelled — the Enhanced FRS carries would_claim_tfc "
+            "at about 87%, not the variable's default of true. The 2.1x gap splits "
+            "into 1.52x too many claimants (914,000 against HMRC's 601,000, so true "
+            "take-up is nearer 57% of the model's eligible population) and 1.36x too "
+            "large an average award (£1,353 against about £998), the latter being the "
+            "fee base below."
         ),
         "url": "https://www.gov.uk/government/collections/tax-free-childcare-statistics",
     },
@@ -153,10 +167,11 @@ BENCHMARKS = [
         "url": "https://www.gov.uk/government/publications/benefit-expenditure-and-caseload-tables-2026",
     },
     {
-        "measure": "Out-of-pocket childcare fees paid by parents",
+        "measure": "Out-of-pocket childcare fees, England, under-5s",
         "model_variables": ["childcare_expenses"],
+        "model_restriction": "england_under_5",
         "official_bn": 3.75,
-        "official_label": "~£3.5-4bn implied, England, 2025-26",
+        "official_label": "~£3.5-4bn implied, England, under-5s, 2025-26",
         "geography": "England",
         "period": "2025-26",
         "kind": "Fee base check",
@@ -165,10 +180,30 @@ BENCHMARKS = [
             "sector income at about £14bn in 2025-26, of which £8.9bn is funded "
             "entitlements; netting off TFC and the UC childcare element leaves "
             "roughly £3.5-4bn of out-of-pocket parent spend. The CMA flags "
-            "substantial uncertainty in the £14bn. No official aggregate of "
-            "parent-paid childcare fees is published."
+            "substantial uncertainty in the £14bn, and the residual on top of it "
+            "is arithmetic rather than a published figure. Compared here against "
+            "England under-5s only, which is what the benchmark covers; the "
+            "model's full UK all-ages aggregate is shown separately below."
         ),
         "url": "https://assets.publishing.service.gov.uk/media/6a43cd6d065c5aec12a4e3ef/_Statement_of_scope_1_July.pdf",
+    },
+    {
+        "measure": "Childcare spending, all children, UK",
+        "model_variables": ["childcare_expenses"],
+        "official_bn": None,
+        "official_label": "No published aggregate exists",
+        "geography": "UK",
+        "period": "2027",
+        "kind": "Unbenchmarked",
+        "note": (
+            "The full base the 75% subsidy applies to, since the subsidy reaches "
+            "qualifying children up to 12. About two thirds is under-5s, a quarter "
+            "school-age wraparound and holiday childcare, and the rest 12-plus. "
+            "Only the under-5 England slice has a benchmark; no aggregate of "
+            "school-age childcare spend is published by anyone, so that part is "
+            "unchecked in either direction."
+        ),
+        "url": "https://www.gov.uk/government/collections/childcare-and-early-years-statistics",
     },
 ]
 

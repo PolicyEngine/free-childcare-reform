@@ -122,9 +122,23 @@ def test_the_known_gaps_are_flagged_rather_than_hidden(results):
         benchmark["measure"]: benchmark["kind"]
         for benchmark in results["by_year"]["2027"]["benchmarks"]
     }
-    assert kinds["Tax-Free Childcare"] == "Take-up gap"
+    assert kinds["Tax-Free Childcare"] == "Caseload and award gap"
     assert kinds["Universal Credit childcare element"] == "Not comparable"
-    assert kinds["Out-of-pocket childcare fees paid by parents"] == "Fee base check"
+    assert kinds["Out-of-pocket childcare fees, England, under-5s"] == "Fee base check"
+    assert kinds["Childcare spending, all children, UK"] == "Unbenchmarked"
+
+
+def test_the_fee_base_is_compared_like_for_like(results):
+    # The CMA benchmark covers England and the under-5s, so it must be compared
+    # against that slice of the model, not the UK all-ages aggregate. Comparing
+    # the two would roughly double the apparent gap.
+    rows = {row["measure"]: row for row in results["by_year"]["2027"]["benchmarks"]}
+    comparable = rows["Out-of-pocket childcare fees, England, under-5s"]
+    full_base = rows["Childcare spending, all children, UK"]
+    assert comparable["model_bn"] < full_base["model_bn"]
+    assert comparable["ratio_model_to_official"] < 2.5
+    # The unbenchmarked row must not claim a ratio it cannot have.
+    assert full_base["ratio_model_to_official"] is None
 
 
 def test_the_fee_base_sensitivity_lowers_the_subsidy_leg(results):

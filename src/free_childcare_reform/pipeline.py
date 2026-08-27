@@ -276,17 +276,43 @@ def _benchmark_comparison(sim, year: int) -> list[dict]:
     """
     rows = []
     for benchmark in sources.BENCHMARKS:
-        ours = sum(
-            float(sim.calculate(variable, year).sum()) for variable in benchmark["model_variables"]
-        ) / 1e9
+        restriction = benchmark.get("model_restriction")
+        if restriction == "england_under_5":
+            # The CMA benchmark covers England and the under-5s only. Comparing
+            # it against the model's UK all-ages aggregate would count school-age
+            # wraparound and holiday childcare — a separate market the benchmark
+            # excludes — and the devolved nations, and would overstate the gap.
+            ours = _childcare_expenses_slice(sim, year, england_only=True, under_5=True) / 1e9
+        else:
+            ours = (
+                sum(
+                    float(sim.calculate(variable, year).sum())
+                    for variable in benchmark["model_variables"]
+                )
+                / 1e9
+            )
         row = {key: value for key, value in benchmark.items() if key != "model_variables"}
         row["model_bn"] = round(ours, 3)
         row["model_variables"] = ", ".join(benchmark["model_variables"])
         row["ratio_model_to_official"] = (
-            round(ours / benchmark["official_bn"], 2) if benchmark["official_bn"] else None
+            round(ours / benchmark["official_bn"], 2) if benchmark.get("official_bn") else None
         )
         rows.append(row)
     return rows
+
+
+def _childcare_expenses_slice(sim, year: int, england_only: bool, under_5: bool) -> float:
+    """Weighted childcare spending, optionally restricted to England or under-5s."""
+    spending = sim.calculate("childcare_expenses", year)
+    values = np.asarray(spending.values, float)
+    weights = np.asarray(spending.weights, float)
+    mask = np.ones(len(values), bool)
+    if england_only:
+        country = np.asarray(sim.calculate("country", year, map_to="person").values).astype(str)
+        mask &= country == "ENGLAND"
+    if under_5:
+        mask &= np.asarray(sim.calculate("age", year).values, float) < 5
+    return float((values * weights * mask).sum())
 
 
 def _new_free_hours_value(baseline_sim, free_hours_sim, year: int) -> np.ndarray:
@@ -400,29 +426,40 @@ def run_year(dataset, year: int) -> dict:
     # result, not a re-run, and it is reported as a sensitivity rather than
     # substituted for the model's own answer.
     fee_base = next(
-        row for row in _benchmark_comparison(baseline, year)
-        if row["measure"].startswith("Out-of-pocket")
+        row
+        for row in _benchmark_comparison(baseline, year)
+        if row.get("model_restriction") == "england_under_5"
     )
-    fee_base_ratio = (
-        fee_base["official_bn"] / fee_base["model_bn"] if fee_base["model_bn"] else 1.0
-    )
+    # Only the under-5 slice has a benchmark, so only it is rebased. School-age
+    # wraparound and holiday childcare — about a third of the base — is left
+    # alone, because no published aggregate exists to rebase it against.
+    # Rebasing the whole base on an under-5 England benchmark would be the same
+    # mistake in reverse.
+    slice_ratio = fee_base["official_bn"] / fee_base["model_bn"] if fee_base["model_bn"] else 1.0
+    total_base = float(baseline.calculate("childcare_expenses", year).sum()) / 1e9
+    under_5_base = _childcare_expenses_slice(baseline, year, False, True) / 1e9
+    rebased_base = under_5_base * slice_ratio + (total_base - under_5_base)
+    fee_base_ratio = rebased_base / total_base if total_base else 1.0
+    subsidy_only_cost = legs["combined"]["static_cost_bn"] - legs["free_hours"]["static_cost_bn"]
     fee_base_sensitivity = {
-        "model_childcare_expenses_bn": fee_base["model_bn"],
-        "benchmark_fee_base_bn": fee_base["official_bn"],
+        "model_childcare_expenses_bn": round(total_base, 3),
+        "model_under_5_bn": round(under_5_base, 3),
+        "model_england_under_5_bn": fee_base["model_bn"],
+        "benchmark_england_under_5_bn": fee_base["official_bn"],
+        "under_5_slice_ratio": round(slice_ratio, 3),
+        "rebased_childcare_expenses_bn": round(rebased_base, 3),
         "ratio": round(fee_base_ratio, 3),
         "subsidy_cost_bn": round(legs["subsidy"]["static_cost_bn"] * fee_base_ratio, 3),
         "combined_cost_bn": round(
-            legs["free_hours"]["static_cost_bn"]
-            + (legs["combined"]["static_cost_bn"] - legs["free_hours"]["static_cost_bn"])
-            * fee_base_ratio,
-            3,
+            legs["free_hours"]["static_cost_bn"] + subsidy_only_cost * fee_base_ratio, 3
         ),
         "note": (
-            "The benchmark fee base is England-only and derived from the CMA's "
-            "sector-income estimate, which the CMA itself flags as uncertain; the "
-            "model's figure is UK-wide. Some of the gap is geography rather than "
-            "overstatement, so this is a lower bound on the subsidy leg, as the "
-            "headline is an upper bound."
+            "Only the under-5 slice is rebased, on the England benchmark; the "
+            "school-age third of the base is left as modelled because nothing is "
+            "published to rebase it against. The CMA flags substantial uncertainty "
+            "in the sector-income figure this benchmark derives from, and its "
+            "direction of error widens rather than closes the gap. Treat this as a "
+            "lower bound on the subsidy leg, as the headline is an upper bound."
         ),
     }
 

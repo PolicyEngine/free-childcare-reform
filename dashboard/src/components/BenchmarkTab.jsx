@@ -5,8 +5,9 @@ import SectionHeading from "./SectionHeading";
 
 const KIND_STYLES = {
   "Independent check": "bg-emerald-50 text-emerald-700 border-emerald-200",
-  "Take-up gap": "bg-amber-50 text-amber-700 border-amber-200",
+  "Caseload and award gap": "bg-amber-50 text-amber-700 border-amber-200",
   "Fee base check": "bg-amber-50 text-amber-700 border-amber-200",
+  Unbenchmarked: "bg-slate-100 text-slate-600 border-slate-200",
   "Not comparable": "bg-slate-100 text-slate-600 border-slate-200",
 };
 
@@ -110,8 +111,9 @@ export default function BenchmarkTab({ data, year }) {
             description={
               <>
                 The 75% subsidy is a flat share of childcare spending, so its cost is
-                linear in the spending base. Restating it on the smaller benchmark fee base
-                is a scaling, not a re-run.
+                linear in the spending base. Only the under-5 slice has a published
+                benchmark, so only it is rebased — the school-age third of the base is left
+                as modelled. This is a scaling of the headline result, not a re-run.
               </>
             }
           />
@@ -123,7 +125,9 @@ export default function BenchmarkTab({ data, year }) {
               </div>
               <div className="mt-2 text-sm text-slate-500">
                 On the model&apos;s own {formatBn(sensitivity.model_childcare_expenses_bn)}{" "}
-                of childcare spending. Treat as an upper bound.
+                of childcare spending, of which{" "}
+                {formatBn(sensitivity.model_under_5_bn)} is under-5s. Treat as an upper
+                bound.
               </div>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -134,8 +138,11 @@ export default function BenchmarkTab({ data, year }) {
                 {formatBn(sensitivity.subsidy_cost_bn)}
               </div>
               <div className="mt-2 text-sm text-slate-500">
-                On {formatBn(sensitivity.benchmark_fee_base_bn)} of out-of-pocket fees.
-                Treat as a lower bound.
+                Rebasing the under-5 slice by{" "}
+                {sensitivity.under_5_slice_ratio}× — England under-5s in the model are{" "}
+                {formatBn(sensitivity.model_england_under_5_bn)} against a benchmark of{" "}
+                {formatBn(sensitivity.benchmark_england_under_5_bn)}. Treat as a lower
+                bound.
               </div>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
