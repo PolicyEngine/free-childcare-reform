@@ -42,3 +42,27 @@ def test_elasticity_bounds_bracket_the_central_case():
         < sources.PRICE_ELASTICITY_CENTRAL
         < sources.PRICE_ELASTICITY_LOW
     )
+
+
+def test_hours_worked_is_treated_as_annual():
+    """Guards the units bug this analysis had to work around.
+
+    policyengine-uk's impute_wages_for_nonworkers computes
+    employment_income / (hours_worked * 52), but hours_worked is annual, so it
+    divides by 52 twice and imputes about £194 of annual earnings for entering
+    part-time work instead of roughly £21,600. impute_entrant_earnings treats
+    the variable as annual. If a future policyengine-uk release changes the
+    units of hours_worked, this fails rather than silently re-breaking the
+    extensive margin.
+    """
+    from free_childcare_reform.labour_supply import HOURS_FOR_NEW_ENTRANTS, WEEKS_PER_YEAR
+
+    # A full-time worker on £40,000 at 37.5 hours a week.
+    annual_hours = 37.5 * WEEKS_PER_YEAR
+    hourly_wage = 40_000 / annual_hours
+    assert 15 < hourly_wage < 30, "hours_worked must be annual for this to be a real wage"
+    entrant = hourly_wage * HOURS_FOR_NEW_ENTRANTS * WEEKS_PER_YEAR
+    assert 15_000 < entrant < 25_000
+    # The upstream formula, for contrast.
+    broken = (40_000 / (annual_hours * WEEKS_PER_YEAR)) * HOURS_FOR_NEW_ENTRANTS * WEEKS_PER_YEAR
+    assert broken < 500

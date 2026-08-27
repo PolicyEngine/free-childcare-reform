@@ -28,7 +28,13 @@ from policyengine_uk import Microsimulation
 from policyengine_uk.data import UKSingleYearDataset
 
 from . import sources
-from .labour_supply import participation_response, prepare, price_elasticity_response
+from .labour_supply import (
+    childcare_cost_when_working,
+    participation_response,
+    prepare,
+    price_elasticity_response,
+    responds_to_childcare,
+)
 from .reforms import (
     SUBSIDY_RATE,
     UNIVERSAL_ENTITLEMENT_AGE_MIN,
@@ -387,12 +393,22 @@ def run_year(dataset, year: int) -> dict:
     # is netted out of out-of-work income, where no care is being bought. The
     # free-hours entitlements are not — those are genuinely available whether or
     # not the parent works, which is part of what the reform does.
+    # A potential entrant's childcare cost has to be imputed: the model records
+    # what they spend today, which for most eligible non-workers is nothing, so
+    # a subsidy applied to it would be worth nothing and the reform's positive
+    # work-incentive channel would be invisible for exactly the people who
+    # might move. See childcare_cost_when_working.
+    responding = responds_to_childcare(baseline, year)
     prepared = prepare(
         baseline,
         combined,
         year,
-        _childcare_cost_per_person(baseline, year),
-        _childcare_cost_per_person(combined, year),
+        childcare_cost_when_working(
+            baseline, year, responding, _childcare_cost_per_person(baseline, year)
+        ),
+        childcare_cost_when_working(
+            combined, year, responding, _childcare_cost_per_person(combined, year)
+        ),
         _benunit_variable_per_person(baseline, year, "tax_free_childcare"),
         _benunit_variable_per_person(combined, year, "tax_free_childcare"),
     )

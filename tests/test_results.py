@@ -149,3 +149,27 @@ def test_the_fee_base_sensitivity_lowers_the_subsidy_leg(results):
         assert sensitivity["combined_cost_bn"] < result["legs"]["combined"]["static_cost_bn"]
         # The free-hours leg is untouched by the fee base, so it is a floor.
         assert sensitivity["combined_cost_bn"] > result["legs"]["free_hours"]["static_cost_bn"]
+
+
+def test_entering_work_pays_a_realistic_amount(results):
+    """The extensive margin must not be suppressed by an imputation bug.
+
+    With the upstream wage imputation a non-worker was credited with about £194
+    a year for entering part-time work, so entrants rounded to nothing and the
+    exchequer recovered nothing from them. Average earnings per entrant should
+    look like a real part-time job.
+    """
+    for year in YEARS:
+        response = results["by_year"][year]["labour_supply"]["central"]
+        assert response["entrants"] > 100, "entrants collapsed — check the wage imputation"
+        per_entrant = response["earnings_gained_gbp"] / response["entrants"]
+        assert 8_000 < per_entrant < 40_000, f"{per_entrant:,.0f} is not a part-time wage"
+
+
+def test_the_exchequer_recovers_something_from_entrants(results):
+    for year in YEARS:
+        response = results["by_year"][year]["labour_supply"]["central"]
+        assert response["revenue_from_entrants_gbp"] > 0
+        # Tax plus benefit withdrawal on a part-time wage: a positive share, well under all of it.
+        share = response["revenue_from_entrants_gbp"] / response["earnings_gained_gbp"]
+        assert 0.02 < share < 0.9

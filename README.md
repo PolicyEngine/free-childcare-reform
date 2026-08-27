@@ -14,9 +14,9 @@ Static cost of both legs together, and the same with the central labour supply r
 
 | Year | Free hours | 75% subsidy | Both, static | Both, with labour supply |
 | --- | --- | --- | --- | --- |
-| 2027 | £2.28bn | £4.46bn | £6.60bn | £6.62bn |
-| 2028 | £2.34bn | £4.56bn | £6.77bn | £6.79bn |
-| 2029 | £2.42bn | £4.68bn | £6.96bn | £6.98bn |
+| 2027 | £2.28bn | £4.46bn | £6.60bn | £6.59bn |
+| 2028 | £2.33bn | £4.58bn | £6.76bn | £6.75bn |
+| 2029 | £2.39bn | £4.72bn | £6.96bn | £6.95bn |
 
 The legs do not sum to the combined figure: free hours displace paid care, which shrinks the base the subsidy applies to.
 
@@ -27,7 +27,9 @@ The legs do not sum to the combined figure: free hours displace paid care, which
 - *Downward.* The reform removes work conditions from childcare support. A parent of a child under 3 gets nothing today unless they work; under the reform they get 15 hours either way, so the gain to work falls for exactly the families the policy targets. Working parents under £100,000 already get 30 hours, so their position is unchanged.
 - *Upward.* The 75% subsidy cuts the price of the care that working requires.
 
-The gain-to-work model, which sees both, gives about **−7,200 net entrants**. The price-elasticity cross-check, which sees only the price fall and so cannot be negative, gives about **+26,000**. For scale, the IFS found the move from 15 to 30 hours put about 12,000 more mothers into work a year, and the government's own costing of the 2023 expansion assumed about 60,000 entrants by 2027-28 — but both of those *added* work-conditional hours, where this reform makes existing hours unconditional.
+The gain-to-work model, which sees both, gives about **10,000 entrants against 11,000 leavers — a net −950**, close enough to zero that the sign should not be leaned on. The price-elasticity cross-check, which sees only the price fall and so cannot be negative, gives about **+26,000**. Either way the labour supply effect is small: it moves the cost by roughly 0.2%, well inside the uncertainty on the static number.
+
+For scale, the IFS found the move from 15 to 30 hours put about 12,000 more mothers into work a year, and the government's own costing of the 2023 expansion assumed about 60,000 entrants by 2027-28 — but both of those *added* work-conditional hours, where this reform makes existing hours unconditional.
 
 **Distributionally, the cash gain rises with income.** Among households with a child under 5 in 2027, the average annual gain runs from about £1,290 in the bottom quintile to about £3,270 in the top. Low-income families gain less in cash because Universal Credit already covers 85% of their childcare costs — which this reform keeps — and because they use fewer paid hours. As a share of net income the gradient reverses at the bottom: Q1 gains most.
 
@@ -42,6 +44,16 @@ Leg 2 is **structural**. Tax-Free Childcare's `rate / (1 - rate)` top-up on pare
 ### The labour supply response
 
 policyengine-uk ships an OBR-methodology labour supply framework, but its coordinator runs only the intensive margin — the participation model is present and commented out as a placeholder. Childcare is the canonical extensive-margin question, so the margin that matters is the one that is not wired up.
+
+**Three things in that module had to be replaced, not just extended.**
+
+*A units bug upstream.* `impute_wages_for_nonworkers` computes `employment_income / (hours_worked * 52)`, but `hours_worked` in policyengine-uk is **annual** — mean 1,887 among workers, implying a sensible £22.12 hourly wage. Dividing by 52 a second time gives £0.43 an hour, so a non-worker is imputed **£194 of annual earnings** for entering part-time work instead of about £21,600. Entering work then appears to pay almost nothing, the extensive margin collapses to near-zero entrants, and the exchequer appears to recover nothing from anyone who does move. The package contradicts itself here: `dynamics/progression.py` reads `hours_worked / 52` as weekly hours, treating the variable as annual, which is the correct reading and the one used in `impute_entrant_earnings`. Because `calculate_gain_to_work` calls the broken helper internally, it is replaced too, keeping its structure and changing only the imputed earnings.
+
+*Quintiles taken over the wrong population.* `calculate_earnings_quintile` applies `pd.qcut` to raw `employment_income` across every person in the dataset, children included. More than half that population has no earnings, so its bottom two quintiles are entirely non-earners and **every** potential entrant lands in Q1 or Q2 — where the OBR's Table A1 elasticities are at their highest. It also leaves those quintiles with no employed donors at all, which is why the upstream wage imputation draws its donors from the wrong place. `potential_earnings_quintile` takes quintiles over adults only, on potential earnings — actual for workers, imputed for non-workers — which is what the upstream docstring describes but not what it does. Assignment is by weighted rank rather than value cutoffs, because every non-worker in a band shares one imputed value and cutting on values drops whole point masses into a single quintile.
+
+*No imputed childcare cost for entrants.* Nothing imputes what a non-worker would **pay for childcare** on entering work, and `childcare_expenses` records what they spend today — nothing, for 85% of eligible non-workers, because they are at home with the child. A subsidy applied to zero is worth zero, so the channel by which cheaper childcare draws a parent into work was invisible for exactly the people who would move. `childcare_cost_when_working` assigns a potential entrant the mean spend of *working* families whose youngest child is the same age, pro-rated to the entrant's assumed hours and taken net of the subsidy that scenario pays. Using working families' observed spend as the base means the free hours they already receive are embedded in it, so the entitlement is not double-counted.
+
+All three defects pushed the same way — they suppressed the *positive* side of the response — so the uncorrected model was biased toward finding that the reform reduces employment.
 
 More importantly, that framework measures work incentives as the gain to work in `household_net_income`, which does not net off childcare costs. Childcare is a cost of working, so the channel by which a childcare subsidy raises employment is invisible to it. `labour_supply.py` reuses what is right — the OBR participation elasticities (which vary by gender, partner employment status, age of youngest child and earnings quintile) and the gain-to-work machinery (which recomputes the whole tax-benefit system with employment switched off) — and adds the two childcare terms:
 

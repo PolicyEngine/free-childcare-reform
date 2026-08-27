@@ -147,6 +147,19 @@ export default function MethodologyTab({ data, year }) {
               subtracted from in-work income, and cost-contingent childcare support is
               subtracted from out-of-work income, where no care is being bought.
             </p>
+            <p>
+              Two further corrections were needed, both of which had been suppressing the
+              positive side of the response. First, a units bug: the upstream wage
+              imputation divides by 52 twice, because{" "}
+              <code className="rounded bg-slate-100 px-1">hours_worked</code> is already
+              annual. It credits a non-worker with about <strong>£194</strong> of annual
+              earnings for entering part-time work rather than roughly £21,600, so entering
+              work appears to pay nothing and the extensive margin collapses. Second,
+              nothing imputes what a potential entrant would <em>pay</em> for childcare, and
+              85% of eligible non-workers record no childcare spend at all — so a subsidy
+              was being applied to zero for exactly the people who might move. Both are
+              replaced here.
+            </p>
           </Block>
 
           <Block title="Elasticities">
