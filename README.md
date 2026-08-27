@@ -20,6 +20,10 @@ Static cost of both legs together, and the same with the central labour supply r
 
 The legs do not sum to the combined figure: free hours displace paid care, which shrinks the base the subsidy applies to.
 
+**The baseline against which the subsidy leg is measured is itself ~1.9× too high.** The model pays £1.24bn of Tax-Free Childcare in 2027 against `policyengine-uk-data`'s own declared calibration target of £0.63bn (`datasets/childcare/takeup_rate.py`) and HMRC's £599.8m outturn, while matching HMRC on caseload — families 1.05×, children 0.98×. The overshoot is entirely the average award, and the larger part of it is not the fee base but **TFC routing**: TFC pays 25% of spend put *through a TFC account*, and the model routes £5,412 per claiming family where HMRC implies £2,764. Real families route about half.
+
+That cuts both ways for this reform. The 75% subsidy is a subsidy on *all* childcare spend with no account to route through, so routing is a baseline-only artefact — which means the reform's **incremental** cost of £4.46bn is, if anything, understated by roughly £0.6bn once the baseline is corrected. Working against that, the reform figure is built on the same childcare fee base, which is ~1.2× high. The two partly offset and neither is modelled away here. See [policyengine-uk-data#470](https://github.com/PolicyEngine/policyengine-uk-data/issues/470).
+
 **Read the subsidy leg as an upper bound.** The model pays £1.24bn of Tax-Free Childcare against HMRC's £599.8m outturn, and essentially all of that gap is the size of the average award rather than the number of claimants — £1,353 against £691, a ratio of **1.96×**. Take-up is fine: 914,000 modelled claimants against HMRC's 868,095 families with used accounts in 2025-26, a ratio of 1.05×. The award is a function of the childcare spending it subsidises, so this is the fee base showing up in a second variable. Restating the subsidy leg on a benchmark fee base is reported in the dashboard's Benchmarks tab as a sensitivity. See *Correcting the baseline* below.
 
 **The labour supply response is small and its sign is genuinely ambiguous.** Two forces pull against each other:

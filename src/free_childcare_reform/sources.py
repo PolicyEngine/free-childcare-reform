@@ -152,8 +152,12 @@ BENCHMARKS = [
             "used accounts — 1.05x, and the caseload grows about 5% a year, so by "
             "2027 the outturn would likely be near the model's figure. The whole "
             "2.06x gap is the average award: £1,353 against £691. That is the fee "
-            "base below. Both sides must be annual — HMRC's point-in-time count of "
-            "601,000 families in March 2026 is a stock, not the annual flow."
+            "base below and, in larger part, TFC routing: the scheme pays 25% of "
+            "spend put through a TFC account, and the model routes £5,412 per "
+            "claiming family where HMRC implies £2,764. The model also misses "
+            "policyengine-uk-data's own declared £0.63bn target by 1.9x. Both "
+            "sides must be annual — HMRC's point-in-time count of 601,000 "
+            "families in March 2026 is a stock, not the annual flow."
         ),
         "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-march-2026",
     },
