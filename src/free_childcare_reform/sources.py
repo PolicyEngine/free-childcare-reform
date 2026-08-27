@@ -81,15 +81,20 @@ RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE = True
 # None of these is an input to the estimate. Two of them matter enough to change
 # how the results should be read, and both are flagged in the results JSON:
 #
-#  * Tax-Free Childcare. The model pays £1.24bn against HMRC's £600m outturn.
-#    Take-up is not the whole story and is already modelled: the Enhanced FRS
-#    carries would_claim_tfc at about 87% (it is *not* left at its default of
-#    true). The gap decomposes almost exactly into two roughly equal parts —
-#    1.52x too many claimants (914,000 against HMRC's 601,000, implying true
-#    take-up nearer 57% of the model's eligible population than 87%) and 1.36x
-#    too large an average award (£1,353 against HMRC's ~£998). The second half
-#    is the fee base below, so the two diagnoses are consistent rather than
-#    independent.
+#  * Tax-Free Childcare. The model pays £1.24bn against HMRC's £599.8m
+#    outturn. Almost none of that is take-up. The Enhanced FRS carries
+#    would_claim_tfc at about 87% (it is *not* left at its model-side default
+#    of true), giving 914,000 claimants against HMRC's 868,095 families with
+#    used accounts in 2025-26 — a ratio of 1.05x, and the caseload has been
+#    growing about 5% a year, so by 2027 the outturn would likely be near the
+#    model's figure. The whole 2.06x gap is the average award: £1,353 against
+#    £691, a ratio of 1.96x. That is the fee base below, seen through a second
+#    variable.
+#
+#    The comparison has to be annual on both sides. HMRC also publishes a
+#    point-in-time monthly count (601,000 families in March 2026); setting an
+#    annual model aggregate against that stock rather than the annual flow
+#    manufactures a take-up gap that is not there.
 #
 #  * The childcare fee base. The CMA puts England's early years sector income
 #    at about £14bn in 2025-26, of which £8.9bn is funded entitlements; netting
@@ -135,20 +140,22 @@ BENCHMARKS = [
     {
         "measure": "Tax-Free Childcare",
         "model_variables": ["tax_free_childcare"],
-        "official_bn": 0.6,
-        "official_label": "HMRC £600m top-ups paid, UK, 2025-26",
+        "official_bn": 0.5998,
+        "official_label": "HMRC £599.8m top-ups, 868,095 families, UK, 2025-26",
         "geography": "UK",
         "period": "2025-26",
-        "kind": "Caseload and award gap",
+        "kind": "Award gap",
         "note": (
-            "Take-up is already modelled — the Enhanced FRS carries would_claim_tfc "
-            "at about 87%, not the variable's default of true. The 2.1x gap splits "
-            "into 1.52x too many claimants (914,000 against HMRC's 601,000, so true "
-            "take-up is nearer 57% of the model's eligible population) and 1.36x too "
-            "large an average award (£1,353 against about £998), the latter being the "
-            "fee base below."
+            "Not a take-up gap. The Enhanced FRS already applies a take-up haircut "
+            "(would_claim_tfc at about 87%, not the variable's model-side default of "
+            "true), giving 914,000 claimants against HMRC's 868,095 families with "
+            "used accounts — 1.05x, and the caseload grows about 5% a year, so by "
+            "2027 the outturn would likely be near the model's figure. The whole "
+            "2.06x gap is the average award: £1,353 against £691. That is the fee "
+            "base below. Both sides must be annual — HMRC's point-in-time count of "
+            "601,000 families in March 2026 is a stock, not the annual flow."
         ),
-        "url": "https://www.gov.uk/government/collections/tax-free-childcare-statistics",
+        "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-march-2026",
     },
     {
         "measure": "Universal Credit childcare element",
