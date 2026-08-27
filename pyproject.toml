@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "free-childcare-reform"
+version = "0.1.0"
+description = "Static and labour-supply-adjusted costing of a universal free childcare reform for the UK, 2027-2029."
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+requires-python = ">=3.13"
+authors = [{ name = "PolicyEngine" }]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.13",
+  "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.0",
+  "tables>=3.9",
+  "huggingface_hub>=0.20",
+  # policyengine.py wrapper. Its [uk] extra exact-pins policyengine-uk, so
+  # policyengine-uk is installed directly instead of via the extra.
+  "policyengine>=5.0.4",
+  # Childcare entitlement variables (universal/extended/targeted) and
+  # tax_free_childcare, which this analysis reforms.
+  "policyengine-uk>=2.92.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[project.scripts]
+free-childcare-reform-build = "free_childcare_reform.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/PolicyEngine/free-childcare-reform"
+Repository = "https://github.com/PolicyEngine/free-childcare-reform"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/free_childcare_reform"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/free_childcare_reform/**/*.py", "tests/**/*.py", "README.md", "LICENSE", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "W"]
+ignore = ["E501"]

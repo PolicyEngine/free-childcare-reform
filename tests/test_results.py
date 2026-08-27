@@ -1,0 +1,137 @@
+"""Checks on the generated results JSON.
+
+These are consistency and sanity checks on a run's output, not assertions that
+the model produces a particular number. Where a bound is asserted it is wide
+enough that only a structural break would trip it.
+"""
+
+import pytest
+
+YEARS = ["2027", "2028", "2029"]
+
+
+def test_every_requested_year_is_present(results):
+    assert [str(year) for year in results["years"]] == YEARS
+    for year in YEARS:
+        assert year in results["by_year"]
+
+
+def test_the_registry_is_emitted(results):
+    for key in ["assumptions", "sources", "comparable_costings", "income_cliff_context"]:
+        assert results[key], f"{key} missing from the results JSON"
+
+
+def test_costs_are_positive_and_grow_with_the_forecast(results):
+    combined = [results["by_year"][year]["legs"]["combined"]["static_cost_bn"] for year in YEARS]
+    assert all(cost > 0 for cost in combined)
+    assert combined == sorted(combined), "cost should rise as the population and rates uprate"
+
+
+def test_the_legs_do_not_sum_to_the_combined_cost(results):
+    # Free hours displace paid care, shrinking the base the subsidy applies to,
+    # so the combined cost is below the sum of the legs run separately.
+    for year in YEARS:
+        legs = results["by_year"][year]["legs"]
+        leg_sum = legs["free_hours"]["static_cost_bn"] + legs["subsidy"]["static_cost_bn"]
+        assert legs["combined"]["static_cost_bn"] < leg_sum
+
+
+def test_free_hours_leg_is_near_the_published_analogue(results):
+    # NEF costed 15 hours free for all children 9 months to 4 at £3.0-3.4bn net
+    # for England. This is UK-wide and static, so it should be the same order.
+    cost = results["by_year"]["2027"]["legs"]["free_hours"]["static_cost_bn"]
+    assert 1.0 < cost < 5.0
+
+
+def test_the_labour_supply_response_is_small_relative_to_the_cost(results):
+    for year in YEARS:
+        dynamic = results["by_year"][year]["dynamic_cost"]["central"]
+        assert abs(dynamic["offset_share_of_static_cost"]) < 0.25
+
+
+def test_elasticity_bounds_order_the_response(results):
+    # A larger elasticity must move employment further from zero in whichever
+    # direction the central case points.
+    for year in YEARS:
+        responses = results["by_year"][year]["labour_supply"]
+        low = abs(responses["low"]["net_entrants"])
+        central = abs(responses["central"]["net_entrants"])
+        high = abs(responses["high"]["net_entrants"])
+        assert low <= central <= high
+
+
+def test_the_price_elasticity_cross_check_can_only_be_positive(results):
+    # It sees the price fall and nothing else, so it brackets the gain-to-work
+    # model from above rather than confirming it.
+    for year in YEARS:
+        for bound in ["low", "central", "high"]:
+            check = results["by_year"][year]["price_elasticity_cross_check"][bound]
+            assert check["entrants"] >= 0
+            assert check["effective_price_change"] < 0
+
+
+def test_quintiles_are_complete_and_gains_are_non_negative(results):
+    for year in YEARS:
+        effects = results["by_year"][year]["legs"]["combined"]["household_effects"]
+        for key in ["by_income_quintile", "by_income_quintile_families_with_under_5s"]:
+            rows = effects[key]
+            assert [row["group"] for row in rows] == ["Q1", "Q2", "Q3", "Q4", "Q5"]
+            # Nobody loses: the reform only adds support.
+            assert all(row["average_gain_gbp"] >= 0 for row in rows)
+
+
+def test_household_gains_are_consistent_with_the_cost(results):
+    # Total household gain should track the static cost. It is not identical:
+    # gov_spending includes support the household measure nets differently, and
+    # the free-hours value reaches households as an in-kind benefit.
+    for year in YEARS:
+        result = results["by_year"][year]
+        total_gain = result["legs"]["combined"]["household_effects"]["all_households"][
+            "total_gain_bn"
+        ]
+        cost = result["legs"]["combined"]["static_cost_bn"]
+        assert 0.5 * cost < total_gain < 1.5 * cost
+
+
+def test_uc_childcare_element_is_never_counted_as_spending(results):
+    # It is the childcare element of the UC maximum amount, before the taper,
+    # so it is an entitlement component and not government spending.
+    for year in YEARS:
+        spending = results["by_year"][year]["baseline_spending"]
+        assert "uc_childcare_element" not in spending
+        assert spending["total_childcare_support_bn"] == pytest.approx(
+            spending["universal_childcare_entitlement"]
+            + spending["extended_childcare_entitlement"]
+            + spending["targeted_childcare_entitlement"]
+            + spending["tax_free_childcare"],
+            abs=1e-3,
+        )
+
+
+def test_benchmarks_carry_a_source_and_a_verdict(results):
+    benchmarks = results["by_year"]["2027"]["benchmarks"]
+    assert len(benchmarks) >= 5
+    for benchmark in benchmarks:
+        assert benchmark["url"].startswith("https://")
+        assert benchmark["kind"]
+        assert benchmark["model_bn"] >= 0
+
+
+def test_the_known_gaps_are_flagged_rather_than_hidden(results):
+    kinds = {
+        benchmark["measure"]: benchmark["kind"]
+        for benchmark in results["by_year"]["2027"]["benchmarks"]
+    }
+    assert kinds["Tax-Free Childcare"] == "Take-up gap"
+    assert kinds["Universal Credit childcare element"] == "Not comparable"
+    assert kinds["Out-of-pocket childcare fees paid by parents"] == "Fee base check"
+
+
+def test_the_fee_base_sensitivity_lowers_the_subsidy_leg(results):
+    for year in YEARS:
+        result = results["by_year"][year]
+        sensitivity = result["fee_base_sensitivity"]
+        assert sensitivity["ratio"] < 1
+        assert sensitivity["combined_cost_bn"] < result["legs"]["combined"]["static_cost_bn"]
+        # The free-hours leg is untouched by the fee base, so it is a floor.
+        assert sensitivity["combined_cost_bn"] > result["legs"]["free_hours"]["static_cost_bn"]

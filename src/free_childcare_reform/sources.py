@@ -1,0 +1,379 @@
+"""Single registry of every non-PolicyEngine number used in the analysis.
+
+Everything PolicyEngine UK models — childcare entitlements, Tax-Free Childcare,
+the UC childcare element, childcare expenses, incomes, ages, weights — comes
+from the Enhanced FRS at run time. Everything else lives here with a value, a
+description and a source URL, and is emitted verbatim into the results JSON so
+the dashboard renders no hardcoded numbers.
+"""
+
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from typing import Any
+
+
+@dataclass(frozen=True)
+class Source:
+    label: str
+    description: str
+    url: str
+
+
+# ---------------------------------------------------------------------------
+# Behavioural assumptions
+# ---------------------------------------------------------------------------
+
+# Additionality of a free-hours expansion. Brewer, Cattan, Crawford and Rabe
+# (IFS WP20/09, Labour Economics 2022) evaluate England's free entitlements with
+# a date-of-birth regression discontinuity and find that for every 570 hours a
+# year of free care offered, children spent only about 163 additional hours a
+# year in subsidisable care — roughly 29% additionality, 71% displacement of
+# care families were already buying. Displacement is what makes a free-hours
+# expansion mostly a transfer rather than a change in the price of working, so
+# it scales the labour supply channel without changing the fiscal cost.
+FREE_HOURS_ADDITIONALITY = 163 / 570  # ~0.286
+FREE_HOURS_DISPLACEMENT = 1 - FREE_HOURS_ADDITIONALITY  # ~0.714
+
+# Childcare price elasticity of maternal employment, extensive margin. Used for
+# the independent cross-check of the gain-to-work model, not as its input.
+# Akgunduz and Plantenga's meta-analysis of 43 estimates gives a mean of -0.277,
+# but with a European/Canadian mean of -0.19 against a US mean of -0.35, clear
+# publication bias (larger and peer-reviewed samples give smaller estimates),
+# and a meta-regression finding significantly smaller elasticities in countries
+# with high part-time incidence and mid-to-high female participation — which
+# describes the UK. Morrissey's review, as cited by the US Treasury, puts most
+# US estimates "on the order of -0.1". Baker, Gruber and Milligan's Quebec
+# estimate of -0.236, from the most generous programme ever studied, is
+# self-described as low-end. The UK causal evidence is weaker still: Brewer et
+# al. find essentially no participation effect from the 15-hour offer and
+# +3.5pp in work from a move to 30-35 hours, confined to mothers whose youngest
+# child is eligible.
+PRICE_ELASTICITY_CENTRAL = -0.15
+PRICE_ELASTICITY_LOW = -0.05
+PRICE_ELASTICITY_HIGH = -0.30
+
+# Scale applied to the OBR participation elasticities for the low and high
+# bounds of the gain-to-work model. Set to the ratio of the low and high price
+# elasticities to the central one, so the two methods' uncertainty bands are
+# the same width and come from the same evidence.
+ELASTICITY_SCALE_CENTRAL = 1.0
+ELASTICITY_SCALE_LOW = PRICE_ELASTICITY_LOW / PRICE_ELASTICITY_CENTRAL  # 1/3
+ELASTICITY_SCALE_HIGH = PRICE_ELASTICITY_HIGH / PRICE_ELASTICITY_CENTRAL  # 2
+
+# Cap on the modelled proportional change in any one person's probability of
+# working. An elasticity applied to a large proportional change in a small
+# baseline gain to work can otherwise imply a probability change above one.
+PARTICIPATION_CHANGE_BOUND = 0.5
+
+# Brewer et al. find no participation effect for mothers who also have a
+# younger, non-eligible child — they still need care for the younger child, so
+# the entitlement does not free them to work. This replicates internationally
+# and is the single most important structural restriction on the response.
+RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE = True
+
+
+# ---------------------------------------------------------------------------
+# External benchmarks
+# ---------------------------------------------------------------------------
+
+# Published figures the model's baseline and reform costs are checked against.
+# None of these is an input to the estimate. Two of them matter enough to change
+# how the results should be read, and both are flagged in the results JSON:
+#
+#  * Tax-Free Childcare. HMRC paid £600m of top-ups in 2025-26 to 601,000
+#    families, against roughly 1.3 million estimated eligible — about 46%
+#    take-up. policyengine-uk's would_claim_tfc defaults to true, so the model
+#    assumes full take-up and its TFC baseline is roughly double the outturn.
+#    The 75% subsidy replaces TFC, so this carries into the reform: the
+#    subsidy leg is costed on a fully-taking-up population.
+#
+#  * The childcare fee base. The CMA puts England's early years sector income
+#    at about £14bn in 2025-26, of which £8.9bn is funded entitlements; netting
+#    off TFC and the UC childcare element leaves roughly £3.5-4bn of true
+#    out-of-pocket parent spend. The model's childcare_expenses aggregate is
+#    substantially larger. A cost-share subsidy is linear in this base, so the
+#    subsidy leg scales directly with it.
+#
+# Both point the same way: the subsidy leg's headline cost is an upper bound.
+BENCHMARKS = [
+    {
+        "measure": "Free early years entitlements, total",
+        "model_variables": [
+            "universal_childcare_entitlement",
+            "extended_childcare_entitlement",
+            "targeted_childcare_entitlement",
+        ],
+        "official_bn": 8.7,
+        "official_label": "IFS £8.7bn, England, 2025-26 prices",
+        "geography": "England",
+        "period": "2025-26",
+        "kind": "Independent check",
+        "url": "https://ifs.org.uk/publications/annual-report-education-spending-england-2025-26",
+    },
+    {
+        "measure": "Disadvantaged 2-year-old offer",
+        "model_variables": ["targeted_childcare_entitlement"],
+        "official_bn": 0.57,
+        "official_label": "IFS £570m, England, 2025-26",
+        "geography": "England",
+        "period": "2025-26",
+        "kind": "Independent check",
+        "url": "https://ifs.org.uk/publications/annual-report-education-spending-england-2025-26",
+    },
+    {
+        "measure": "Tax-Free Childcare",
+        "model_variables": ["tax_free_childcare"],
+        "official_bn": 0.6,
+        "official_label": "HMRC £600m top-ups paid, UK, 2025-26",
+        "geography": "UK",
+        "period": "2025-26",
+        "kind": "Take-up gap",
+        "note": (
+            "601,000 families used TFC against roughly 1.3 million eligible, about "
+            "46% take-up. The model assumes full take-up (would_claim_tfc defaults "
+            "to true), so its TFC baseline is roughly double the outturn."
+        ),
+        "url": "https://www.gov.uk/government/collections/tax-free-childcare-statistics",
+    },
+    {
+        "measure": "Universal Credit childcare element",
+        "model_variables": ["uc_childcare_element"],
+        "official_bn": 0.61,
+        "official_label": "DWP £611m, Great Britain, 2024-25 outturn",
+        "geography": "Great Britain",
+        "period": "2024-25",
+        "kind": "Not comparable",
+        "note": (
+            "uc_childcare_element is the childcare element of the UC maximum "
+            "amount, before the earnings taper reduces the award. It is not "
+            "government spending and is not counted as such here. DWP's £611m is "
+            "the spending figure."
+        ),
+        "url": "https://www.gov.uk/government/publications/benefit-expenditure-and-caseload-tables-2026",
+    },
+    {
+        "measure": "Out-of-pocket childcare fees paid by parents",
+        "model_variables": ["childcare_expenses"],
+        "official_bn": 3.75,
+        "official_label": "~£3.5-4bn implied, England, 2025-26",
+        "geography": "England",
+        "period": "2025-26",
+        "kind": "Fee base check",
+        "note": (
+            "Derived, not published: the CMA estimates England's early years "
+            "sector income at about £14bn in 2025-26, of which £8.9bn is funded "
+            "entitlements; netting off TFC and the UC childcare element leaves "
+            "roughly £3.5-4bn of out-of-pocket parent spend. The CMA flags "
+            "substantial uncertainty in the £14bn. No official aggregate of "
+            "parent-paid childcare fees is published."
+        ),
+        "url": "https://assets.publishing.service.gov.uk/media/6a43cd6d065c5aec12a4e3ef/_Statement_of_scope_1_July.pdf",
+    },
+]
+
+# Comparable published costings of this reform's first leg. NEF's is a direct
+# analogue: 15 hours free for all children from 9 months to 4, no work test.
+COMPARABLE_COSTINGS = [
+    {
+        "proposal": "15 hours free for all children 9 months to 4, no work test",
+        "source": "New Economics Foundation, with the Public Services Trust and JRF",
+        "date": "July 2025",
+        "cost_bn": "3.0-3.4 net",
+        "geography": "England",
+        "note": (
+            "The closest published analogue to this reform's free-hours leg. NEF "
+            "cost it at roughly cost-neutral at current usage, rising to £3-3.4bn "
+            "net at expanded usage, and about 11% lower again once labour supply "
+            "is allowed for."
+        ),
+        "url": "https://neweconomics.org/2025/07/the-universal-family-childcare-promise",
+    },
+    {
+        "proposal": "30 hours for all 3-4 year olds, work test removed",
+        "source": "Sutton Trust and IFS (Farquharson), A Fair Start?",
+        "date": "August 2021",
+        "cost_bn": "0.25",
+        "geography": "England",
+        "note": (
+            "Predates the under-3 expansion entirely, so it cannot be scaled to "
+            "today's system, but it is the only IFS-authored costing of removing "
+            "a work test."
+        ),
+        "url": "https://www.suttontrust.com/our-research/a-fair-start-equalising-access-to-early-education/",
+    },
+    {
+        "proposal": "The March 2023 expansion to under-3s, as originally costed",
+        "source": "HM Treasury and OBR, Spring Budget 2023",
+        "date": "March 2023",
+        "cost_bn": "4.1 by 2027-28",
+        "geography": "England",
+        "note": (
+            "Costed with about 60,000 entrants to employment by 2027-28, on a "
+            "plausible range of 55,000 to 240,000. Useful both as a cost anchor "
+            "and as the government's own labour supply assumption. Outturn ran "
+            "26-28% above forecast on take-up alone."
+        ),
+        "url": "https://www.gov.uk/government/publications/spring-budget-2023",
+    },
+    {
+        "proposal": "Nordic-style universal childcare, 40 hours, 6 months to school age",
+        "source": "Women's Budget Group (De Henau)",
+        "date": "2020",
+        "cost_bn": "38-55 gross, 9-16 net",
+        "geography": "UK",
+        "note": "A far larger offer than this reform. Cited only as an upper bound.",
+        "url": "https://wbg.org.uk/analysis/uk-policy-briefings/2020-briefing-a-care-led-recovery-from-coronavirus/",
+    },
+]
+
+# The £100,000 adjusted net income cliff the reform's second tier retains.
+INCOME_CLIFF_CONTEXT = {
+    "threshold_gbp": 100_000,
+    "frozen_since": 2017,
+    "inflation_indexed_equivalent_gbp": 137_000,
+    "children_affected": "50,500-99,000 in 2025-26",
+    "support_forgone_bn": 0.874,
+    "note": (
+        "DfE estimates released under FOI put 50,500 to 99,000 children in "
+        "families above the threshold in 2025-26, with up to £874m of funded "
+        "childcare support unavailable to them. A two-child family loses nearly "
+        "£30,000 of support on crossing £100,000 and needs about £156,000 of "
+        "gross income to restore its disposable income at £99,000. This reform "
+        "keeps the cliff for the second 15 hours but removes it from the first, "
+        "which cuts the size of the step without abolishing it."
+    ),
+    "url": "https://www.gov.uk/government/organisations/department-for-education",
+}
+
+
+# ---------------------------------------------------------------------------
+# Sources
+# ---------------------------------------------------------------------------
+
+IFS_FREE_CHILDCARE = Source(
+    "Brewer, Cattan, Crawford and Rabe — Does more free childcare help parents work more?",
+    "Regression-discontinuity evaluation of England's free entitlements, 2005-2013. "
+    "The 15-hour part-time offer only marginally affected maternal labour force "
+    "participation. Moving to 30-35 hours raised participation by 5.7pp and "
+    "employment by 3.5pp, about 12,000 more mothers in work a year, concentrated "
+    "in mothers whose youngest child was eligible and with no effect on fathers. "
+    "For every 570 free hours offered, children spent only about 163 additional "
+    "hours in subsidisable care.",
+    "https://ifs.org.uk/sites/default/files/output_url_files/WP202009-Does-more-free-childcare-help-parents-work-more.pdf",
+)
+
+AKGUNDUZ_PLANTENGA = Source(
+    "Akgunduz and Plantenga — Child care prices and maternal employment: a meta-analysis",
+    "43 estimates from 36 studies. Mean childcare price elasticity of maternal "
+    "employment -0.277, with a European and Canadian mean of -0.19 against a US "
+    "mean of -0.35. Finds publication bias and significantly smaller elasticities "
+    "in high part-time, mid-to-high participation countries.",
+    "https://www.uu.nl/sites/default/files/rebo_use_dp_2015_15-14.pdf",
+)
+
+BAKER_GRUBER_MILLIGAN = Source(
+    "Baker, Gruber and Milligan — Universal child care, maternal labor supply and family well-being",
+    "Quebec's $5-a-day childcare raised married maternal participation by 7.7pp, "
+    "an implied childcare-cost elasticity of 0.236 that the authors call low-end. "
+    "About a third of the rise in reported childcare use was women already working "
+    "shifting from informal to formal care. Quebec offered up to 10 hours a day; "
+    "England's entitlements are school-day and term-time, which is the main reason "
+    "cited for the weaker UK results.",
+    "https://www.nber.org/system/files/working_papers/w11832/w11832.pdf",
+)
+
+DFE_30_HOURS_EVALUATION = Source(
+    "DfE — Evaluation of the national rollout of 30 hours free childcare",
+    "Survey evidence, self-reported rather than causal. Since starting the extended "
+    "hours 2% of mothers entered work and 26% increased their hours, against under "
+    "1% and 7% for fathers. Reported positive work impact was much higher for lower "
+    "income (56%) than higher income (29%) mothers.",
+    "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/740168/Evaluation_of_national_rollout_of_30_hours_free-childcare.pdf",
+)
+
+DFE_CHILDCARE_EXPERIENCES = Source(
+    "DfE — Expansion to early childcare entitlements: childcare experiences survey",
+    "The 2024-25 expansion to under-3s has no causal evaluation yet. In the pilot "
+    "wave 13% of respondents increased hours and 7% decreased, with 78% unchanged. "
+    "Self-reported, unweighted, 17% response rate.",
+    "https://explore-education-statistics.service.gov.uk/find-statistics/expansion-to-early-childcare-entitlements-childcare-experiences-survey/2024-25-autumn-term",
+)
+
+DE_HENAU = Source(
+    "De Henau — Simulating employment and fiscal effects of universal childcare in the UK",
+    "UKMOD microsimulation with input-output multipliers. Gross cost £26.6bn to "
+    "£49.4bn a year, with 61-72% recouped. Used here only as a stated ceiling: the "
+    "employment response is assumed rather than estimated, part-time mothers are "
+    "forced to full-time, labour demand is assumed to accommodate supply in full, "
+    "and childcare-sector employment multipliers are counted alongside maternal "
+    "labour supply.",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8853244/",
+)
+
+OBR_LABOUR_SUPPLY = Source(
+    "OBR — The impact of a NICs cut on labour supply",
+    "The participation elasticities used here, by gender, partner employment "
+    "status, age of youngest child and earnings quintile, and the Appendix E "
+    "conversion of an elasticity with respect to in-work income into one with "
+    "respect to the gain to work. Shipped in policyengine-uk as "
+    "policyengine_uk.dynamics.participation.",
+    "https://obr.uk/docs/dlm_uploads/NICS-Cut-Impact-on-Labour-Supply-Note.pdf",
+)
+
+BETTENDORF_JONGEN_MULLER = Source(
+    "Bettendorf, Jongen and Muller — Childcare subsidies and labour supply",
+    "A Dutch reform roughly halving out-of-pocket childcare costs raised maternal "
+    "hours by 6.2% against employment by 3.0%, so the intensive margin moved about "
+    "twice as much as the extensive margin. Cited here as the reason the "
+    "participation-only estimate is a floor on the total labour supply response.",
+    "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf",
+)
+
+POLICYENGINE_UK = Source(
+    "PolicyEngine UK",
+    "The open-source microsimulation model and the Enhanced FRS dataset used for "
+    "every baseline and reform quantity in this analysis.",
+    "https://github.com/PolicyEngine/policyengine-uk",
+)
+
+
+def as_json(model_parameters: dict[str, Any]) -> dict:
+    """Registry as emitted to the results JSON.
+
+    ``model_parameters`` is read from the simulation at run time (funding rates,
+    weeks per year, entitlement hours, income limits) rather than duplicated
+    here, so the dashboard displays what the simulation actually applied.
+    """
+    return {
+        "model_parameters": model_parameters,
+        "assumptions": {
+            "free_hours_additionality": round(FREE_HOURS_ADDITIONALITY, 4),
+            "free_hours_displacement": round(FREE_HOURS_DISPLACEMENT, 4),
+            "price_elasticity_central": PRICE_ELASTICITY_CENTRAL,
+            "price_elasticity_low": PRICE_ELASTICITY_LOW,
+            "price_elasticity_high": PRICE_ELASTICITY_HIGH,
+            "elasticity_scale_low": round(ELASTICITY_SCALE_LOW, 4),
+            "elasticity_scale_high": round(ELASTICITY_SCALE_HIGH, 4),
+            "participation_change_bound": PARTICIPATION_CHANGE_BOUND,
+            "restrict_to_youngest_child_eligible": RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE,
+            "margin": "extensive (participation) only; the intensive margin is not modelled",
+            "incidence": (
+                "Free hours are valued at the DfE funding rate the model applies; "
+                "the subsidy is valued at its cash value to the family."
+            ),
+        },
+        "comparable_costings": COMPARABLE_COSTINGS,
+        "income_cliff_context": INCOME_CLIFF_CONTEXT,
+        "sources": {
+            "ifs_free_childcare": asdict(IFS_FREE_CHILDCARE),
+            "akgunduz_plantenga": asdict(AKGUNDUZ_PLANTENGA),
+            "baker_gruber_milligan": asdict(BAKER_GRUBER_MILLIGAN),
+            "dfe_30_hours_evaluation": asdict(DFE_30_HOURS_EVALUATION),
+            "dfe_childcare_experiences": asdict(DFE_CHILDCARE_EXPERIENCES),
+            "de_henau": asdict(DE_HENAU),
+            "obr_labour_supply": asdict(OBR_LABOUR_SUPPLY),
+            "bettendorf_jongen_muller": asdict(BETTENDORF_JONGEN_MULLER),
+            "policyengine_uk": asdict(POLICYENGINE_UK),
+        },
+    }

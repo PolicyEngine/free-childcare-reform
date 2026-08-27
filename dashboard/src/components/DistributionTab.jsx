@@ -1,0 +1,257 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { colors } from "../lib/colors";
+import { formatBn, formatCurrency, formatPct } from "../lib/formatters";
+import SectionHeading from "./SectionHeading";
+
+const MEASURES = [
+  {
+    id: "average_gain_gbp",
+    label: "Average gain per household",
+    format: formatCurrency,
+    unit: "£/year",
+  },
+  {
+    id: "average_gain_gbp_among_gainers",
+    label: "Average gain per gaining household",
+    format: formatCurrency,
+    unit: "£/year",
+  },
+  {
+    id: "total_gain_bn",
+    label: "Total gain",
+    format: formatBn,
+    unit: "£bn",
+  },
+  {
+    id: "average_gain_pct_of_income",
+    label: "Gain as a share of net income",
+    format: (value) => formatPct(value, 2),
+    unit: "% of net income",
+  },
+];
+
+const POPULATIONS = [
+  {
+    id: "by_income_quintile_families_with_under_5s",
+    label: "Households with a child under 5",
+  },
+  { id: "by_income_quintile", label: "All households" },
+];
+
+const LEGS = [
+  { id: "combined", label: "Both legs together" },
+  { id: "free_hours", label: "15 free hours for all, from 9 months" },
+  { id: "subsidy", label: "75% subsidy replacing Tax-Free Childcare" },
+];
+
+export default function DistributionTab({ data, year, onYearChange }) {
+  const [measureId, setMeasureId] = useState("average_gain_gbp");
+  const [populationId, setPopulationId] = useState(
+    "by_income_quintile_families_with_under_5s",
+  );
+  const [legId, setLegId] = useState("combined");
+
+  const result = data.by_year[String(year)];
+  const effects = result.legs[legId].household_effects;
+  const measure = MEASURES.find((m) => m.id === measureId);
+  const population = POPULATIONS.find((p) => p.id === populationId);
+  const rows = effects[populationId] || [];
+  const familyRows = effects.by_family_type_families_with_under_5s || [];
+  const headline = effects.families_with_under_5s;
+  const all = effects.all_households;
+
+  return (
+    <div className="space-y-10">
+      <section>
+        <SectionHeading
+          title="Who gains, and by how much"
+          description={
+            <>
+              The change in household net income, by income quintile. Quintiles fold
+              PolicyEngine&apos;s published household income deciles, so they rank all
+              households in the UK — not only those with young children. Free childcare
+              hours are counted at the DfE funding rate the model applies, which is what
+              the government pays a provider, not what a family would have paid on the open
+              market.
+            </>
+          }
+        />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <div className="text-sm text-slate-500">
+              Households with a child under 5
+            </div>
+            <div className="mt-1 text-3xl font-semibold text-slate-900">
+              {formatCurrency(headline.average_gain_gbp)}
+            </div>
+            <div className="mt-2 text-sm text-slate-500">
+              average gain a year, across {headline.households_m.toFixed(2)}m households.{" "}
+              {formatPct(headline.share_gaining * 100, 0)} of them gain anything.
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <div className="text-sm text-slate-500">Among those that gain</div>
+            <div className="mt-1 text-3xl font-semibold text-slate-900">
+              {formatCurrency(headline.average_gain_gbp_among_gainers)}
+            </div>
+            <div className="mt-2 text-sm text-slate-500">
+              average gain a year for a household that gains at all.
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <div className="text-sm text-slate-500">All households</div>
+            <div className="mt-1 text-3xl font-semibold text-slate-900">
+              {formatCurrency(all.average_gain_gbp)}
+            </div>
+            <div className="mt-2 text-sm text-slate-500">
+              average across all {all.households_m.toFixed(1)}m UK households, most of which
+              have no young children.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+          <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="min-w-0">
+              <span className="mb-1 block text-xs font-medium text-slate-500">Year</span>
+              <select
+                value={year}
+                onChange={(event) => onYearChange(Number(event.target.value))}
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
+              >
+                {data.years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="min-w-0">
+              <span className="mb-1 block text-xs font-medium text-slate-500">Reform</span>
+              <select
+                value={legId}
+                onChange={(event) => setLegId(event.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
+              >
+                {LEGS.map((leg) => (
+                  <option key={leg.id} value={leg.id}>
+                    {leg.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="min-w-0">
+              <span className="mb-1 block text-xs font-medium text-slate-500">
+                Population
+              </span>
+              <select
+                value={populationId}
+                onChange={(event) => setPopulationId(event.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
+              >
+                {POPULATIONS.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="min-w-0">
+              <span className="mb-1 block text-xs font-medium text-slate-500">Measure</span>
+              <select
+                value={measureId}
+                onChange={(event) => setMeasureId(event.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
+              >
+                {MEASURES.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <h3 className="mb-4 text-sm font-semibold text-slate-700">
+            {measure.label} by income quintile — {population.label.toLowerCase()} (
+            {measure.unit}, {year})
+          </h3>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={rows} margin={{ left: 8, right: 16, top: 8, bottom: 16 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.border.light} />
+              <XAxis dataKey="group" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value) => measure.format(value)} />
+              <Bar dataKey={measureId} radius={[4, 4, 0, 0]}>
+                {rows.map((_, index) => (
+                  <Cell key={index} fill={colors.primary[500]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <p className="mt-4 text-sm leading-6 text-slate-500">
+            Q1 is the lowest-income fifth of households. Lower quintiles gain less in cash
+            because families on Universal Credit already receive 85% of childcare costs
+            through the UC childcare element, which this reform keeps unchanged, and
+            because low-income families use fewer paid childcare hours to begin with. As a
+            share of net income the picture is different — switch the measure above.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <SectionHeading
+          title="By family type"
+          description="Households with a child under 5, ranked by average gain."
+        />
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500">
+                  <th className="px-6 py-3 font-medium">Family type</th>
+                  <th className="px-6 py-3 font-medium">Households</th>
+                  <th className="px-6 py-3 font-medium">Average gain</th>
+                  <th className="px-6 py-3 font-medium">Share gaining</th>
+                  <th className="px-6 py-3 font-medium">Total gain</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {familyRows.map((row) => (
+                  <tr key={row.group}>
+                    <td className="px-6 py-3 text-slate-900">{row.group}</td>
+                    <td className="px-6 py-3 text-slate-600">
+                      {row.households_m.toFixed(2)}m
+                    </td>
+                    <td className="px-6 py-3 text-slate-600">
+                      {formatCurrency(row.average_gain_gbp)}
+                    </td>
+                    <td className="px-6 py-3 text-slate-600">
+                      {formatPct(row.share_gaining * 100, 0)}
+                    </td>
+                    <td className="px-6 py-3 text-slate-600">
+                      {formatBn(row.total_gain_bn)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
