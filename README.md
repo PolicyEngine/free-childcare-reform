@@ -18,6 +18,8 @@ Static cost of both legs together, and the same with the central labour supply r
 | 2028 | £2.20bn | £4.96bn | £7.01bn | £6.99bn |
 | 2029 | £2.25bn | £5.09bn | £7.19bn | £7.17bn |
 
+**Read the combined figure as a range: £5.53bn to £6.84bn in 2027.** The subsidy leg is 75% of a childcare fee base the model puts at £6.36bn for England under-5s against a £3.75bn benchmark — **1.70×**. The cost scales almost linearly in that base, so rebasing the under-5 slice takes the subsidy leg from £4.84bn to £3.49bn and the combined cost to £5.53bn. Now that the Tax-Free Childcare baseline is fixed, the fee base is by a wide margin the largest uncertainty here: it is worth about £1.3bn, five times the TFC correction and two orders of magnitude more than the labour supply response. The point estimates above are the upper end of the range, not a central case.
+
 Computed on Enhanced FRS release **1.57.2** (HuggingFace `7b0a06f0`, 30 August 2026) with policyengine-uk 2.94.0. An earlier version of this analysis, on release 1.56.x and policyengine-uk 2.92.0, reported £2.28bn / £4.46bn / £6.60bn for 2027. The change is almost entirely the Tax-Free Childcare baseline correction described below, which raises the subsidy leg by about £0.38bn and the combined cost by about £0.25bn.
 
 The legs do not sum to the combined figure: free hours displace paid care, which shrinks the base the subsidy applies to.
@@ -39,7 +41,7 @@ On the pre-correction baseline this figure was a net **−950**, and the analysi
 
 For scale, the IFS found the move from 15 to 30 hours put about 12,000 more mothers into work a year, and the government's own costing of the 2023 expansion assumed about 60,000 entrants by 2027-28 — but both of those *added* work-conditional hours, where this reform makes existing hours unconditional.
 
-**Distributionally, the cash gain rises with income.** Among households with a child under 5 in 2027, the average annual gain runs from about £1,160 in the bottom quintile to about £3,070 in the top. Low-income families gain less in cash because Universal Credit already covers 85% of their childcare costs — which this reform keeps — and because they use fewer paid hours. As a share of net income the gradient reverses at the bottom: Q1 gains most.
+**Distributionally, the cash gain broadly rises with income, but not monotonically.** Among households with a child under 5 in 2027 the average annual gain runs Q1 £1,164, Q2 £966, Q3 £2,174, Q4 £2,411, Q5 £3,067 — so the bottom two quintiles are close together and Q2 is the *lowest* of the five, with the gradient only establishing itself from Q3 up. Low-income families gain less in cash because Universal Credit already covers 85% of their childcare costs — which this reform keeps — and because they use fewer paid hours. As a share of net income the ordering changes again: Q1 gains most, at 2.98% against Q5's 2.24%.
 
 ## How it is modelled
 

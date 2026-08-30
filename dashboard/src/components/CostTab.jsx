@@ -53,6 +53,7 @@ export default function CostTab({ data, year, onYearChange }) {
 
   // The two legs do not sum to the combined cost: free hours displace paid
   // care, which shrinks the base the 75% subsidy applies to.
+  const feeBase = result.fee_base_sensitivity;
   const legSum = legs.free_hours.static_cost_bn + legs.subsidy.static_cost_bn;
   const interaction = legs.combined.static_cost_bn - legSum;
 
@@ -114,8 +115,8 @@ export default function CostTab({ data, year, onYearChange }) {
         <div className="grid gap-4 sm:grid-cols-3">
           <Stat
             label={`Static cost, ${year}`}
-            value={formatBn(legs.combined.static_cost_bn)}
-            sub="Both legs, behaviour held fixed."
+            value={`${formatBn(feeBase.combined_cost_bn)} to ${formatBn(legs.combined.static_cost_bn)}`}
+            sub={`Both legs, behaviour held fixed. The range is the childcare fee base: the model's England under-5 spend is ${feeBase.model_england_under_5_bn.toFixed(2)}bn against a ${feeBase.benchmark_england_under_5_bn.toFixed(2)}bn benchmark, and the subsidy is a share of that base. See Benchmarks.`}
           />
           <Stat
             label={`Cost with labour supply response, ${year}`}
