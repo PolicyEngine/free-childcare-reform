@@ -1,0 +1,42 @@
+name: Pull request
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install (logic tests only; the pipeline needs the gated dataset)
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check src tests
+      - name: Test
+        run: pytest -q
+
+  dashboard-build:
+    name: Dashboard build and site-shell check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install deps
+        working-directory: dashboard
+        run: bun install --frozen-lockfile
+      - name: Build
+        working-directory: dashboard
+        run: bun run build
+      - name: Assert the PolicyEngine site shell is in the built HTML
+        working-directory: dashboard
+        run: |
+          html=.next/server/app/index.html
+          for needle in "PolicyEngine" ">Research<" ">Model<" ">API<" ">Donate<" "About us" "Developer tools" "Privacy policy" "Terms and conditions"; do
+            grep -qF -- "$needle" "$html" || { echo "MISSING from built HTML: $needle"; exit 1; }
+          done
+          echo "Site shell present (brand, nav labels, footer links)."

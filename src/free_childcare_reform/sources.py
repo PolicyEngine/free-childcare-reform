@@ -81,15 +81,20 @@ RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE = True
 # None of these is an input to the estimate. Two of them matter enough to change
 # how the results should be read, and both are flagged in the results JSON:
 #
-#  * Tax-Free Childcare. The model pays £1.24bn against HMRC's £599.8m
-#    outturn. Almost none of that is take-up. The Enhanced FRS carries
-#    would_claim_tfc at about 87% (it is *not* left at its model-side default
-#    of true), giving 914,000 claimants against HMRC's 868,095 families with
-#    used accounts in 2025-26 — a ratio of 1.05x, and the caseload has been
-#    growing about 5% a year, so by 2027 the outturn would likely be near the
-#    model's figure. The whole 2.06x gap is the average award: £1,353 against
-#    £691, a ratio of 1.96x. That is the fee base below, seen through a second
-#    variable.
+#  * Tax-Free Childcare. The model pays £0.67bn against HMRC's £599.8m
+#    outturn — 1.11x. This was 2.06x until the Enhanced FRS release of
+#    30 August 2026 (1.57.2), which corrected the routed-spend proxy and the
+#    calibration target; policyengine-uk-data's own release check now measures
+#    TFC spending at 0.99x its £632.2m target, against 1.87x before.
+#
+#    The correction also flipped where the residual sits. It used to be
+#    entirely the average award — £1,353 against HMRC's £691, with claimants
+#    close to right at 1.05x. It is now the other way round: the average award
+#    is £600 against £691 (0.87x) and the claimant count is 1.11m against
+#    868,095 (1.28x). Part of that is projection rather than error, since the
+#    caseload has been growing about 5% a year and these are 2027 figures,
+#    but not all of it. The remaining overshoot is a caseload question now,
+#    not a fee-base one.
 #
 #    The comparison has to be annual on both sides. HMRC also publishes a
 #    point-in-time monthly count (601,000 families in March 2026); setting an
@@ -146,17 +151,16 @@ BENCHMARKS = [
         "period": "2025-26",
         "kind": "Award gap",
         "note": (
-            "Not a take-up gap. The Enhanced FRS already applies a take-up haircut "
-            "(would_claim_tfc at about 87%, not the variable's model-side default of "
-            "true), giving 914,000 claimants against HMRC's 868,095 families with "
-            "used accounts — 1.05x, and the caseload grows about 5% a year, so by "
-            "2027 the outturn would likely be near the model's figure. The whole "
-            "2.06x gap is the average award: £1,353 against £691. That is the fee "
-            "base below and, in larger part, TFC routing: the scheme pays 25% of "
-            "spend put through a TFC account, and the model routes £5,412 per "
-            "claiming family where HMRC implies £2,764. The model also misses "
-            "policyengine-uk-data's own declared £0.63bn target by 1.9x. Both "
-            "sides must be annual — HMRC's point-in-time count of 601,000 "
+            "Was 2.06x; now 1.11x, after the Enhanced FRS release of 30 August "
+            "2026 (1.57.2) corrected the routed-spend proxy and the calibration "
+            "target. policyengine-uk-data's own release check measures TFC "
+            "spending at 0.99x its £632.2m target, against 1.87x before. The "
+            "residual has changed character: the average award is now £600 "
+            "against HMRC's £691 (0.87x) while claimants are 1.11m against "
+            "868,095 (1.28x), where before the award was 1.96x and claimants "
+            "1.05x. Some of the caseload gap is projection — these are 2027 "
+            "figures and the caseload grows about 5% a year — but not all. "
+            "Both sides must be annual: HMRC's point-in-time count of 601,000 "
             "families in March 2026 is a stock, not the annual flow."
         ),
         "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-march-2026",

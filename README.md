@@ -14,28 +14,32 @@ Static cost of both legs together, and the same with the central labour supply r
 
 | Year | Free hours | 75% subsidy | Both, static | Both, with labour supply |
 | --- | --- | --- | --- | --- |
-| 2027 | £2.28bn | £4.46bn | £6.60bn | £6.59bn |
-| 2028 | £2.33bn | £4.58bn | £6.76bn | £6.75bn |
-| 2029 | £2.39bn | £4.72bn | £6.96bn | £6.95bn |
+| 2027 | £2.15bn | £4.84bn | £6.84bn | £6.82bn |
+| 2028 | £2.20bn | £4.96bn | £7.01bn | £6.99bn |
+| 2029 | £2.25bn | £5.09bn | £7.19bn | £7.17bn |
+
+Computed on Enhanced FRS release **1.57.2** (HuggingFace `7b0a06f0`, 30 August 2026) with policyengine-uk 2.94.0. An earlier version of this analysis, on release 1.56.x and policyengine-uk 2.92.0, reported £2.28bn / £4.46bn / £6.60bn for 2027. The change is almost entirely the Tax-Free Childcare baseline correction described below, which raises the subsidy leg by about £0.38bn and the combined cost by about £0.25bn.
 
 The legs do not sum to the combined figure: free hours displace paid care, which shrinks the base the subsidy applies to.
 
-**The baseline against which the subsidy leg is measured is itself ~1.9× too high.** The model pays £1.24bn of Tax-Free Childcare in 2027 against `policyengine-uk-data`'s own declared calibration target of £0.63bn (`datasets/childcare/takeup_rate.py`) and HMRC's £599.8m outturn, while matching HMRC on caseload — families 1.05×, children 0.98×. The overshoot is entirely the average award, and the larger part of it is not the fee base but **TFC routing**: TFC pays 25% of spend put *through a TFC account*, and the model routes £5,412 per claiming family where HMRC implies £2,764. Real families route about half.
+**The Tax-Free Childcare baseline has been corrected, and it is what moved these numbers.** Earlier versions of this analysis carried a baseline ~1.9× too high: the model paid £1.24bn of Tax-Free Childcare in 2027 against HMRC's £599.8m outturn, and the larger part of that was **TFC routing** — the scheme pays 25% of spend put *through a TFC account*, and the model routed £5,412 per claiming family where HMRC implies £2,764. That was fixed upstream in [policyengine-uk-data#473](https://github.com/PolicyEngine/policyengine-uk-data/pull/473) and the calibration target corrected in [#472](https://github.com/PolicyEngine/policyengine-uk-data/pull/472) and [#474](https://github.com/PolicyEngine/policyengine-uk-data/pull/474), all of which ship in release 1.57.2. The release build now measures TFC spending at **0.99×** its £632.2m target, against 1.87× before.
 
-That cuts both ways for this reform. The 75% subsidy is a subsidy on *all* childcare spend with no account to route through, so routing is a baseline-only artefact — which means the reform's **incremental** cost of £4.46bn is, if anything, understated by roughly £0.6bn once the baseline is corrected. Working against that, the reform figure is built on the same childcare fee base, which is ~1.2× high. The two partly offset and neither is modelled away here. See [policyengine-uk-data#470](https://github.com/PolicyEngine/policyengine-uk-data/issues/470).
+On this release the model pays **£0.67bn against HMRC's £599.8m — 1.11×**, and, as predicted, correcting a baseline that was nearly double its true size *raises* the reform's incremental cost: the subsidy leg goes from £4.46bn to £4.84bn. The earlier note that the £4.46bn was "understated by roughly £0.6bn once the baseline is corrected" was right in direction and somewhat high in magnitude; the realised move is £0.38bn.
 
-**Read the subsidy leg as an upper bound.** The model pays £1.24bn of Tax-Free Childcare against HMRC's £599.8m outturn, and essentially all of that gap is the size of the average award rather than the number of claimants — £1,353 against £691, a ratio of **1.96×**. Take-up is fine: 914,000 modelled claimants against HMRC's 868,095 families with used accounts in 2025-26, a ratio of 1.05×. The award is a function of the childcare spending it subsidises, so this is the fee base showing up in a second variable. Restating the subsidy leg on a benchmark fee base is reported in the dashboard's Benchmarks tab as a sensitivity. See *Correcting the baseline* below.
+**The residual has changed character, and the remaining question is now caseload, not fees.** The old gap was entirely the average award — £1,353 against £691, a ratio of 1.96×, with claimants about right at 1.05×. It is now the reverse: the average award is **£600 against £691 (0.87×)** while claimants are **1.11m against 868,095 (1.28×)**. Some of that caseload gap is projection rather than error — these are 2027 figures and the caseload has been growing about 5% a year — but not all of it. The fee-base sensitivity is still reported in the dashboard's Benchmarks tab; it now works against a baseline that is close to right rather than one that was doubled.
 
 **The labour supply response is small and its sign is genuinely ambiguous.** Two forces pull against each other:
 
 - *Downward.* The reform removes work conditions from childcare support. A parent of a child under 3 gets nothing today unless they work; under the reform they get 15 hours either way, so the gain to work falls for exactly the families the policy targets. Working parents under £100,000 already get 30 hours, so their position is unchanged.
 - *Upward.* The 75% subsidy cuts the price of the care that working requires.
 
-The gain-to-work model, which sees both, gives about **10,000 entrants against 11,000 leavers — a net −950**, close enough to zero that the sign should not be leaned on. The price-elasticity cross-check, which sees only the price fall and so cannot be negative, gives about **+26,000**. Either way the labour supply effect is small: it moves the cost by roughly 0.2%, well inside the uncertainty on the static number.
+The gain-to-work model, which sees both, gives about **12,600 entrants against 8,100 leavers — a net +4,550**. The price-elasticity cross-check, which sees only the price fall and so cannot be negative, gives about **+28,200**. Either way the labour supply effect is small: it moves the cost by roughly 0.3%, well inside the uncertainty on the static number.
+
+On the pre-correction baseline this figure was a net **−950**, and the analysis warned that the sign should not be leaned on. Correcting the Tax-Free Childcare baseline moved it positive — a smaller baseline means the 75% subsidy is a larger gain to work, so entrants rise and leavers fall. The sign is now positive on both methods, but at 4,550 net entrants against a working population in the millions it remains small enough that it should be read as "approximately zero, probably slightly positive" rather than as a participation finding.
 
 For scale, the IFS found the move from 15 to 30 hours put about 12,000 more mothers into work a year, and the government's own costing of the 2023 expansion assumed about 60,000 entrants by 2027-28 — but both of those *added* work-conditional hours, where this reform makes existing hours unconditional.
 
-**Distributionally, the cash gain rises with income.** Among households with a child under 5 in 2027, the average annual gain runs from about £1,290 in the bottom quintile to about £3,270 in the top. Low-income families gain less in cash because Universal Credit already covers 85% of their childcare costs — which this reform keeps — and because they use fewer paid hours. As a share of net income the gradient reverses at the bottom: Q1 gains most.
+**Distributionally, the cash gain rises with income.** Among households with a child under 5 in 2027, the average annual gain runs from about £1,160 in the bottom quintile to about £3,070 in the top. Low-income families gain less in cash because Universal Credit already covers 85% of their childcare costs — which this reform keeps — and because they use fewer paid hours. As a share of net income the gradient reverses at the bottom: Q1 gains most.
 
 ## How it is modelled
 
@@ -106,7 +110,7 @@ Neither gap above is a defect in this repo to patch here, and neither should be 
 
 **Do not carry take-up into the reform unchanged.** A 75% subsidy with no work test and no cap is a far more valuable and far simpler benefit than a 20% top-up capped at £2,000 with a work test and a £100,000 cliff. The model holds take-up fixed between baseline and reform, which understates the reform's cost. Take-up under a universal subsidy is a separate assumption that has to be stated and defended on its own, and the cost is close to linear in it.
 
-Until that lands, the Benchmarks tab reports the rebased figure as a sensitivity, rebasing only the under-5 slice: the subsidy leg falls from £4.46bn to **£3.23bn** and the combined static cost from £6.60bn to **£5.40bn** in 2027. That is the honest lower bound. An earlier version of this analysis rebased the whole base against an England under-5 benchmark and reported £3.70bn, which was too aggressive by roughly £1.7bn.
+Until that lands, the Benchmarks tab reports the rebased figure as a sensitivity, rebasing only the under-5 slice: the subsidy leg falls from £4.84bn to **£3.49bn** and the combined static cost from £6.84bn to **£5.53bn** in 2027. That is the honest lower bound. An earlier version of this analysis rebased the whole base against an England under-5 benchmark and reported £3.70bn, which was too aggressive by roughly £1.7bn.
 
 ## Caveats
 

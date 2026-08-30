@@ -48,7 +48,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # pinned revision for reproducibility.
 DATASET = "enhanced_frs_2024_25.h5"
 PRIVATE_REPO = "policyengine/policyengine-uk-data-private"
-DATASET_REVISION = "2966541fca275ab5ccb6cfb659b010b1db37ad49"
+DATASET_REVISION = "7b0a06f0f08bec4bdb81c5d0fdb4057fe4e7fd1a"
 YEARS = [2027, 2028, 2029]
 # The parameter changes need to be in force from before the first costed year.
 PARAMETER_YEARS = [2026, 2027, 2028, 2029, 2030]
