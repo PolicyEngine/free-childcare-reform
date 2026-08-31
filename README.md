@@ -2,6 +2,8 @@
 
 Costing of a two-part childcare reform for the UK, fiscal years 2027-28 to 2029-30, on the PolicyEngine UK Enhanced FRS — static and with an extensive-margin labour supply response.
 
+**Dashboard: https://free-childcare-reform.vercel.app/uk/free-childcare-reform**
+
 ## The reform
 
 **Leg 1 — free hours.** Replace the current split (30 free hours for under-5s whose parents work and earn under £100,000; 15 hours for 3-4 year olds regardless) with **15 hours free for every child from 9 months to school age**, plus **a further 15 hours** where parents work and earn under £100,000.
