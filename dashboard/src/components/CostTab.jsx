@@ -67,11 +67,13 @@ export default function CostTab({ data, year, onYearChange }) {
           title={`Budget impact, ${formatFiscalYear(data.years[0])} to ${formatFiscalYear(data.years[data.years.length - 1])}`}
           description={
             <>
-              Both legs of the reform, costed on the PolicyEngine UK Enhanced FRS. The{" "}
-              <strong>static</strong> cost holds behaviour fixed. The{" "}
-              <strong>dynamic</strong> cost adds an extensive-margin labour supply response
-              built on {A(src.obr_labour_supply, "the OBR's participation elasticities")},
-              with childcare treated as a cost of working. Free hours are valued at the DfE
+              Each leg of the reform costed against the current system, on the PolicyEngine
+              UK Enhanced FRS. They are shown separately and should not be added: free
+              hours displace paid care, so running both at once costs less than the sum.
+              The costs below hold behaviour fixed; choosing a labour supply assumption
+              adds an extensive-margin response built on{" "}
+              {A(src.obr_labour_supply, "the OBR's participation elasticities")}, with
+              childcare treated as a cost of working. Free hours are valued at the DfE
               funding rate the model applies; the subsidy at its cash value.
             </>
           }
@@ -233,87 +235,89 @@ export default function CostTab({ data, year, onYearChange }) {
         </div>
       </section>
 
-      <section>
-        <SectionHeading
-          title="Why the labour supply response is small, and which way it points"
-          description={
-            <>
-              Two forces pull in opposite directions, and the model reports the net of
-              them.
-            </>
-          }
-        />
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <h3 className="text-sm font-semibold text-slate-900">
-              Downward: the reform removes work conditions
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Today a parent of a child under 3 gets nothing unless they work. Under the
-              reform they get 15 hours whether they work or not, so the gain to work falls
-              for exactly the families the policy targets. Working parents earning under
-              £100,000 already get 30 hours, so their position is unchanged. This is a real
-              effect, not a modelling artefact, and the gain-to-work model below captures
-              it.
-            </p>
-            <dl className="mt-4 space-y-1 text-sm text-slate-600">
-              <div className="flex justify-between">
-                <dt>Modelled entrants</dt>
-                <dd className="font-semibold">{formatCount(response.entrants)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>Modelled leavers</dt>
-                <dd className="font-semibold">{formatCount(response.leavers)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>Net revenue effect</dt>
-                <dd className="font-semibold">
-                  {formatBn(response.net_revenue_gbp / 1e9)}
-                </dd>
-              </div>
-            </dl>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <h3 className="text-sm font-semibold text-slate-900">
-              Upward: the price of childcare falls
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              The 75% subsidy cuts the price of the care that working requires. Applying{" "}
-              {A(src.akgunduz_plantenga, "a childcare price elasticity of maternal employment")}{" "}
-              to that price fall, scaled by{" "}
-              {A(src.ifs_free_childcare, "29% additionality")}, gives an upper bound on the
-              positive channel on its own. It cannot be negative by construction, so it
-              brackets the answer from the other side rather than confirming it.
-            </p>
-            {priceCheck ? (
+      {isStatic ? null : (
+        <section>
+          <SectionHeading
+            title="Why the labour supply response is small, and which way it points"
+            description={
+              <>
+                Two forces pull in opposite directions, and the model reports the net of
+                them.
+              </>
+            }
+          />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h3 className="text-sm font-semibold text-slate-900">
+                Downward: the reform removes work conditions
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Today a parent of a child under 3 gets nothing unless they work. Under the
+                reform they get 15 hours whether they work or not, so the gain to work falls
+                for exactly the families the policy targets. Working parents earning under
+                £100,000 already get 30 hours, so their position is unchanged. This is a real
+                effect, not a modelling artefact, and the gain-to-work model below captures
+                it.
+              </p>
               <dl className="mt-4 space-y-1 text-sm text-slate-600">
                 <div className="flex justify-between">
-                  <dt>Price elasticity used</dt>
-                  <dd className="font-semibold">{priceCheck.price_elasticity}</dd>
+                  <dt>Modelled entrants</dt>
+                  <dd className="font-semibold">{formatCount(response.entrants)}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt>Effective price change</dt>
+                  <dt>Modelled leavers</dt>
+                  <dd className="font-semibold">{formatCount(response.leavers)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Net revenue effect</dt>
                   <dd className="font-semibold">
-                    {(priceCheck.effective_price_change * 100).toFixed(1)}%
+                    {formatBn(response.net_revenue_gbp / 1e9)}
                   </dd>
                 </div>
-                <div className="flex justify-between">
-                  <dt>Implied entrants</dt>
-                  <dd className="font-semibold">{formatCount(priceCheck.entrants)}</dd>
-                </div>
               </dl>
-            ) : null}
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h3 className="text-sm font-semibold text-slate-900">
+                Upward: the price of childcare falls
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                The 75% subsidy cuts the price of the care that working requires. Applying{" "}
+                {A(src.akgunduz_plantenga, "a childcare price elasticity of maternal employment")}{" "}
+                to that price fall, scaled by{" "}
+                {A(src.ifs_free_childcare, "29% additionality")}, gives an upper bound on the
+                positive channel on its own. It cannot be negative by construction, so it
+                brackets the answer from the other side rather than confirming it.
+              </p>
+              {priceCheck ? (
+                <dl className="mt-4 space-y-1 text-sm text-slate-600">
+                  <div className="flex justify-between">
+                    <dt>Price elasticity used</dt>
+                    <dd className="font-semibold">{priceCheck.price_elasticity}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt>Effective price change</dt>
+                    <dd className="font-semibold">
+                      {(priceCheck.effective_price_change * 100).toFixed(1)}%
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt>Implied entrants</dt>
+                    <dd className="font-semibold">{formatCount(priceCheck.entrants)}</dd>
+                  </div>
+                </dl>
+              ) : null}
+            </div>
           </div>
-        </div>
-        <p className="mt-4 text-sm leading-6 text-slate-600">
-          For scale: {A(src.ifs_free_childcare, "the IFS")} found the move from 15 to 30
-          hours put about 12,000 more mothers into work a year, and the government&apos;s own
-          costing of the 2023 expansion assumed about 60,000 entrants by 2027-28 on a
-          plausible range of 55,000 to 240,000. Both are policies that{" "}
-          <em>added</em> work-conditional hours. This reform does the opposite: it makes
-          existing hours unconditional.
-        </p>
-      </section>
+          <p className="mt-4 text-sm leading-6 text-slate-600">
+            For scale: {A(src.ifs_free_childcare, "the IFS")} found the move from 15 to 30
+            hours put about 12,000 more mothers into work a year, and the government&apos;s own
+            costing of the 2023 expansion assumed about 60,000 entrants by 2027-28 on a
+            plausible range of 55,000 to 240,000. Both are policies that{" "}
+            <em>added</em> work-conditional hours. This reform does the opposite: it makes
+            existing hours unconditional.
+          </p>
+        </section>
+      )}
       {cliff ? (
         <section>
           <SectionHeading

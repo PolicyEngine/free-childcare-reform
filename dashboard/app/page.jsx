@@ -8,14 +8,13 @@ import DistributionTab from "../src/components/DistributionTab";
 import MethodologyTab from "../src/components/MethodologyTab";
 
 const TAB_OPTIONS = [
-  { id: "cost", label: "Budget impact" },
-  { id: "distribution", label: "Household effects" },
+  { id: "reform", label: "The reform" },
   { id: "baseline", label: "Baseline" },
   { id: "methodology", label: "Methodology" },
 ];
 
 function getInitialTab(tabParam) {
-  return TAB_OPTIONS.some((tab) => tab.id === tabParam) ? tabParam : "cost";
+  return TAB_OPTIONS.some((tab) => tab.id === tabParam) ? tabParam : "reform";
 }
 
 function TabLink({ onSelect, children }) {
@@ -68,7 +67,7 @@ function Dashboard() {
 
   function handleTabChange(tab) {
     setActiveTab(tab);
-    router.replace(tab === "cost" ? "/" : `/?tab=${tab}`, { scroll: false });
+    router.replace(tab === "reform" ? "/" : `/?tab=${tab}`, { scroll: false });
   }
 
   return (
@@ -92,11 +91,9 @@ function Dashboard() {
           plus a further 15 hours where parents work and earn under £100,000. The second
           replaces Tax-Free Childcare with a <strong>75% subsidy of childcare costs for
           all</strong>, keeping the Universal Credit childcare element. The{" "}
-          <TabLink onSelect={() => handleTabChange("cost")}>Budget impact</TabLink> tab
-          reports the cost both statically and with an extensive-margin labour supply
-          response. The{" "}
-          <TabLink onSelect={() => handleTabChange("distribution")}>Household effects</TabLink>{" "}
-          tab shows who gains, by income quintile. The{" "}
+          <TabLink onSelect={() => handleTabChange("reform")}>The reform</TabLink> tab
+          reports what each leg costs — statically or with an extensive-margin labour supply
+          response — and who gains, by income quintile. The{" "}
           <TabLink onSelect={() => handleTabChange("baseline")}>Baseline</TabLink> tab sets
           the modelled baseline for each childcare programme against its published figure,
           on spending and on children covered, and checks the rest against published
@@ -131,11 +128,11 @@ function Dashboard() {
 
         {!loading && !error && data && year && (
           <>
-            {activeTab === "cost" && (
-              <CostTab data={data} year={year} onYearChange={setYear} />
-            )}
-            {activeTab === "distribution" && (
-              <DistributionTab data={data} year={year} onYearChange={setYear} />
+            {activeTab === "reform" && (
+              <div className="space-y-10">
+                <CostTab data={data} year={year} onYearChange={setYear} />
+                <DistributionTab data={data} year={year} />
+              </div>
             )}
             {activeTab === "baseline" && <BaselineTab data={data} year={year} />}
             {activeTab === "methodology" && <MethodologyTab data={data} year={year} />}

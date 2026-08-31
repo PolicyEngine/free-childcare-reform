@@ -56,7 +56,7 @@ const LEGS = [
   { id: "subsidy", label: "75% subsidy replacing Tax-Free Childcare" },
 ];
 
-export default function DistributionTab({ data, year, onYearChange }) {
+export default function DistributionTab({ data, year }) {
   const [measureId, setMeasureId] = useState("average_gain_gbp");
   const [populationId, setPopulationId] = useState(
     "by_income_quintile_families_with_under_5s",
@@ -125,19 +125,7 @@ export default function DistributionTab({ data, year, onYearChange }) {
 
       <section>
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <label className="min-w-0">
-              <span className="mb-1 block text-xs font-medium text-slate-500">Year</span>
-              <select
-                value={year}
-                onChange={(event) => onYearChange(Number(event.target.value))}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
-              >
-                {data.years.map((y) => (
-                  <option key={y} value={y}>{formatFiscalYear(y)}</option>
-                ))}
-              </select>
-            </label>
+          <div className="mb-5 grid gap-3 sm:grid-cols-3">
             <label className="min-w-0">
               <span className="mb-1 block text-xs font-medium text-slate-500">Reform</span>
               <select
