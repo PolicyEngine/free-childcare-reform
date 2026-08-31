@@ -182,7 +182,7 @@
           "geography": "UK",
           "period": "2025-26",
           "kind": "Award gap",
-          "note": "Not a take-up gap. The Enhanced FRS already applies a take-up haircut (would_claim_tfc at about 87%, not the variable's model-side default of true), giving 914,000 claimants against HMRC's 868,095 families with used accounts \u2014 1.05x, and the caseload grows about 5% a year, so by 2027 the outturn would likely be near the model's figure. The whole 2.06x gap is the average award: \u00a31,353 against \u00a3691. That is the fee base below and, in larger part, TFC routing: the scheme pays 25% of spend put through a TFC account, and the model routes \u00a35,412 per claiming family where HMRC implies \u00a32,764. The model also misses policyengine-uk-data's own declared \u00a30.63bn target by 1.9x. Both sides must be annual \u2014 HMRC's point-in-time count of 601,000 families in March 2026 is a stock, not the annual flow.",
+          "note": "Was 2.06x; now 1.11x, after the Enhanced FRS release of 30 August 2026 (1.57.2) corrected the routed-spend proxy and the calibration target. policyengine-uk-data's own release check measures TFC spending at 0.99x its \u00a3632.2m target, against 1.87x before. The residual has changed character: the average award is now \u00a3600 against HMRC's \u00a3691 (0.87x) while claimants are 1.11m against 868,095 (1.28x), where before the award was 1.96x and claimants 1.05x. Some of the caseload gap is projection \u2014 these are 2027 figures and the caseload grows about 5% a year \u2014 but not all. Both sides must be annual: HMRC's point-in-time count of 601,000 families in March 2026 is a stock, not the annual flow.",
           "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-march-2026",
           "model_bn": 0.667,
           "model_variables": "tax_free_childcare",
@@ -202,18 +202,18 @@
           "ratio_model_to_official": 14.24
         },
         {
-          "measure": "Out-of-pocket childcare fees, England, under-5s",
+          "measure": "Parent-paid childcare fees, England, under-5s",
           "model_restriction": "england_under_5",
-          "official_bn": 3.75,
-          "official_label": "~\u00a33.5-4bn implied, England, under-5s, 2025-26",
+          "official_bn": 5.1,
+          "official_label": "~\u00a35.1bn implied, England, under-5s, 2025-26",
           "geography": "England",
           "period": "2025-26",
           "kind": "Fee base check",
-          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements; netting off TFC and the UC childcare element leaves roughly \u00a33.5-4bn of out-of-pocket parent spend. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
+          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements, leaving about \u00a35.1bn that parents pay providers. That gross figure is the comparator. An earlier version of this check used \u00a33.75bn, netting TFC and the UC childcare element off the residual \u2014 but childcare_expenses is the total fee and both of those are computed from it, so subtracting them double-counts the support and overstated the gap as 1.70x rather than 1.25x. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
           "url": "https://assets.publishing.service.gov.uk/media/6a43cd6d065c5aec12a4e3ef/_Statement_of_scope_1_July.pdf",
           "model_bn": 6.361,
           "model_variables": "childcare_expenses",
-          "ratio_model_to_official": 1.7
+          "ratio_model_to_official": 1.25
         },
         {
           "measure": "Childcare spending, all children, UK",
@@ -788,13 +788,13 @@
         "model_childcare_expenses_bn": 11.061,
         "model_under_5_bn": 7.539,
         "model_england_under_5_bn": 6.361,
-        "benchmark_england_under_5_bn": 3.75,
-        "under_5_slice_ratio": 0.59,
-        "rebased_childcare_expenses_bn": 7.967,
-        "ratio": 0.72,
-        "subsidy_cost_bn": 3.485,
-        "combined_cost_bn": 5.529,
-        "note": "Only the under-5 slice is rebased, on the England benchmark; the school-age third of the base is left as modelled because nothing is published to rebase it against. The CMA flags substantial uncertainty in the sector-income figure this benchmark derives from, and its direction of error widens rather than closes the gap. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
+        "benchmark_england_under_5_bn": 5.1,
+        "under_5_slice_ratio": 0.802,
+        "rebased_childcare_expenses_bn": 9.567,
+        "ratio": 0.865,
+        "subsidy_cost_bn": 4.185,
+        "combined_cost_bn": 6.209,
+        "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
       },
       "dynamic_cost": {
         "central": {
@@ -884,7 +884,7 @@
           "geography": "UK",
           "period": "2025-26",
           "kind": "Award gap",
-          "note": "Not a take-up gap. The Enhanced FRS already applies a take-up haircut (would_claim_tfc at about 87%, not the variable's model-side default of true), giving 914,000 claimants against HMRC's 868,095 families with used accounts \u2014 1.05x, and the caseload grows about 5% a year, so by 2027 the outturn would likely be near the model's figure. The whole 2.06x gap is the average award: \u00a31,353 against \u00a3691. That is the fee base below and, in larger part, TFC routing: the scheme pays 25% of spend put through a TFC account, and the model routes \u00a35,412 per claiming family where HMRC implies \u00a32,764. The model also misses policyengine-uk-data's own declared \u00a30.63bn target by 1.9x. Both sides must be annual \u2014 HMRC's point-in-time count of 601,000 families in March 2026 is a stock, not the annual flow.",
+          "note": "Was 2.06x; now 1.11x, after the Enhanced FRS release of 30 August 2026 (1.57.2) corrected the routed-spend proxy and the calibration target. policyengine-uk-data's own release check measures TFC spending at 0.99x its \u00a3632.2m target, against 1.87x before. The residual has changed character: the average award is now \u00a3600 against HMRC's \u00a3691 (0.87x) while claimants are 1.11m against 868,095 (1.28x), where before the award was 1.96x and claimants 1.05x. Some of the caseload gap is projection \u2014 these are 2027 figures and the caseload grows about 5% a year \u2014 but not all. Both sides must be annual: HMRC's point-in-time count of 601,000 families in March 2026 is a stock, not the annual flow.",
           "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-march-2026",
           "model_bn": 0.683,
           "model_variables": "tax_free_childcare",
@@ -904,18 +904,18 @@
           "ratio_model_to_official": 14.54
         },
         {
-          "measure": "Out-of-pocket childcare fees, England, under-5s",
+          "measure": "Parent-paid childcare fees, England, under-5s",
           "model_restriction": "england_under_5",
-          "official_bn": 3.75,
-          "official_label": "~\u00a33.5-4bn implied, England, under-5s, 2025-26",
+          "official_bn": 5.1,
+          "official_label": "~\u00a35.1bn implied, England, under-5s, 2025-26",
           "geography": "England",
           "period": "2025-26",
           "kind": "Fee base check",
-          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements; netting off TFC and the UC childcare element leaves roughly \u00a33.5-4bn of out-of-pocket parent spend. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
+          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements, leaving about \u00a35.1bn that parents pay providers. That gross figure is the comparator. An earlier version of this check used \u00a33.75bn, netting TFC and the UC childcare element off the residual \u2014 but childcare_expenses is the total fee and both of those are computed from it, so subtracting them double-counts the support and overstated the gap as 1.70x rather than 1.25x. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
           "url": "https://assets.publishing.service.gov.uk/media/6a43cd6d065c5aec12a4e3ef/_Statement_of_scope_1_July.pdf",
           "model_bn": 6.514,
           "model_variables": "childcare_expenses",
-          "ratio_model_to_official": 1.74
+          "ratio_model_to_official": 1.28
         },
         {
           "measure": "Childcare spending, all children, UK",
@@ -1490,13 +1490,13 @@
         "model_childcare_expenses_bn": 11.328,
         "model_under_5_bn": 7.72,
         "model_england_under_5_bn": 6.514,
-        "benchmark_england_under_5_bn": 3.75,
-        "under_5_slice_ratio": 0.576,
-        "rebased_childcare_expenses_bn": 8.052,
-        "ratio": 0.711,
-        "subsidy_cost_bn": 3.523,
-        "combined_cost_bn": 5.616,
-        "note": "Only the under-5 slice is rebased, on the England benchmark; the school-age third of the base is left as modelled because nothing is published to rebase it against. The CMA flags substantial uncertainty in the sector-income figure this benchmark derives from, and its direction of error widens rather than closes the gap. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
+        "benchmark_england_under_5_bn": 5.1,
+        "under_5_slice_ratio": 0.783,
+        "rebased_childcare_expenses_bn": 9.652,
+        "ratio": 0.852,
+        "subsidy_cost_bn": 4.223,
+        "combined_cost_bn": 6.295,
+        "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
       },
       "dynamic_cost": {
         "central": {
@@ -1586,7 +1586,7 @@
           "geography": "UK",
           "period": "2025-26",
           "kind": "Award gap",
-          "note": "Not a take-up gap. The Enhanced FRS already applies a take-up haircut (would_claim_tfc at about 87%, not the variable's model-side default of true), giving 914,000 claimants against HMRC's 868,095 families with used accounts \u2014 1.05x, and the caseload grows about 5% a year, so by 2027 the outturn would likely be near the model's figure. The whole 2.06x gap is the average award: \u00a31,353 against \u00a3691. That is the fee base below and, in larger part, TFC routing: the scheme pays 25% of spend put through a TFC account, and the model routes \u00a35,412 per claiming family where HMRC implies \u00a32,764. The model also misses policyengine-uk-data's own declared \u00a30.63bn target by 1.9x. Both sides must be annual \u2014 HMRC's point-in-time count of 601,000 families in March 2026 is a stock, not the annual flow.",
+          "note": "Was 2.06x; now 1.11x, after the Enhanced FRS release of 30 August 2026 (1.57.2) corrected the routed-spend proxy and the calibration target. policyengine-uk-data's own release check measures TFC spending at 0.99x its \u00a3632.2m target, against 1.87x before. The residual has changed character: the average award is now \u00a3600 against HMRC's \u00a3691 (0.87x) while claimants are 1.11m against 868,095 (1.28x), where before the award was 1.96x and claimants 1.05x. Some of the caseload gap is projection \u2014 these are 2027 figures and the caseload grows about 5% a year \u2014 but not all. Both sides must be annual: HMRC's point-in-time count of 601,000 families in March 2026 is a stock, not the annual flow.",
           "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-march-2026",
           "model_bn": 0.693,
           "model_variables": "tax_free_childcare",
@@ -1606,18 +1606,18 @@
           "ratio_model_to_official": 14.85
         },
         {
-          "measure": "Out-of-pocket childcare fees, England, under-5s",
+          "measure": "Parent-paid childcare fees, England, under-5s",
           "model_restriction": "england_under_5",
-          "official_bn": 3.75,
-          "official_label": "~\u00a33.5-4bn implied, England, under-5s, 2025-26",
+          "official_bn": 5.1,
+          "official_label": "~\u00a35.1bn implied, England, under-5s, 2025-26",
           "geography": "England",
           "period": "2025-26",
           "kind": "Fee base check",
-          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements; netting off TFC and the UC childcare element leaves roughly \u00a33.5-4bn of out-of-pocket parent spend. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
+          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements, leaving about \u00a35.1bn that parents pay providers. That gross figure is the comparator. An earlier version of this check used \u00a33.75bn, netting TFC and the UC childcare element off the residual \u2014 but childcare_expenses is the total fee and both of those are computed from it, so subtracting them double-counts the support and overstated the gap as 1.70x rather than 1.25x. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
           "url": "https://assets.publishing.service.gov.uk/media/6a43cd6d065c5aec12a4e3ef/_Statement_of_scope_1_July.pdf",
           "model_bn": 6.674,
           "model_variables": "childcare_expenses",
-          "ratio_model_to_official": 1.78
+          "ratio_model_to_official": 1.31
         },
         {
           "measure": "Childcare spending, all children, UK",
@@ -2192,13 +2192,13 @@
         "model_childcare_expenses_bn": 11.605,
         "model_under_5_bn": 7.909,
         "model_england_under_5_bn": 6.674,
-        "benchmark_england_under_5_bn": 3.75,
-        "under_5_slice_ratio": 0.562,
-        "rebased_childcare_expenses_bn": 8.14,
-        "ratio": 0.701,
-        "subsidy_cost_bn": 3.569,
-        "combined_cost_bn": 5.716,
-        "note": "Only the under-5 slice is rebased, on the England benchmark; the school-age third of the base is left as modelled because nothing is published to rebase it against. The CMA flags substantial uncertainty in the sector-income figure this benchmark derives from, and its direction of error widens rather than closes the gap. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
+        "benchmark_england_under_5_bn": 5.1,
+        "under_5_slice_ratio": 0.764,
+        "rebased_childcare_expenses_bn": 9.74,
+        "ratio": 0.839,
+        "subsidy_cost_bn": 4.27,
+        "combined_cost_bn": 6.397,
+        "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
       },
       "dynamic_cost": {
         "central": {

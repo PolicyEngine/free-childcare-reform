@@ -470,12 +470,14 @@ def run_year(dataset, year: int) -> dict:
             legs["free_hours"]["static_cost_bn"] + subsidy_only_cost * fee_base_ratio, 3
         ),
         "note": (
-            "Only the under-5 slice is rebased, on the England benchmark; the "
-            "school-age third of the base is left as modelled because nothing is "
-            "published to rebase it against. The CMA flags substantial uncertainty "
-            "in the sector-income figure this benchmark derives from, and its "
-            "direction of error widens rather than closes the gap. Treat this as a "
-            "lower bound on the subsidy leg, as the headline is an upper bound."
+            "Only the under-5 slice is rebased, on the England benchmark of "
+            "about £5.1bn of parent-paid fees; the school-age third of the base "
+            "is left as modelled because nothing is published to rebase it "
+            "against. The benchmark is gross of Tax-Free Childcare and the UC "
+            "childcare element, matching childcare_expenses, which both are "
+            "computed from. The CMA flags substantial uncertainty in the "
+            "sector-income figure this derives from. Treat this as a lower bound "
+            "on the subsidy leg, as the headline is an upper bound."
         ),
     }
 

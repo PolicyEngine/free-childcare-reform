@@ -124,7 +124,7 @@ def test_the_known_gaps_are_flagged_rather_than_hidden(results):
     }
     assert kinds["Tax-Free Childcare"] == "Award gap"
     assert kinds["Universal Credit childcare element"] == "Not comparable"
-    assert kinds["Out-of-pocket childcare fees, England, under-5s"] == "Fee base check"
+    assert kinds["Parent-paid childcare fees, England, under-5s"] == "Fee base check"
     assert kinds["Childcare spending, all children, UK"] == "Unbenchmarked"
 
 
@@ -133,12 +133,34 @@ def test_the_fee_base_is_compared_like_for_like(results):
     # against that slice of the model, not the UK all-ages aggregate. Comparing
     # the two would roughly double the apparent gap.
     rows = {row["measure"]: row for row in results["by_year"]["2027"]["benchmarks"]}
-    comparable = rows["Out-of-pocket childcare fees, England, under-5s"]
+    comparable = rows["Parent-paid childcare fees, England, under-5s"]
     full_base = rows["Childcare spending, all children, UK"]
     assert comparable["model_bn"] < full_base["model_bn"]
     assert comparable["ratio_model_to_official"] < 2.5
     # The unbenchmarked row must not claim a ratio it cannot have.
     assert full_base["ratio_model_to_official"] is None
+
+
+def test_the_fee_base_benchmark_is_gross_of_the_support_derived_from_it(results):
+    """The benchmark must not net off TFC or the UC childcare element.
+
+    `childcare_expenses` is the total fee, and `tax_free_childcare` and
+    `uc_childcare_element` are both computed from it. Subtracting them from the
+    CMA residual and then comparing against the variable they derive from
+    double-counts the support: it is what produced an apparent 1.70x gap where
+    the like-for-like figure is 1.25x. The comparator is the CMA residual
+    itself — England early years sector income less funded entitlements,
+    about £14bn - £8.9bn.
+    """
+    rows = {row["measure"]: row for row in results["by_year"]["2027"]["benchmarks"]}
+    benchmark = rows["Parent-paid childcare fees, England, under-5s"]["official_bn"]
+    assert benchmark == pytest.approx(5.10), (
+        "the fee-base benchmark must be the gross CMA residual, not a figure "
+        "net of the support computed from childcare_expenses"
+    )
+    for year in YEARS:
+        sensitivity = results["by_year"][year]["fee_base_sensitivity"]
+        assert sensitivity["benchmark_england_under_5_bn"] == pytest.approx(5.10)
 
 
 def test_the_fee_base_sensitivity_lowers_the_subsidy_leg(results):
