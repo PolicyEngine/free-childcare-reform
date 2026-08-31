@@ -31,6 +31,11 @@ export default function BaselineTab({ data, year }) {
   const result = data.by_year[String(year)];
   const programmes = result.baseline_programmes;
   const sensitivity = result.fee_base_sensitivity;
+  // How much bigger the model's fee base is than the published one. Note this
+  // is the reciprocal of sensitivity.ratio, which scales the base down.
+  const feeBaseRatio = sensitivity
+    ? sensitivity.model_england_under_5_bn / sensitivity.benchmark_england_under_5_bn
+    : null;
   const costings = data.comparable_costings || [];
   const [open, setOpen] = useState(null);
 
@@ -70,13 +75,17 @@ export default function BaselineTab({ data, year }) {
                 return (
                   <Fragment key={row.programme}>
                     <tr
-                      onClick={() => setOpen(isOpen ? null : row.programme)}
-                      className={`cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 ${
+                      className={`border-b border-slate-100 transition-colors hover:bg-slate-50 ${
                         isOpen ? "bg-slate-50" : ""
                       }`}
                     >
                       <td className="px-6 py-4 align-top">
-                        <div className="font-semibold text-slate-900">
+                        <button
+                          type="button"
+                          onClick={() => setOpen(isOpen ? null : row.programme)}
+                          aria-expanded={isOpen}
+                          className="w-full cursor-pointer text-left font-semibold text-slate-900"
+                        >
                           <span
                             aria-hidden
                             className="mr-2 inline-block text-slate-400"
@@ -88,7 +97,10 @@ export default function BaselineTab({ data, year }) {
                             ▸
                           </span>
                           {row.label}
-                        </div>
+                          <span className="sr-only">
+                            {isOpen ? " (collapse details)" : " (expand details)"}
+                          </span>
+                        </button>
                         <div className="mt-1 pl-5 text-xs text-slate-500">
                           {row.geography}, {row.period} · compared at {row.comparison_year}
                         </div>

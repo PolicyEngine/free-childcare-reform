@@ -246,26 +246,25 @@ def _household_effects(
     ]
     # "Couple no children" survives the has_young_child filter for a handful of
     # weighted households — an artefact of family type and child presence being
-    # recorded on different entities — and contributes 0.002m households and
-    # nothing to the gain. Reporting a row of zeroes invites the reader to
-    # wonder what it means, so it is dropped rather than shown.
+    # recorded on different entities — and contributes 0.002m households. It is
+    # dropped on household count rather than on gain: gain varies with the
+    # labour supply assumption, so filtering on it made the row appear under
+    # some assumptions and not others, and the chart's categories moved.
     by_family_type = sorted(
         (
             {"group": name, **summarise(group)}
             for name, group in families.groupby("family_type")
-            if summarise(group)["total_gain_bn"] > 0
+            if summarise(group)["households_m"] >= 0.01
         ),
-        key=lambda row: row["average_gain_gbp"],
-        reverse=True,
+        key=lambda row: row["group"],
     )
     by_family_type_all = sorted(
         (
             {"group": name, **summarise(group)}
             for name, group in frame.groupby("family_type")
-            if summarise(group)["total_gain_bn"] > 0
+            if summarise(group)["households_m"] >= 0.01
         ),
-        key=lambda row: row["average_gain_gbp"],
-        reverse=True,
+        key=lambda row: row["group"],
     )
     return {
         "by_income_quintile": by_quintile,

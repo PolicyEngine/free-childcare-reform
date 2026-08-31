@@ -20,7 +20,9 @@ Each leg costed against the current system, on the PolicyEngine UK Enhanced FRS:
 | 2028-29 | £2.01bn | £4.96bn |
 | 2029-30 | £2.06bn | £5.09bn |
 
-**The two legs are reported separately and should not be added.** Free hours displace paid care — about 71% of a new free offer replaces care families were already buying — so running both at once shrinks the base the 75% subsidy applies to. Both together cost £6.67bn in 2027-28, not the £6.81bn the columns suggest.
+**The two legs are reported separately and should not be added.** Free hours displace paid care, so running both at once shrinks the base the 75% subsidy applies to. Both together cost £6.67bn in 2027-28, not the £6.81bn the columns suggest.
+
+The displacement assumption is that 71% of the value of a new free offer replaces care a family was already buying, but displacement is also capped at what they actually spend, and that cap binds hard: modelled childcare spending falls only £0.23bn, or **12% of the £1.97bn of new free hours**. Most newly-eligible families are not working and buy little paid care, so there is little for the free offer to displace. The 71% is the parameter; 12% is what happens.
 
 **The childcare fee base is the largest uncertainty.** The subsidy pays a share of what families spend, and for England's under-5s the model has £6.36bn of fees against a published estimate of £5.10bn — **1.25×**. Scaling the model's under-5 fees to that estimate takes the subsidy leg to £4.18bn and both legs to £6.03bn. Free hours are unaffected, so they set a floor. Read the combined cost as **£6.03bn to £6.67bn**.
 
@@ -28,7 +30,9 @@ Each leg costed against the current system, on the PolicyEngine UK Enhanced FRS:
 
 HMT's 60,000 entrants for the 2023 expansion is not the right yardstick: that expansion *added* work-conditional hours, where this reform *removes* conditionality. The comparable figure is the subsidy leg's +14,224 against the IFS's ~12,000 for the 15-to-30-hour expansion.
 
-**Distributionally, the gain broadly rises with income.** Among families with a child under 5 in 2027-28, the average annual gain runs Q1 £1,059, Q2 £955, Q3 £2,135, Q4 £2,401, Q5 £3,062 — so the bottom two quintiles are close and Q2 is the lowest, with the gradient establishing itself from Q3 up. Low-income families gain less in cash because Universal Credit already covers 85% of their childcare costs, which this reform keeps, and because they use fewer paid hours.
+**Distributionally, the average gain broadly rises with income, but the free-hours leg does not.** Among families with a child under 5 in 2027-28, on the central labour supply assumption, the average annual gain runs Q1 £1,059, Q2 £955, Q3 £2,135, Q4 £2,401, Q5 £3,062 — the bottom two quintiles are close, Q2 is the lowest, and the gradient establishes itself from Q3 up. Low-income families gain less in cash because Universal Credit already covers 85% of their childcare costs, which this reform keeps, and because they use fewer paid hours.
+
+The free-hours leg is U-shaped rather than rising. The share of under-5 families gaining runs Q1 13.0%, Q2 9.9%, Q3 6.4%, Q4 3.6%, **Q5 16.1%** — the top quintile is the most likely to gain, because it contains the families above £100,000 who are excluded from the working-parent entitlement today and who the unconditional 15 hours reaches. Averaging the two legs together hides that.
 
 Computed on Enhanced FRS release **1.57.2** (HuggingFace `7b0a06f0`) with policyengine.py 5.3.0 and policyengine-uk 2.94.0.
 
@@ -116,13 +120,21 @@ bun run dev
 
 Neither gap above is a defect in this repo to patch here, and neither should be closed with a scalar applied to the results. Both are dataset properties, and the house pattern — the one the sibling `bus-fare-cap` analysis follows for `bus_fare_spending` — is to calibrate in `policyengine-uk-data` and consume the calibrated dataset downstream. Two upstream changes would close them.
 
-**1. Add a calibration target for `childcare_expenses`.** The comparison has to be like-for-like, which the first version of this analysis got wrong. The CMA's figure covers **England and the under-5s**; the model's £11.4bn aggregate is **UK and all ages**, and about a third of it is school-age wraparound and holiday childcare, a separate market the CMA number excludes. On the comparable slice the model is **£6.36bn against a benchmark of about £5.1bn — a gap of roughly 1.25×, not 3×**. The benchmark must be gross of Tax-Free Childcare and the UC childcare element, since `childcare_expenses` is the fee both of those are computed from; an earlier version of this analysis netted them off and reported the gap as 1.7×. The Tax-Free Childcare award no longer corroborates a fee-base overstatement either way: on Enhanced FRS 1.57.2 the average award is £600 against HMRC's £691, slightly *below* rather than above. There is no published aggregate for school-age childcare spend, so that part of the base cannot be calibrated in either direction and should be left alone.
+**1. Add a calibration target for `childcare_expenses`.** The comparison has to be like-for-like, which the first version of this analysis got wrong. The CMA's figure covers **England and the under-5s**; the model's £11.1bn aggregate is **UK and all ages**, and about a third of it is school-age wraparound and holiday childcare, a separate market the CMA number excludes. On the comparable slice the model is **£6.36bn against a benchmark of about £5.1bn — a gap of roughly 1.25×, not 3×**. The benchmark must be gross of Tax-Free Childcare and the UC childcare element, since `childcare_expenses` is the fee both of those are computed from; an earlier version of this analysis netted them off and reported the gap as 1.7×. The Tax-Free Childcare award no longer corroborates a fee-base overstatement either way: on Enhanced FRS 1.57.2 the average award is £600 against HMRC's £691, slightly *below* rather than above. There is no published aggregate for school-age childcare spend, so that part of the base cannot be calibrated in either direction and should be left alone.
 
 **One thing take-up is *not*.** An earlier version of this analysis reported a 1.52× take-up gap and recommended retargeting `would_claim_tfc`. That was wrong: it compared the model's annual claimant count against HMRC's *point-in-time* March 2026 figure of 601,000 families, a stock against a flow. On the annual figure the model is within 5%, and the take-up haircut the data build already applies is about right. The recommendation is withdrawn.
 
 **Do not carry take-up into the reform unchanged.** A 75% subsidy with no work test and no cap is a far more valuable and far simpler benefit than a 20% top-up capped at £2,000 with a work test and a £100,000 cliff. The model holds take-up fixed between baseline and reform, which understates the reform's cost. Take-up under a universal subsidy is a separate assumption that has to be stated and defended on its own, and the cost is close to linear in it.
 
 The Baseline tab reports the rebased figure as a sensitivity, rebasing only the under-5 slice: the subsidy leg falls from £4.84bn to **£4.18bn** and both legs from £6.67bn to **£6.03bn** in 2027-28. That is the honest lower bound.
+
+## Known limitations found in review
+
+**The 9-month tier is modelled as age 1.** FRS ages are whole years, so the reform's 0.75 age floor evaluates as `age >= 1`, and no child recorded as age 0 receives the entitlement — verified as exactly zero on the pinned dataset. The 9-to-12-month cohort the brief names is therefore not costed. On the age-1 cohort as an analogue — 158,982 children at £6,934 each — a quarter of a birth year is roughly 40,000 children and about **£0.28bn, some 14% of the free-hours leg**. Modelling it needs sub-year ages, not a different threshold. The labour supply side omits the same cohort, so the two are consistent.
+
+**The additionality figure is the part-time estimate, and displacement is probably understated.** The 163-in-570 additional hours come from IFS BN189 and describe the 15-hour offer; the note says the full-time offer's additional hours are smaller still, and on *any* care rather than subsidisable care the figure is 54 in 570 — 9.5%. So 71% displacement is a lower bound and the truth is plausibly nearer 90%. It matters less than it looks, because displacement is separately capped at what a family actually spends and that cap binds: realised displacement is about 12% of the value of the new free hours.
+
+**Participation elasticities are read at 2025, not the costed year.** The upstream helper resolves its inputs at the default calculation period. Because the dataset does not age people across projection years, only uprated earnings differ, so this is latent rather than live — but it becomes real if the dataset starts ageing.
 
 ## Caveats
 

@@ -24,14 +24,27 @@ class Source:
 # Behavioural assumptions
 # ---------------------------------------------------------------------------
 
-# Additionality of a free-hours expansion. Brewer, Cattan, Crawford and Rabe
-# (IFS WP20/09, Labour Economics 2022) evaluate England's free entitlements with
-# a date-of-birth regression discontinuity and find that for every 570 hours a
-# year of free care offered, children spent only about 163 additional hours a
-# year in subsidisable care — roughly 29% additionality, 71% displacement of
-# care families were already buying. Displacement is what makes a free-hours
-# expansion mostly a transfer rather than a change in the price of working, so
-# it scales the labour supply channel without changing the fiscal cost.
+# Additionality of a free-hours expansion. For every 570 hours a year of free
+# care offered, children spent only about 163 additional hours a year in
+# subsidisable care — roughly 29% additionality, 71% displacement of care
+# families were already buying.
+#
+# The figure is from IFS Briefing Note BN189 (2016), not the later working
+# paper, and three qualifications go with it:
+#
+#   - It is the estimate for the *part-time* 15-hour offer. BN189 says the
+#     additional hours from the full-time offer are smaller still, so applying
+#     29% to newly free hours is, if anything, generous on additionality.
+#   - "Subsidisable" care includes school. On *any* care the same note gives
+#     only 54 additional hours per 570 — 9.5% — with most of the 163 being
+#     substitution out of informal care rather than out of paid care.
+#   - So 71% is a lower bound on displacement of paid care; the true figure
+#     is plausibly nearer 90%.
+#
+# It matters less than it looks: displacement is separately capped at what a
+# family actually spends, and that cap binds for most newly-eligible families,
+# who are not working and buy little paid care. Realised displacement in the
+# 2027-28 run is about 12% of the value of the new free hours, not 71%.
 FREE_HOURS_ADDITIONALITY = 163 / 570  # ~0.286
 FREE_HOURS_DISPLACEMENT = 1 - FREE_HOURS_ADDITIONALITY  # ~0.714
 
@@ -318,7 +331,7 @@ COMPARABLE_COSTINGS = [
             "months — cited only as an upper bound. The net range is small "
             "because WBG puts tax and benefit recoupment at 89-95% of gross."
         ),
-        "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/",
+        "url": "https://wbg.org.uk/wp-content/uploads/2020/02/Budget-2020-Representation-WBG.pdf",
     },
 ]
 
@@ -334,7 +347,7 @@ IFS_FREE_CHILDCARE = Source(
     "raised maternal participation 5.7pp and employment 3.5pp — about 12,000 more "
     "mothers a year — only where the youngest child was eligible. For every 570 free "
     "hours offered, only about 163 extra hours of subsidisable care were used.",
-    "https://ifs.org.uk/sites/default/files/output_url_files/WP202009-Does-more-free-childcare-help-parents-work-more.pdf",
+    "https://www.iser.essex.ac.uk/wp-content/uploads/files/misoc/reports/BN189%20free%20childcare.pdf",
 )
 
 AKGUNDUZ_PLANTENGA = Source(
@@ -391,9 +404,10 @@ OBR_LABOUR_SUPPLY = Source(
 
 BETTENDORF_JONGEN_MULLER = Source(
     "Bettendorf, Jongen and Muller — Childcare subsidies and labour supply",
-    "Netherlands. Roughly halving out-of-pocket childcare costs raised maternal "
-    "hours 6.2% against employment 3.0% — the intensive margin moved about twice as "
-    "much. Why the participation-only estimate here is a floor.",
+    "Netherlands. A joint reform — childcare subsidies plus an earned income tax "
+    "credit — raised maternal hours 6.2% against employment 3.0%, so the intensive "
+    "margin moved about twice as much. Why the participation-only estimate here is "
+    "a floor. The two instruments are not separately identified.",
     "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf",
 )
 

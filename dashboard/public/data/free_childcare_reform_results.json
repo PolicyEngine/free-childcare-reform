@@ -78,14 +78,14 @@
       "cost_bn": "38-57 gross, 1.7-6.1 net",
       "geography": "UK",
       "note": "A far larger offer \u2014 40 hours a week, 48 weeks a year, from 6 months \u2014 cited only as an upper bound. The net range is small because WBG puts tax and benefit recoupment at 89-95% of gross.",
-      "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/"
+      "url": "https://wbg.org.uk/wp-content/uploads/2020/02/Budget-2020-Representation-WBG.pdf"
     }
   ],
   "sources": {
     "ifs_free_childcare": {
       "label": "Brewer, Cattan, Crawford and Rabe \u2014 Does more free childcare help parents work more?",
       "description": "England, 2005-2013. Regression discontinuity. Moving from 15 to 30-35 hours raised maternal participation 5.7pp and employment 3.5pp \u2014 about 12,000 more mothers a year \u2014 only where the youngest child was eligible. For every 570 free hours offered, only about 163 extra hours of subsidisable care were used.",
-      "url": "https://ifs.org.uk/sites/default/files/output_url_files/WP202009-Does-more-free-childcare-help-parents-work-more.pdf"
+      "url": "https://www.iser.essex.ac.uk/wp-content/uploads/files/misoc/reports/BN189%20free%20childcare.pdf"
     },
     "akgunduz_plantenga": {
       "label": "Akgunduz and Plantenga \u2014 Child care prices and maternal employment: a meta-analysis",
@@ -119,7 +119,7 @@
     },
     "bettendorf_jongen_muller": {
       "label": "Bettendorf, Jongen and Muller \u2014 Childcare subsidies and labour supply",
-      "description": "Netherlands. Roughly halving out-of-pocket childcare costs raised maternal hours 6.2% against employment 3.0% \u2014 the intensive margin moved about twice as much. Why the participation-only estimate here is a floor.",
+      "description": "Netherlands. A joint reform \u2014 childcare subsidies plus an earned income tax credit \u2014 raised maternal hours 6.2% against employment 3.0%, so the intensive margin moved about twice as much. Why the participation-only estimate here is a floor. The two instruments are not separately identified.",
       "url": "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf"
     }
   },
@@ -422,15 +422,6 @@
             ],
             "by_family_type_families_with_under_5s": [
               {
-                "group": "Lone Parent",
-                "households_m": 0.79,
-                "total_gain_bn": 0.5331,
-                "average_gain_gbp": 674.46,
-                "average_gain_gbp_among_gainers": 7077.69,
-                "share_gaining": 0.0953,
-                "average_gain_pct_of_income": 1.4978
-              },
-              {
                 "group": "Couple With Children",
                 "households_m": 2.475,
                 "total_gain_bn": 1.4335,
@@ -438,9 +429,27 @@
                 "average_gain_gbp_among_gainers": 6111.63,
                 "share_gaining": 0.0948,
                 "average_gain_pct_of_income": 0.6733
+              },
+              {
+                "group": "Lone Parent",
+                "households_m": 0.79,
+                "total_gain_bn": 0.5331,
+                "average_gain_gbp": 674.46,
+                "average_gain_gbp_among_gainers": 7077.69,
+                "share_gaining": 0.0953,
+                "average_gain_pct_of_income": 1.4978
               }
             ],
             "by_family_type": [
+              {
+                "group": "Couple No Children",
+                "households_m": 12.478,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
+              },
               {
                 "group": "Couple With Children",
                 "households_m": 6.298,
@@ -458,6 +467,15 @@
                 "average_gain_gbp_among_gainers": 7077.69,
                 "share_gaining": 0.0306,
                 "average_gain_pct_of_income": 0.4822
+              },
+              {
+                "group": "Single",
+                "households_m": 10.271,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -624,15 +642,6 @@
               ],
               "by_family_type_families_with_under_5s": [
                 {
-                  "group": "Lone Parent",
-                  "households_m": 0.79,
-                  "total_gain_bn": 0.5193,
-                  "average_gain_gbp": 656.95,
-                  "average_gain_gbp_among_gainers": 7077.69,
-                  "share_gaining": 0.0953,
-                  "average_gain_pct_of_income": 1.4589
-                },
-                {
                   "group": "Couple With Children",
                   "households_m": 2.475,
                   "total_gain_bn": 1.2867,
@@ -640,9 +649,36 @@
                   "average_gain_gbp_among_gainers": 6093.4,
                   "share_gaining": 0.0952,
                   "average_gain_pct_of_income": 0.6043
+                },
+                {
+                  "group": "Lone Parent",
+                  "households_m": 0.79,
+                  "total_gain_bn": 0.5193,
+                  "average_gain_gbp": 656.95,
+                  "average_gain_gbp_among_gainers": 7077.69,
+                  "share_gaining": 0.0953,
+                  "average_gain_pct_of_income": 1.4589
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.478,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
+                },
+                {
+                  "group": "Couple With Children",
+                  "households_m": 6.298,
+                  "total_gain_bn": 1.2867,
+                  "average_gain_gbp": 204.3,
+                  "average_gain_gbp_among_gainers": 6093.4,
+                  "share_gaining": 0.0374,
+                  "average_gain_pct_of_income": 0.2261
+                },
                 {
                   "group": "Lone Parent",
                   "households_m": 2.465,
@@ -653,13 +689,13 @@
                   "average_gain_pct_of_income": 0.4697
                 },
                 {
-                  "group": "Couple With Children",
-                  "households_m": 6.298,
-                  "total_gain_bn": 1.2867,
-                  "average_gain_gbp": 204.3,
-                  "average_gain_gbp_among_gainers": 6093.4,
-                  "share_gaining": 0.0374,
-                  "average_gain_pct_of_income": 0.2261
+                  "group": "Single",
+                  "households_m": 10.271,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -778,15 +814,6 @@
               ],
               "by_family_type_families_with_under_5s": [
                 {
-                  "group": "Lone Parent",
-                  "households_m": 0.79,
-                  "total_gain_bn": 0.5285,
-                  "average_gain_gbp": 668.62,
-                  "average_gain_gbp_among_gainers": 7077.69,
-                  "share_gaining": 0.0953,
-                  "average_gain_pct_of_income": 1.4848
-                },
-                {
                   "group": "Couple With Children",
                   "households_m": 2.475,
                   "total_gain_bn": 1.3848,
@@ -794,9 +821,27 @@
                   "average_gain_gbp_among_gainers": 6089.34,
                   "share_gaining": 0.0952,
                   "average_gain_pct_of_income": 0.6504
+                },
+                {
+                  "group": "Lone Parent",
+                  "households_m": 0.79,
+                  "total_gain_bn": 0.5285,
+                  "average_gain_gbp": 668.62,
+                  "average_gain_gbp_among_gainers": 7077.69,
+                  "share_gaining": 0.0953,
+                  "average_gain_pct_of_income": 1.4848
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.478,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.298,
@@ -814,6 +859,15 @@
                   "average_gain_gbp_among_gainers": 7077.69,
                   "share_gaining": 0.0306,
                   "average_gain_pct_of_income": 0.478
+                },
+                {
+                  "group": "Single",
+                  "households_m": 10.271,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -932,15 +986,6 @@
               ],
               "by_family_type_families_with_under_5s": [
                 {
-                  "group": "Lone Parent",
-                  "households_m": 0.79,
-                  "total_gain_bn": 0.5056,
-                  "average_gain_gbp": 639.61,
-                  "average_gain_gbp_among_gainers": 7077.69,
-                  "share_gaining": 0.0953,
-                  "average_gain_pct_of_income": 1.4204
-                },
-                {
                   "group": "Couple With Children",
                   "households_m": 2.475,
                   "total_gain_bn": 1.138,
@@ -948,9 +993,36 @@
                   "average_gain_gbp_among_gainers": 6093.38,
                   "share_gaining": 0.0952,
                   "average_gain_pct_of_income": 0.5345
+                },
+                {
+                  "group": "Lone Parent",
+                  "households_m": 0.79,
+                  "total_gain_bn": 0.5056,
+                  "average_gain_gbp": 639.61,
+                  "average_gain_gbp_among_gainers": 7077.69,
+                  "share_gaining": 0.0953,
+                  "average_gain_pct_of_income": 1.4204
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.478,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
+                },
+                {
+                  "group": "Couple With Children",
+                  "households_m": 6.298,
+                  "total_gain_bn": 1.138,
+                  "average_gain_gbp": 180.69,
+                  "average_gain_gbp_among_gainers": 6093.38,
+                  "share_gaining": 0.0374,
+                  "average_gain_pct_of_income": 0.2
+                },
                 {
                   "group": "Lone Parent",
                   "households_m": 2.465,
@@ -961,13 +1033,13 @@
                   "average_gain_pct_of_income": 0.4573
                 },
                 {
-                  "group": "Couple With Children",
-                  "households_m": 6.298,
-                  "total_gain_bn": 1.138,
-                  "average_gain_gbp": 180.69,
-                  "average_gain_gbp_among_gainers": 6093.38,
-                  "share_gaining": 0.0374,
-                  "average_gain_pct_of_income": 0.2
+                  "group": "Single",
+                  "households_m": 10.271,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -1144,6 +1216,15 @@
             ],
             "by_family_type": [
               {
+                "group": "Couple No Children",
+                "households_m": 12.478,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
+              },
+              {
                 "group": "Couple With Children",
                 "households_m": 6.298,
                 "total_gain_bn": 4.7336,
@@ -1160,6 +1241,15 @@
                 "average_gain_gbp_among_gainers": 2963.39,
                 "share_gaining": 0.0144,
                 "average_gain_pct_of_income": 0.0952
+              },
+              {
+                "group": "Single",
+                "households_m": 10.271,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -1342,18 +1432,18 @@
                   "average_gain_gbp_among_gainers": 504.4,
                   "share_gaining": 0.4565,
                   "average_gain_pct_of_income": 0.5113
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0001,
-                  "average_gain_gbp": 93.82,
-                  "average_gain_gbp_among_gainers": 187.32,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.0825
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.478,
+                  "total_gain_bn": 0.0001,
+                  "average_gain_gbp": 0.01,
+                  "average_gain_gbp_among_gainers": 187.32,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.298,
@@ -1373,12 +1463,12 @@
                   "average_gain_pct_of_income": 0.194
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.478,
-                  "total_gain_bn": 0.0001,
-                  "average_gain_gbp": 0.01,
-                  "average_gain_gbp_among_gainers": 187.32,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.271,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -1518,6 +1608,15 @@
               ],
               "by_family_type": [
                 {
+                  "group": "Couple No Children",
+                  "households_m": 12.478,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 62.44,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
+                {
                   "group": "Couple With Children",
                   "households_m": 6.298,
                   "total_gain_bn": 4.7609,
@@ -1534,6 +1633,15 @@
                   "average_gain_gbp_among_gainers": 374.98,
                   "share_gaining": 0.1532,
                   "average_gain_pct_of_income": 0.1281
+                },
+                {
+                  "group": "Single",
+                  "households_m": 10.271,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -1668,18 +1776,18 @@
                   "average_gain_gbp_among_gainers": 805.85,
                   "share_gaining": 0.4565,
                   "average_gain_pct_of_income": 0.8169
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 187.64,
-                  "average_gain_gbp_among_gainers": 374.65,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.165
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.478,
+                  "total_gain_bn": 0.0003,
+                  "average_gain_gbp": 0.02,
+                  "average_gain_gbp_among_gainers": 374.65,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.298,
@@ -1699,12 +1807,12 @@
                   "average_gain_pct_of_income": 0.2923
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.478,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 0.02,
-                  "average_gain_gbp_among_gainers": 374.65,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.271,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -1882,6 +1990,15 @@
             ],
             "by_family_type": [
               {
+                "group": "Couple No Children",
+                "households_m": 12.478,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
+              },
+              {
                 "group": "Couple With Children",
                 "households_m": 6.298,
                 "total_gain_bn": 6.0317,
@@ -1898,6 +2015,15 @@
                 "average_gain_gbp_among_gainers": 5803.28,
                 "share_gaining": 0.0445,
                 "average_gain_pct_of_income": 0.5758
+              },
+              {
+                "group": "Single",
+                "households_m": 10.271,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -2080,18 +2206,18 @@
                   "average_gain_gbp_among_gainers": 1769.73,
                   "share_gaining": 0.5013,
                   "average_gain_pct_of_income": 1.9385
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0001,
-                  "average_gain_gbp": 93.91,
-                  "average_gain_gbp_among_gainers": 187.5,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.0826
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.478,
+                  "total_gain_bn": 0.0001,
+                  "average_gain_gbp": 0.01,
+                  "average_gain_gbp_among_gainers": 187.5,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.298,
@@ -2111,12 +2237,12 @@
                   "average_gain_pct_of_income": 0.6534
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.478,
-                  "total_gain_bn": 0.0001,
-                  "average_gain_gbp": 0.01,
-                  "average_gain_gbp_among_gainers": 187.5,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.271,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -2256,6 +2382,15 @@
               ],
               "by_family_type": [
                 {
+                  "group": "Couple No Children",
+                  "households_m": 12.478,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 62.5,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
+                {
                   "group": "Couple With Children",
                   "households_m": 6.298,
                   "total_gain_bn": 6.0226,
@@ -2272,6 +2407,15 @@
                   "average_gain_gbp_among_gainers": 1616.04,
                   "share_gaining": 0.1679,
                   "average_gain_pct_of_income": 0.6017
+                },
+                {
+                  "group": "Single",
+                  "households_m": 10.271,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -2406,18 +2550,18 @@
                   "average_gain_gbp_among_gainers": 2018.18,
                   "share_gaining": 0.5009,
                   "average_gain_pct_of_income": 2.1784
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 187.81,
-                  "average_gain_gbp_among_gainers": 375.0,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.1651
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.478,
+                  "total_gain_bn": 0.0003,
+                  "average_gain_gbp": 0.02,
+                  "average_gain_gbp_among_gainers": 375.0,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.298,
@@ -2437,12 +2581,12 @@
                   "average_gain_pct_of_income": 0.7307
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.478,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 0.02,
-                  "average_gain_gbp_among_gainers": 375.0,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.271,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -2892,15 +3036,6 @@
             ],
             "by_family_type_families_with_under_5s": [
               {
-                "group": "Lone Parent",
-                "households_m": 0.794,
-                "total_gain_bn": 0.546,
-                "average_gain_gbp": 687.95,
-                "average_gain_gbp_among_gainers": 7219.24,
-                "share_gaining": 0.0953,
-                "average_gain_pct_of_income": 1.5074
-              },
-              {
                 "group": "Couple With Children",
                 "households_m": 2.485,
                 "total_gain_bn": 1.4666,
@@ -2908,9 +3043,27 @@
                 "average_gain_gbp_among_gainers": 6230.04,
                 "share_gaining": 0.0947,
                 "average_gain_pct_of_income": 0.6763
+              },
+              {
+                "group": "Lone Parent",
+                "households_m": 0.794,
+                "total_gain_bn": 0.546,
+                "average_gain_gbp": 687.95,
+                "average_gain_gbp_among_gainers": 7219.24,
+                "share_gaining": 0.0953,
+                "average_gain_pct_of_income": 1.5074
               }
             ],
             "by_family_type": [
+              {
+                "group": "Couple No Children",
+                "households_m": 12.528,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
+              },
               {
                 "group": "Couple With Children",
                 "households_m": 6.323,
@@ -2928,6 +3081,15 @@
                 "average_gain_gbp_among_gainers": 7219.24,
                 "share_gaining": 0.0306,
                 "average_gain_pct_of_income": 0.4859
+              },
+              {
+                "group": "Single",
+                "households_m": 10.313,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -3094,15 +3256,6 @@
               ],
               "by_family_type_families_with_under_5s": [
                 {
-                  "group": "Lone Parent",
-                  "households_m": 0.794,
-                  "total_gain_bn": 0.5315,
-                  "average_gain_gbp": 669.73,
-                  "average_gain_gbp_among_gainers": 7219.24,
-                  "share_gaining": 0.0953,
-                  "average_gain_pct_of_income": 1.4675
-                },
-                {
                   "group": "Couple With Children",
                   "households_m": 2.485,
                   "total_gain_bn": 1.316,
@@ -3110,9 +3263,36 @@
                   "average_gain_gbp_among_gainers": 6212.13,
                   "share_gaining": 0.0951,
                   "average_gain_pct_of_income": 0.6069
+                },
+                {
+                  "group": "Lone Parent",
+                  "households_m": 0.794,
+                  "total_gain_bn": 0.5315,
+                  "average_gain_gbp": 669.73,
+                  "average_gain_gbp_among_gainers": 7219.24,
+                  "share_gaining": 0.0953,
+                  "average_gain_pct_of_income": 1.4675
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.528,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
+                },
+                {
+                  "group": "Couple With Children",
+                  "households_m": 6.323,
+                  "total_gain_bn": 1.316,
+                  "average_gain_gbp": 208.12,
+                  "average_gain_gbp_among_gainers": 6212.13,
+                  "share_gaining": 0.0374,
+                  "average_gain_pct_of_income": 0.2267
+                },
                 {
                   "group": "Lone Parent",
                   "households_m": 2.475,
@@ -3123,13 +3303,13 @@
                   "average_gain_pct_of_income": 0.473
                 },
                 {
-                  "group": "Couple With Children",
-                  "households_m": 6.323,
-                  "total_gain_bn": 1.316,
-                  "average_gain_gbp": 208.12,
-                  "average_gain_gbp_among_gainers": 6212.13,
-                  "share_gaining": 0.0374,
-                  "average_gain_pct_of_income": 0.2267
+                  "group": "Single",
+                  "households_m": 10.313,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -3248,15 +3428,6 @@
               ],
               "by_family_type_families_with_under_5s": [
                 {
-                  "group": "Lone Parent",
-                  "households_m": 0.794,
-                  "total_gain_bn": 0.5412,
-                  "average_gain_gbp": 681.87,
-                  "average_gain_gbp_among_gainers": 7219.24,
-                  "share_gaining": 0.0953,
-                  "average_gain_pct_of_income": 1.4941
-                },
-                {
                   "group": "Couple With Children",
                   "households_m": 2.485,
                   "total_gain_bn": 1.4167,
@@ -3264,9 +3435,27 @@
                   "average_gain_gbp_among_gainers": 6207.63,
                   "share_gaining": 0.0951,
                   "average_gain_pct_of_income": 0.6533
+                },
+                {
+                  "group": "Lone Parent",
+                  "households_m": 0.794,
+                  "total_gain_bn": 0.5412,
+                  "average_gain_gbp": 681.87,
+                  "average_gain_gbp_among_gainers": 7219.24,
+                  "share_gaining": 0.0953,
+                  "average_gain_pct_of_income": 1.4941
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.528,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.323,
@@ -3284,6 +3473,15 @@
                   "average_gain_gbp_among_gainers": 7219.24,
                   "share_gaining": 0.0306,
                   "average_gain_pct_of_income": 0.4816
+                },
+                {
+                  "group": "Single",
+                  "households_m": 10.313,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -3402,15 +3600,6 @@
               ],
               "by_family_type_families_with_under_5s": [
                 {
-                  "group": "Lone Parent",
-                  "households_m": 0.794,
-                  "total_gain_bn": 0.5172,
-                  "average_gain_gbp": 651.7,
-                  "average_gain_gbp_among_gainers": 7219.24,
-                  "share_gaining": 0.0953,
-                  "average_gain_pct_of_income": 1.428
-                },
-                {
                   "group": "Couple With Children",
                   "households_m": 2.485,
                   "total_gain_bn": 1.1631,
@@ -3418,9 +3607,36 @@
                   "average_gain_gbp_among_gainers": 6211.71,
                   "share_gaining": 0.0951,
                   "average_gain_pct_of_income": 0.5364
+                },
+                {
+                  "group": "Lone Parent",
+                  "households_m": 0.794,
+                  "total_gain_bn": 0.5172,
+                  "average_gain_gbp": 651.7,
+                  "average_gain_gbp_among_gainers": 7219.24,
+                  "share_gaining": 0.0953,
+                  "average_gain_pct_of_income": 1.428
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.528,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
+                },
+                {
+                  "group": "Couple With Children",
+                  "households_m": 6.323,
+                  "total_gain_bn": 1.1631,
+                  "average_gain_gbp": 183.95,
+                  "average_gain_gbp_among_gainers": 6211.71,
+                  "share_gaining": 0.0374,
+                  "average_gain_pct_of_income": 0.2004
+                },
                 {
                   "group": "Lone Parent",
                   "households_m": 2.475,
@@ -3431,13 +3647,13 @@
                   "average_gain_pct_of_income": 0.4603
                 },
                 {
-                  "group": "Couple With Children",
-                  "households_m": 6.323,
-                  "total_gain_bn": 1.1631,
-                  "average_gain_gbp": 183.95,
-                  "average_gain_gbp_among_gainers": 6211.71,
-                  "share_gaining": 0.0374,
-                  "average_gain_pct_of_income": 0.2004
+                  "group": "Single",
+                  "households_m": 10.313,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -3614,6 +3830,15 @@
             ],
             "by_family_type": [
               {
+                "group": "Couple No Children",
+                "households_m": 12.528,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
+              },
+              {
                 "group": "Couple With Children",
                 "households_m": 6.323,
                 "total_gain_bn": 4.8483,
@@ -3630,6 +3855,15 @@
                 "average_gain_gbp_among_gainers": 3023.06,
                 "share_gaining": 0.0144,
                 "average_gain_pct_of_income": 0.096
+              },
+              {
+                "group": "Single",
+                "households_m": 10.313,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -3812,18 +4046,18 @@
                   "average_gain_gbp_among_gainers": 518.17,
                   "share_gaining": 0.4565,
                   "average_gain_pct_of_income": 0.5183
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0002,
-                  "average_gain_gbp": 95.71,
-                  "average_gain_gbp_among_gainers": 191.11,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.0827
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.528,
+                  "total_gain_bn": 0.0002,
+                  "average_gain_gbp": 0.01,
+                  "average_gain_gbp_among_gainers": 191.11,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.323,
@@ -3843,12 +4077,12 @@
                   "average_gain_pct_of_income": 0.1966
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.528,
-                  "total_gain_bn": 0.0002,
-                  "average_gain_gbp": 0.01,
-                  "average_gain_gbp_among_gainers": 191.11,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.313,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -3984,18 +4218,18 @@
                   "average_gain_gbp_among_gainers": 310.02,
                   "share_gaining": 0.4565,
                   "average_gain_pct_of_income": 0.3101
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0001,
-                  "average_gain_gbp": 31.9,
-                  "average_gain_gbp_among_gainers": 63.7,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.0276
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.528,
+                  "total_gain_bn": 0.0001,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 63.7,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.323,
@@ -4015,12 +4249,12 @@
                   "average_gain_pct_of_income": 0.1295
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.528,
-                  "total_gain_bn": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.313,
+                  "total_gain_bn": 0.0,
                   "average_gain_gbp": 0.0,
-                  "average_gain_gbp_among_gainers": 63.7,
-                  "share_gaining": 0.0001,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -4156,18 +4390,18 @@
                   "average_gain_gbp_among_gainers": 829.3,
                   "share_gaining": 0.4565,
                   "average_gain_pct_of_income": 0.8295
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 191.42,
-                  "average_gain_gbp_among_gainers": 382.21,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.1654
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.528,
+                  "total_gain_bn": 0.0003,
+                  "average_gain_gbp": 0.02,
+                  "average_gain_gbp_among_gainers": 382.21,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.323,
@@ -4187,12 +4421,12 @@
                   "average_gain_pct_of_income": 0.2969
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.528,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 0.02,
-                  "average_gain_gbp_among_gainers": 382.21,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.313,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -4370,6 +4604,15 @@
             ],
             "by_family_type": [
               {
+                "group": "Couple No Children",
+                "households_m": 12.528,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
+              },
+              {
                 "group": "Couple With Children",
                 "households_m": 6.323,
                 "total_gain_bn": 6.1772,
@@ -4386,6 +4629,15 @@
                 "average_gain_gbp_among_gainers": 5919.72,
                 "share_gaining": 0.0445,
                 "average_gain_pct_of_income": 0.5802
+              },
+              {
+                "group": "Single",
+                "households_m": 10.313,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -4568,18 +4820,18 @@
                   "average_gain_gbp_among_gainers": 1808.52,
                   "share_gaining": 0.5013,
                   "average_gain_pct_of_income": 1.9539
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0002,
-                  "average_gain_gbp": 95.87,
-                  "average_gain_gbp_among_gainers": 191.41,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.0828
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.528,
+                  "total_gain_bn": 0.0002,
+                  "average_gain_gbp": 0.01,
+                  "average_gain_gbp_among_gainers": 191.41,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.323,
@@ -4599,12 +4851,12 @@
                   "average_gain_pct_of_income": 0.6594
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.528,
-                  "total_gain_bn": 0.0002,
-                  "average_gain_gbp": 0.01,
-                  "average_gain_gbp_among_gainers": 191.41,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.313,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -4740,18 +4992,18 @@
                   "average_gain_gbp_among_gainers": 1636.57,
                   "share_gaining": 0.5021,
                   "average_gain_pct_of_income": 1.7901
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0001,
-                  "average_gain_gbp": 31.96,
-                  "average_gain_gbp_among_gainers": 63.8,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.0276
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.528,
+                  "total_gain_bn": 0.0001,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 63.8,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.323,
@@ -4771,12 +5023,12 @@
                   "average_gain_pct_of_income": 0.6066
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.528,
-                  "total_gain_bn": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.313,
+                  "total_gain_bn": 0.0,
                   "average_gain_gbp": 0.0,
-                  "average_gain_gbp_among_gainers": 63.8,
-                  "share_gaining": 0.0001,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -4912,18 +5164,18 @@
                   "average_gain_gbp_among_gainers": 2065.23,
                   "share_gaining": 0.5009,
                   "average_gain_pct_of_income": 2.1982
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 191.73,
-                  "average_gain_gbp_among_gainers": 382.82,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.1656
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.528,
+                  "total_gain_bn": 0.0003,
+                  "average_gain_gbp": 0.02,
+                  "average_gain_gbp_among_gainers": 382.82,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.323,
@@ -4943,12 +5195,12 @@
                   "average_gain_pct_of_income": 0.7381
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.528,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 0.02,
-                  "average_gain_gbp_among_gainers": 382.82,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.313,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -5398,15 +5650,6 @@
             ],
             "by_family_type_families_with_under_5s": [
               {
-                "group": "Lone Parent",
-                "households_m": 0.797,
-                "total_gain_bn": 0.5593,
-                "average_gain_gbp": 701.71,
-                "average_gain_gbp_among_gainers": 7363.62,
-                "share_gaining": 0.0953,
-                "average_gain_pct_of_income": 1.52
-              },
-              {
                 "group": "Couple With Children",
                 "households_m": 2.496,
                 "total_gain_bn": 1.5031,
@@ -5414,9 +5657,27 @@
                 "average_gain_gbp_among_gainers": 6354.18,
                 "share_gaining": 0.0948,
                 "average_gain_pct_of_income": 0.6803
+              },
+              {
+                "group": "Lone Parent",
+                "households_m": 0.797,
+                "total_gain_bn": 0.5593,
+                "average_gain_gbp": 701.71,
+                "average_gain_gbp_among_gainers": 7363.62,
+                "share_gaining": 0.0953,
+                "average_gain_pct_of_income": 1.52
               }
             ],
             "by_family_type": [
+              {
+                "group": "Couple No Children",
+                "households_m": 12.583,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
+              },
               {
                 "group": "Couple With Children",
                 "households_m": 6.351,
@@ -5434,6 +5695,15 @@
                 "average_gain_gbp_among_gainers": 7363.62,
                 "share_gaining": 0.0306,
                 "average_gain_pct_of_income": 0.4893
+              },
+              {
+                "group": "Single",
+                "households_m": 10.358,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -5600,15 +5870,6 @@
               ],
               "by_family_type_families_with_under_5s": [
                 {
-                  "group": "Lone Parent",
-                  "households_m": 0.797,
-                  "total_gain_bn": 0.5446,
-                  "average_gain_gbp": 683.23,
-                  "average_gain_gbp_among_gainers": 7363.62,
-                  "share_gaining": 0.0953,
-                  "average_gain_pct_of_income": 1.48
-                },
-                {
                   "group": "Couple With Children",
                   "households_m": 2.496,
                   "total_gain_bn": 1.3482,
@@ -5616,9 +5877,36 @@
                   "average_gain_gbp_among_gainers": 6336.23,
                   "share_gaining": 0.0952,
                   "average_gain_pct_of_income": 0.6102
+                },
+                {
+                  "group": "Lone Parent",
+                  "households_m": 0.797,
+                  "total_gain_bn": 0.5446,
+                  "average_gain_gbp": 683.23,
+                  "average_gain_gbp_among_gainers": 7363.62,
+                  "share_gaining": 0.0953,
+                  "average_gain_pct_of_income": 1.48
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.583,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
+                },
+                {
+                  "group": "Couple With Children",
+                  "households_m": 6.351,
+                  "total_gain_bn": 1.3482,
+                  "average_gain_gbp": 212.29,
+                  "average_gain_gbp_among_gainers": 6336.23,
+                  "share_gaining": 0.0374,
+                  "average_gain_pct_of_income": 0.2276
+                },
                 {
                   "group": "Lone Parent",
                   "households_m": 2.486,
@@ -5629,13 +5917,13 @@
                   "average_gain_pct_of_income": 0.4764
                 },
                 {
-                  "group": "Couple With Children",
-                  "households_m": 6.351,
-                  "total_gain_bn": 1.3482,
-                  "average_gain_gbp": 212.29,
-                  "average_gain_gbp_among_gainers": 6336.23,
-                  "share_gaining": 0.0374,
-                  "average_gain_pct_of_income": 0.2276
+                  "group": "Single",
+                  "households_m": 10.358,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -5754,15 +6042,6 @@
               ],
               "by_family_type_families_with_under_5s": [
                 {
-                  "group": "Lone Parent",
-                  "households_m": 0.797,
-                  "total_gain_bn": 0.5544,
-                  "average_gain_gbp": 695.55,
-                  "average_gain_gbp_among_gainers": 7363.62,
-                  "share_gaining": 0.0953,
-                  "average_gain_pct_of_income": 1.5067
-                },
-                {
                   "group": "Couple With Children",
                   "households_m": 2.496,
                   "total_gain_bn": 1.4519,
@@ -5770,9 +6049,27 @@
                   "average_gain_gbp_among_gainers": 6331.71,
                   "share_gaining": 0.0952,
                   "average_gain_pct_of_income": 0.6571
+                },
+                {
+                  "group": "Lone Parent",
+                  "households_m": 0.797,
+                  "total_gain_bn": 0.5544,
+                  "average_gain_gbp": 695.55,
+                  "average_gain_gbp_among_gainers": 7363.62,
+                  "share_gaining": 0.0953,
+                  "average_gain_pct_of_income": 1.5067
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.583,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.351,
@@ -5790,6 +6087,15 @@
                   "average_gain_gbp_among_gainers": 7363.62,
                   "share_gaining": 0.0306,
                   "average_gain_pct_of_income": 0.485
+                },
+                {
+                  "group": "Single",
+                  "households_m": 10.358,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -5908,15 +6214,6 @@
               ],
               "by_family_type_families_with_under_5s": [
                 {
-                  "group": "Lone Parent",
-                  "households_m": 0.797,
-                  "total_gain_bn": 0.53,
-                  "average_gain_gbp": 664.94,
-                  "average_gain_gbp_among_gainers": 7363.62,
-                  "share_gaining": 0.0953,
-                  "average_gain_pct_of_income": 1.4404
-                },
-                {
                   "group": "Couple With Children",
                   "households_m": 2.496,
                   "total_gain_bn": 1.1911,
@@ -5924,9 +6221,36 @@
                   "average_gain_gbp_among_gainers": 6335.77,
                   "share_gaining": 0.0952,
                   "average_gain_pct_of_income": 0.5391
+                },
+                {
+                  "group": "Lone Parent",
+                  "households_m": 0.797,
+                  "total_gain_bn": 0.53,
+                  "average_gain_gbp": 664.94,
+                  "average_gain_gbp_among_gainers": 7363.62,
+                  "share_gaining": 0.0953,
+                  "average_gain_pct_of_income": 1.4404
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.583,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
+                },
+                {
+                  "group": "Couple With Children",
+                  "households_m": 6.351,
+                  "total_gain_bn": 1.1911,
+                  "average_gain_gbp": 187.55,
+                  "average_gain_gbp_among_gainers": 6335.77,
+                  "share_gaining": 0.0374,
+                  "average_gain_pct_of_income": 0.2011
+                },
                 {
                   "group": "Lone Parent",
                   "households_m": 2.486,
@@ -5937,13 +6261,13 @@
                   "average_gain_pct_of_income": 0.4637
                 },
                 {
-                  "group": "Couple With Children",
-                  "households_m": 6.351,
-                  "total_gain_bn": 1.1911,
-                  "average_gain_gbp": 187.55,
-                  "average_gain_gbp_among_gainers": 6335.77,
-                  "share_gaining": 0.0374,
-                  "average_gain_pct_of_income": 0.2011
+                  "group": "Single",
+                  "households_m": 10.358,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
+                  "average_gain_pct_of_income": 0.0
                 }
               ],
               "all_households": {
@@ -6120,6 +6444,15 @@
             ],
             "by_family_type": [
               {
+                "group": "Couple No Children",
+                "households_m": 12.583,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
+              },
+              {
                 "group": "Couple With Children",
                 "households_m": 6.351,
                 "total_gain_bn": 4.9741,
@@ -6136,6 +6469,15 @@
                 "average_gain_gbp_among_gainers": 2951.59,
                 "share_gaining": 0.0156,
                 "average_gain_pct_of_income": 0.0999
+              },
+              {
+                "group": "Single",
+                "households_m": 10.358,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -6318,18 +6660,18 @@
                   "average_gain_gbp_among_gainers": 553.78,
                   "share_gaining": 0.454,
                   "average_gain_pct_of_income": 0.5447
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0002,
-                  "average_gain_gbp": 96.44,
-                  "average_gain_gbp_among_gainers": 192.57,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.0819
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.583,
+                  "total_gain_bn": 0.0002,
+                  "average_gain_gbp": 0.01,
+                  "average_gain_gbp_among_gainers": 192.57,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.351,
@@ -6349,12 +6691,12 @@
                   "average_gain_pct_of_income": 0.2084
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.583,
-                  "total_gain_bn": 0.0002,
-                  "average_gain_gbp": 0.01,
-                  "average_gain_gbp_among_gainers": 192.57,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.358,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -6490,18 +6832,18 @@
                   "average_gain_gbp_among_gainers": 325.4,
                   "share_gaining": 0.454,
                   "average_gain_pct_of_income": 0.32
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0001,
-                  "average_gain_gbp": 32.15,
-                  "average_gain_gbp_among_gainers": 64.19,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.0273
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.583,
+                  "total_gain_bn": 0.0001,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 64.19,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.351,
@@ -6521,12 +6863,12 @@
                   "average_gain_pct_of_income": 0.1361
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.583,
-                  "total_gain_bn": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.358,
+                  "total_gain_bn": 0.0,
                   "average_gain_gbp": 0.0,
-                  "average_gain_gbp_among_gainers": 64.19,
-                  "share_gaining": 0.0001,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -6662,18 +7004,18 @@
                   "average_gain_gbp_among_gainers": 895.23,
                   "share_gaining": 0.454,
                   "average_gain_pct_of_income": 0.8805
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 192.89,
-                  "average_gain_gbp_among_gainers": 385.13,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.1638
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.583,
+                  "total_gain_bn": 0.0003,
+                  "average_gain_gbp": 0.02,
+                  "average_gain_gbp_among_gainers": 385.13,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.351,
@@ -6693,12 +7035,12 @@
                   "average_gain_pct_of_income": 0.3165
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.583,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 0.02,
-                  "average_gain_gbp_among_gainers": 385.13,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.358,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -6876,6 +7218,15 @@
             ],
             "by_family_type": [
               {
+                "group": "Couple No Children",
+                "households_m": 12.583,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
+              },
+              {
                 "group": "Couple With Children",
                 "households_m": 6.351,
                 "total_gain_bn": 6.3369,
@@ -6892,6 +7243,15 @@
                 "average_gain_gbp_among_gainers": 5918.38,
                 "share_gaining": 0.0457,
                 "average_gain_pct_of_income": 0.5876
+              },
+              {
+                "group": "Single",
+                "households_m": 10.358,
+                "total_gain_bn": 0.0,
+                "average_gain_gbp": 0.0,
+                "average_gain_gbp_among_gainers": 0.0,
+                "share_gaining": 0.0,
+                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -7074,18 +7434,18 @@
                   "average_gain_gbp_among_gainers": 1871.78,
                   "share_gaining": 0.4988,
                   "average_gain_pct_of_income": 1.99
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0002,
-                  "average_gain_gbp": 96.61,
-                  "average_gain_gbp_among_gainers": 192.9,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.082
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.583,
+                  "total_gain_bn": 0.0002,
+                  "average_gain_gbp": 0.01,
+                  "average_gain_gbp_among_gainers": 192.9,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.351,
@@ -7105,12 +7465,12 @@
                   "average_gain_pct_of_income": 0.6737
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.583,
-                  "total_gain_bn": 0.0002,
-                  "average_gain_gbp": 0.01,
-                  "average_gain_gbp_among_gainers": 192.9,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.358,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -7246,18 +7606,18 @@
                   "average_gain_gbp_among_gainers": 1683.51,
                   "share_gaining": 0.4997,
                   "average_gain_pct_of_income": 1.8117
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0001,
-                  "average_gain_gbp": 32.2,
-                  "average_gain_gbp_among_gainers": 64.3,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.0273
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.583,
+                  "total_gain_bn": 0.0001,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 64.3,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.351,
@@ -7277,12 +7637,12 @@
                   "average_gain_pct_of_income": 0.6163
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.583,
-                  "total_gain_bn": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.358,
+                  "total_gain_bn": 0.0,
                   "average_gain_gbp": 0.0,
-                  "average_gain_gbp_among_gainers": 64.3,
-                  "share_gaining": 0.0001,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],
@@ -7418,18 +7778,18 @@
                   "average_gain_gbp_among_gainers": 2152.96,
                   "share_gaining": 0.4985,
                   "average_gain_pct_of_income": 2.256
-                },
-                {
-                  "group": "Couple No Children",
-                  "households_m": 0.002,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 193.22,
-                  "average_gain_gbp_among_gainers": 385.8,
-                  "share_gaining": 0.5008,
-                  "average_gain_pct_of_income": 0.1641
                 }
               ],
               "by_family_type": [
+                {
+                  "group": "Couple No Children",
+                  "households_m": 12.583,
+                  "total_gain_bn": 0.0003,
+                  "average_gain_gbp": 0.02,
+                  "average_gain_gbp_among_gainers": 385.8,
+                  "share_gaining": 0.0001,
+                  "average_gain_pct_of_income": 0.0
+                },
                 {
                   "group": "Couple With Children",
                   "households_m": 6.351,
@@ -7449,12 +7809,12 @@
                   "average_gain_pct_of_income": 0.7593
                 },
                 {
-                  "group": "Couple No Children",
-                  "households_m": 12.583,
-                  "total_gain_bn": 0.0003,
-                  "average_gain_gbp": 0.02,
-                  "average_gain_gbp_among_gainers": 385.8,
-                  "share_gaining": 0.0001,
+                  "group": "Single",
+                  "households_m": 10.358,
+                  "total_gain_bn": 0.0,
+                  "average_gain_gbp": 0.0,
+                  "average_gain_gbp_among_gainers": 0.0,
+                  "share_gaining": 0.0,
                   "average_gain_pct_of_income": 0.0
                 }
               ],

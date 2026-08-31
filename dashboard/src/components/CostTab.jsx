@@ -4,7 +4,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Legend,
   ResponsiveContainer,
   Tooltip,
@@ -20,13 +19,11 @@ import {
 } from "../lib/formatters";
 import SectionHeading from "./SectionHeading";
 
-function Stat({ label, value, sub, footnote, tone = "default" }) {
-  const valueClass =
-    tone === "negative" ? "text-slate-900" : "text-slate-900";
+function Stat({ label, value, sub, footnote }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6">
       <div className="text-sm text-slate-500">{label}</div>
-      <div className={`mt-1 text-3xl font-semibold ${valueClass}`}>{value}</div>
+      <div className="mt-1 text-3xl font-semibold text-slate-900">{value}</div>
       {sub ? <div className="mt-2 text-sm leading-6 text-slate-500">{sub}</div> : null}
       {footnote ? (
         <div className="mt-3 border-t border-slate-100 pt-2 text-xs leading-5 text-slate-500">
@@ -58,6 +55,9 @@ export default function CostTab({ data, year, bound }) {
   const isStatic = bound === "none";
   const dynamic = isStatic ? null : result.dynamic_cost[bound];
   const response = isStatic ? null : result.labour_supply[bound];
+  // Each panel below describes one leg's channel, so it must show that leg's
+  // own response rather than the response to both legs together.
+  const freeHoursResponse = isStatic ? null : legs.free_hours.labour_supply[bound];
   const src = data.sources || {};
   const A = (source, text) =>
     source ? (
@@ -218,10 +218,13 @@ export default function CostTab({ data, year, bound }) {
           description={
             <>
               Each leg on its own, against the current system. They are deliberately not
-              added together: free hours displace paid care —{" "}
-              {A(src.ifs_free_childcare, "about 71% of a new free offer")} replaces care
-              families were already buying — so running both at once costs less than the
-              sum of the two, and adding these figures would overstate it.
+              added together: free hours displace paid care, so running both at once costs
+              less than the sum of the two. The assumption is that{" "}
+              {A(src.ifs_free_childcare, "71% of a new free offer")} replaces care a family
+              was already buying, but displacement is capped at what they actually spend,
+              and that cap binds — most newly-eligible families are not working and buy
+              little paid care, so modelled childcare spending falls by only about 12% of
+              the value of the new free hours.
             </>
           }
         />
@@ -279,10 +282,14 @@ export default function CostTab({ data, year, bound }) {
                       position is unchanged.
                     </li>
                     <li>
-                      Modelled: <strong>{formatCount(response.entrants)}</strong> entrants
-                      against <strong>{formatCount(response.leavers)}</strong> leavers, a
-                      net revenue effect of{" "}
-                      <strong>{formatBn(response.net_revenue_gbp / 1e9)}</strong>.
+                      On the free-hours leg alone:{" "}
+                      <strong>{formatCount(freeHoursResponse.entrants)}</strong> entrants
+                      against <strong>{formatCount(freeHoursResponse.leavers)}</strong>{" "}
+                      leavers, a net revenue effect of{" "}
+                      <strong>
+                        {formatSignedBn(freeHoursResponse.net_revenue_gbp / 1e9)}
+                      </strong>
+                      .
                     </li>
                   </ul>
                 </dd>

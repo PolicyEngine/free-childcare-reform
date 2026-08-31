@@ -56,6 +56,15 @@ from policyengine_uk.utils.scenario import Scenario
 # 15 hours a week from 9 months, for every child, regardless of parental work
 # or income. 0.75 is the age floor in years the extended (working-parent)
 # scheme already uses, so the two tiers line up on the same age band.
+#
+# IN PRACTICE THIS IS AGE 1, NOT 9 MONTHS. FRS ages are whole years, so
+# `age >= 0.75` evaluates as `age >= 1` and no child recorded as age 0
+# receives the entitlement: verified as exactly zero on the pinned dataset.
+# The 9-to-12-month cohort the brief names is therefore not costed. On the
+# age-1 cohort as an analogue — 158,982 children at £6,934 each — a quarter
+# of a birth year is roughly 40,000 children and about £0.28bn, some 14% of
+# the free-hours leg. The leg is understated by that much, and modelling it
+# properly needs sub-year ages rather than a different threshold here.
 UNIVERSAL_ENTITLEMENT_AGE_MIN = 0.75
 # The subsidy that replaces Tax-Free Childcare: 75% of childcare costs, with no
 # work test, no £100k cliff and no per-child cap.

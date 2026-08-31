@@ -35,7 +35,7 @@ export default function MethodologyTab({ data, year }) {
       <section>
         <SectionHeading
           title="How the reform is modelled"
-          description="Every quantity below comes from the simulation at run time. Nothing on this page is a hardcoded number."
+          description="Model parameters below are read from the simulation at run time; the caveats quote fixed figures from the sources they cite."
         />
         <Block title="The two legs">
           <li>

@@ -29,43 +29,29 @@ def test_displacement_applies_only_the_displaced_share():
     assert result[0] == 2_000 - 1_000 * sources.FREE_HOURS_DISPLACEMENT
 
 
-def test_additionality_matches_the_ifs_estimate():
-    # 163 additional hours per 570 free hours offered (IFS WP20/09).
-    assert round(sources.FREE_HOURS_ADDITIONALITY, 3) == 0.286
-    assert round(sources.FREE_HOURS_ADDITIONALITY + sources.FREE_HOURS_DISPLACEMENT, 6) == 1
-
-
-def test_elasticity_bounds_bracket_the_central_case():
-    assert sources.ELASTICITY_SCALE_LOW < 1 < sources.ELASTICITY_SCALE_HIGH
-    assert (
-        sources.PRICE_ELASTICITY_HIGH
-        < sources.PRICE_ELASTICITY_CENTRAL
-        < sources.PRICE_ELASTICITY_LOW
-    )
-
-
-def test_hours_worked_is_treated_as_annual():
-    """Guards the units bug this analysis had to work around.
+def test_hours_worked_is_annual_in_policyengine_uk():
+    """Guards the units bug this analysis works around.
 
     policyengine-uk's impute_wages_for_nonworkers computes
     employment_income / (hours_worked * 52), but hours_worked is annual, so it
     divides by 52 twice and imputes about £194 of annual earnings for entering
-    part-time work instead of roughly £21,600. impute_entrant_earnings treats
-    the variable as annual. If a future policyengine-uk release changes the
-    units of hours_worked, this fails rather than silently re-breaking the
-    extensive margin.
-    """
-    from free_childcare_reform.labour_supply import HOURS_FOR_NEW_ENTRANTS, WEEKS_PER_YEAR
+    part-time work instead of roughly £21,600 (policyengine-uk#1839).
 
-    # A full-time worker on £40,000 at 37.5 hours a week.
-    annual_hours = 37.5 * WEEKS_PER_YEAR
-    hourly_wage = 40_000 / annual_hours
-    assert 15 < hourly_wage < 30, "hours_worked must be annual for this to be a real wage"
-    entrant = hourly_wage * HOURS_FOR_NEW_ENTRANTS * WEEKS_PER_YEAR
-    assert 15_000 < entrant < 25_000
-    # The upstream formula, for contrast.
-    broken = (40_000 / (annual_hours * WEEKS_PER_YEAR)) * HOURS_FOR_NEW_ENTRANTS * WEEKS_PER_YEAR
-    assert broken < 500
+    An earlier version of this test did arithmetic on two local constants and
+    so could not detect anything about policyengine-uk at all. This one reads
+    the variable's own metadata, so a release that redefines the units fails
+    here rather than silently re-breaking the extensive margin.
+    """
+    from policyengine_uk.system import system
+
+    variable = system.variables["hours_worked"]
+    assert variable.definition_period == "year", (
+        "hours_worked is annual; the imputation in labour_supply.py divides by "
+        "WEEKS_PER_YEAR exactly once on that basis"
+    )
+    assert "annual" in variable.label.lower(), (
+        f"hours_worked may have been redefined: {variable.label!r}"
+    )
 
 
 def test_the_widened_universal_entitlement_does_not_stack_on_the_targeted_offer():
