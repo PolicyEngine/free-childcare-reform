@@ -233,9 +233,13 @@
         }
       ],
       "uc_childcare_fiscal_cost": {
-        "fiscal_cost_bn": 1.7903,
-        "maximum_amount_component_bn": 8.686,
-        "benefit_units_receiving": 425981
+        "comparison_year": 2024,
+        "fiscal_cost_bn": 1.5802,
+        "maximum_amount_component_bn": 7.9536,
+        "benefit_units_receiving": 427424,
+        "average_monthly_award_gbp": 315,
+        "costed_year": 2027,
+        "costed_year_fiscal_cost_bn": 1.7903
       },
       "benchmarks": [
         {
@@ -277,17 +281,17 @@
         },
         {
           "measure": "Universal Credit childcare element",
-          "official_bn": 0.61,
-          "official_label": "DWP \u00a3611m, Great Britain, 2024-25 outturn",
+          "official_bn": 0.611,
+          "official_label": "DWP \u00a3611m, Great Britain, 2024-25 (modelled element split of a measured UC total)",
           "geography": "Great Britain",
           "period": "2024-25",
-          "kind": "Not comparable",
+          "kind": "Caseload gap",
           "model_measure": "uc_childcare_fiscal_cost",
-          "note": "Measured by abolishing it: the change in government spending when the 85% coverage rate is set to zero. Summing uc_childcare_element instead gives \u00a38.69bn, because it is a component of the UC maximum amount before the earnings taper \u2014 most of that face value never reaches a household, so setting it against an outturn produces a 14x gap that is an artefact of the comparison rather than a model error. The counterfactual is the comparable quantity.",
-          "url": "https://www.gov.uk/government/publications/benefit-expenditure-and-caseload-tables-2026",
-          "model_bn": 1.79,
+          "note": "Measured by abolishing it: the change in government spending when the 85% coverage rate is set to zero, at 2024 to match the published year. Summing uc_childcare_element instead gives \u00a37.95bn, because it is a component of the UC maximum amount before the earnings taper \u2014 most of that face value never reaches a household, so setting it against an outturn produces a 13x gap that is an artefact of the comparison rather than a model error. \n\nNeither side of what is left is exact. DWP's \u00a3611m is a modelled split of a measured UC total, not a measured childcare outturn: the workbook says element breakdowns are 'an estimate designed to be consistent with the OBR's Economic and Fiscal Outlook, although other credible breakdowns could be reached'. DWP's own caseload statistics do not reconcile with it either \u2014 164,000 households at \u00a3400 a month in May 2026 implies about \u00a3790m, some 30% above the expenditure line. \n\nThe gap that remains is caseload, not award size. The model has 427,000 benefit units gaining from the element against DWP's 164,000 to 177,000 households, roughly 2.5x, while paying a *lower* average award \u2014 \u00a3315 a month against DWP's \u00a3400. That is a real overstatement of how many families receive UC childcare support, and it is worth recording rather than explaining away.",
+          "url": "https://www.gov.uk/government/statistics/universal-credit-quarterly-statistics-29-april-2013-to-14-may-2026/universal-credit-childcare-element-statistics-to-may-2026",
+          "model_bn": 1.58,
           "model_variables": "abolition counterfactual on gov_spending",
-          "ratio_model_to_official": 2.93
+          "ratio_model_to_official": 2.59
         },
         {
           "measure": "Parent-paid childcare fees, England, under-5s",
@@ -996,9 +1000,13 @@
         }
       ],
       "uc_childcare_fiscal_cost": {
-        "fiscal_cost_bn": 1.8243,
-        "maximum_amount_component_bn": 8.8682,
-        "benefit_units_receiving": 425235
+        "comparison_year": 2024,
+        "fiscal_cost_bn": 1.5802,
+        "maximum_amount_component_bn": 7.9536,
+        "benefit_units_receiving": 427424,
+        "average_monthly_award_gbp": 315,
+        "costed_year": 2028,
+        "costed_year_fiscal_cost_bn": 1.8243
       },
       "benchmarks": [
         {
@@ -1040,17 +1048,17 @@
         },
         {
           "measure": "Universal Credit childcare element",
-          "official_bn": 0.61,
-          "official_label": "DWP \u00a3611m, Great Britain, 2024-25 outturn",
+          "official_bn": 0.611,
+          "official_label": "DWP \u00a3611m, Great Britain, 2024-25 (modelled element split of a measured UC total)",
           "geography": "Great Britain",
           "period": "2024-25",
-          "kind": "Not comparable",
+          "kind": "Caseload gap",
           "model_measure": "uc_childcare_fiscal_cost",
-          "note": "Measured by abolishing it: the change in government spending when the 85% coverage rate is set to zero. Summing uc_childcare_element instead gives \u00a38.69bn, because it is a component of the UC maximum amount before the earnings taper \u2014 most of that face value never reaches a household, so setting it against an outturn produces a 14x gap that is an artefact of the comparison rather than a model error. The counterfactual is the comparable quantity.",
-          "url": "https://www.gov.uk/government/publications/benefit-expenditure-and-caseload-tables-2026",
-          "model_bn": 1.824,
+          "note": "Measured by abolishing it: the change in government spending when the 85% coverage rate is set to zero, at 2024 to match the published year. Summing uc_childcare_element instead gives \u00a37.95bn, because it is a component of the UC maximum amount before the earnings taper \u2014 most of that face value never reaches a household, so setting it against an outturn produces a 13x gap that is an artefact of the comparison rather than a model error. \n\nNeither side of what is left is exact. DWP's \u00a3611m is a modelled split of a measured UC total, not a measured childcare outturn: the workbook says element breakdowns are 'an estimate designed to be consistent with the OBR's Economic and Fiscal Outlook, although other credible breakdowns could be reached'. DWP's own caseload statistics do not reconcile with it either \u2014 164,000 households at \u00a3400 a month in May 2026 implies about \u00a3790m, some 30% above the expenditure line. \n\nThe gap that remains is caseload, not award size. The model has 427,000 benefit units gaining from the element against DWP's 164,000 to 177,000 households, roughly 2.5x, while paying a *lower* average award \u2014 \u00a3315 a month against DWP's \u00a3400. That is a real overstatement of how many families receive UC childcare support, and it is worth recording rather than explaining away.",
+          "url": "https://www.gov.uk/government/statistics/universal-credit-quarterly-statistics-29-april-2013-to-14-may-2026/universal-credit-childcare-element-statistics-to-may-2026",
+          "model_bn": 1.58,
           "model_variables": "abolition counterfactual on gov_spending",
-          "ratio_model_to_official": 2.99
+          "ratio_model_to_official": 2.59
         },
         {
           "measure": "Parent-paid childcare fees, England, under-5s",
@@ -1759,9 +1767,13 @@
         }
       ],
       "uc_childcare_fiscal_cost": {
-        "fiscal_cost_bn": 1.8552,
-        "maximum_amount_component_bn": 9.0576,
-        "benefit_units_receiving": 435418
+        "comparison_year": 2024,
+        "fiscal_cost_bn": 1.5802,
+        "maximum_amount_component_bn": 7.9536,
+        "benefit_units_receiving": 427424,
+        "average_monthly_award_gbp": 315,
+        "costed_year": 2029,
+        "costed_year_fiscal_cost_bn": 1.8552
       },
       "benchmarks": [
         {
@@ -1803,17 +1815,17 @@
         },
         {
           "measure": "Universal Credit childcare element",
-          "official_bn": 0.61,
-          "official_label": "DWP \u00a3611m, Great Britain, 2024-25 outturn",
+          "official_bn": 0.611,
+          "official_label": "DWP \u00a3611m, Great Britain, 2024-25 (modelled element split of a measured UC total)",
           "geography": "Great Britain",
           "period": "2024-25",
-          "kind": "Not comparable",
+          "kind": "Caseload gap",
           "model_measure": "uc_childcare_fiscal_cost",
-          "note": "Measured by abolishing it: the change in government spending when the 85% coverage rate is set to zero. Summing uc_childcare_element instead gives \u00a38.69bn, because it is a component of the UC maximum amount before the earnings taper \u2014 most of that face value never reaches a household, so setting it against an outturn produces a 14x gap that is an artefact of the comparison rather than a model error. The counterfactual is the comparable quantity.",
-          "url": "https://www.gov.uk/government/publications/benefit-expenditure-and-caseload-tables-2026",
-          "model_bn": 1.855,
+          "note": "Measured by abolishing it: the change in government spending when the 85% coverage rate is set to zero, at 2024 to match the published year. Summing uc_childcare_element instead gives \u00a37.95bn, because it is a component of the UC maximum amount before the earnings taper \u2014 most of that face value never reaches a household, so setting it against an outturn produces a 13x gap that is an artefact of the comparison rather than a model error. \n\nNeither side of what is left is exact. DWP's \u00a3611m is a modelled split of a measured UC total, not a measured childcare outturn: the workbook says element breakdowns are 'an estimate designed to be consistent with the OBR's Economic and Fiscal Outlook, although other credible breakdowns could be reached'. DWP's own caseload statistics do not reconcile with it either \u2014 164,000 households at \u00a3400 a month in May 2026 implies about \u00a3790m, some 30% above the expenditure line. \n\nThe gap that remains is caseload, not award size. The model has 427,000 benefit units gaining from the element against DWP's 164,000 to 177,000 households, roughly 2.5x, while paying a *lower* average award \u2014 \u00a3315 a month against DWP's \u00a3400. That is a real overstatement of how many families receive UC childcare support, and it is worth recording rather than explaining away.",
+          "url": "https://www.gov.uk/government/statistics/universal-credit-quarterly-statistics-29-april-2013-to-14-may-2026/universal-credit-childcare-element-statistics-to-may-2026",
+          "model_bn": 1.58,
           "model_variables": "abolition counterfactual on gov_spending",
-          "ratio_model_to_official": 3.04
+          "ratio_model_to_official": 2.59
         },
         {
           "measure": "Parent-paid childcare fees, England, under-5s",

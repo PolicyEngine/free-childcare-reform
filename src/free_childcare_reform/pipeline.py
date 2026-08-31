@@ -334,6 +334,12 @@ def _baseline_programmes(sim, year: int) -> list[dict]:
     return rows
 
 
+UC_CHILDCARE_COMPARISON_YEAR = 2024
+# The abolition counterfactual needs the parameter changed from before the
+# year it is measured at, so this runs wider than PARAMETER_YEARS.
+UC_COUNTERFACTUAL_YEARS = [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030]
+
+
 def _uc_childcare_fiscal_cost(dataset, baseline, year: int) -> dict:
     """What the UC childcare element actually costs, by abolishing it.
 
@@ -352,20 +358,45 @@ def _uc_childcare_fiscal_cost(dataset, baseline, year: int) -> dict:
         scenario=Scenario(
             parameter_changes={
                 "gov.dwp.universal_credit.elements.childcare.coverage_rate": {
-                    parameter_year: 0 for parameter_year in PARAMETER_YEARS
+                    parameter_year: 0 for parameter_year in UC_COUNTERFACTUAL_YEARS
                 }
             }
         ),
     )
-    baseline_spending = float(baseline.calculate("gov_spending", year).sum())
-    abolished_spending = float(abolished.calculate("gov_spending", year).sum())
-    face_value = float(baseline.calculate("uc_childcare_element", year).sum())
-    uc_baseline = baseline.calculate("universal_credit", year)
-    losing = (uc_baseline - abolished.calculate("universal_credit", year)) > 1
+    # Measured at the year DWP's outturn covers, not the costed year. A 2027
+    # figure against a 2024-25 outturn would measure three years of caseload
+    # growth as much as it measures the model.
+    compare = UC_CHILDCARE_COMPARISON_YEAR
+    uc_baseline = baseline.calculate("universal_credit", compare)
+    lost = uc_baseline - abolished.calculate("universal_credit", compare)
+    losing = lost > 1
+    receiving = round(float(losing.sum()))
     return {
-        "fiscal_cost_bn": round((baseline_spending - abolished_spending) / 1e9, 4),
-        "maximum_amount_component_bn": round(face_value / 1e9, 4),
-        "benefit_units_receiving": round(float(losing.sum())),
+        "comparison_year": compare,
+        "fiscal_cost_bn": round(
+            (
+                float(baseline.calculate("gov_spending", compare).sum())
+                - float(abolished.calculate("gov_spending", compare).sum())
+            )
+            / 1e9,
+            4,
+        ),
+        "maximum_amount_component_bn": round(
+            float(baseline.calculate("uc_childcare_element", compare).sum()) / 1e9, 4
+        ),
+        "benefit_units_receiving": receiving,
+        "average_monthly_award_gbp": (
+            round(float(lost[losing].sum()) / receiving / 12) if receiving else None
+        ),
+        "costed_year": year,
+        "costed_year_fiscal_cost_bn": round(
+            (
+                float(baseline.calculate("gov_spending", year).sum())
+                - float(abolished.calculate("gov_spending", year).sum())
+            )
+            / 1e9,
+            4,
+        ),
     }
 
 

@@ -13,6 +13,7 @@ import SectionHeading from "./SectionHeading";
 const EXTRA_MEASURES = ["Universal Credit childcare element"];
 
 const BADGE = {
+  "Caseload gap": "bg-amber-50 text-amber-700 border-amber-200",
   "Not comparable": "bg-slate-100 text-slate-600 border-slate-200",
   "Fee base check": "bg-amber-50 text-amber-700 border-amber-200",
 };
@@ -181,9 +182,13 @@ export default function BaselineTab({ data, year }) {
                         source
                       </a>
                     </div>
-                    <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-500">
-                      {row.note}
-                    </p>
+                    <div className="mt-2 max-w-3xl space-y-2 text-xs leading-5 text-slate-500">
+                      {String(row.note)
+                        .split("\n\n")
+                        .map((paragraph) => (
+                          <p key={paragraph.slice(0, 32)}>{paragraph}</p>
+                        ))}
+                    </div>
                   </td>
                   <td className="px-4 py-4 text-right tabular-nums text-slate-700">
                     {money(row.model_bn)}
@@ -203,36 +208,55 @@ export default function BaselineTab({ data, year }) {
       {sensitivity ? (
         <section>
           <SectionHeading
-            title="What the fee base does to the subsidy leg"
-            description={`The 75% subsidy is a share of childcare spending, so it scales almost linearly in a fee base the model puts ${(
-              sensitivity.model_england_under_5_bn /
-              sensitivity.benchmark_england_under_5_bn
-            ).toFixed(2)}× the benchmark for England under-5s. This is the largest remaining uncertainty in the costing.`}
+            title="How much the childcare fee base moves the answer"
+            description={
+              <>
+                The 75% subsidy pays a share of what families spend on childcare, so its
+                cost depends on how much the model thinks they spend. For England&apos;s
+                under-5s the model has{" "}
+                <strong>{formatBn(sensitivity.model_england_under_5_bn)}</strong> of
+                childcare fees against a published estimate of{" "}
+                <strong>{formatBn(sensitivity.benchmark_england_under_5_bn)}</strong> — about{" "}
+                {(
+                  sensitivity.model_england_under_5_bn /
+                  sensitivity.benchmark_england_under_5_bn
+                ).toFixed(2)}
+                × as much. If the published figure is the better one, the subsidy is
+                being priced on a fee base that is too big, and the cost below falls.
+                Scaling the model&apos;s under-5 fees down to that estimate — and leaving
+                school-age childcare alone, because nothing is published to scale it
+                against — gives the second figure. This is the largest single uncertainty
+                in the costing, worth about{" "}
+                {formatBn(
+                  result.legs.combined.static_cost_bn - sensitivity.combined_cost_bn,
+                )}
+                .
+              </>
+            }
           />
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm text-slate-500">Subsidy leg, as modelled</div>
-              <div className="mt-1 text-3xl font-semibold text-slate-900">
-                {formatBn(result.legs.subsidy.static_cost_bn)}
+              <div className="text-sm text-slate-500">
+                Both legs, on the model&apos;s own fee base
               </div>
-              <div className="mt-2 text-sm text-slate-500">Upper end of the range.</div>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm text-slate-500">On the benchmark fee base</div>
               <div className="mt-1 text-3xl font-semibold text-slate-900">
-                {formatBn(sensitivity.subsidy_cost_bn)}
+                {formatBn(result.legs.combined.static_cost_bn)}
               </div>
               <div className="mt-2 text-sm text-slate-500">
-                Rebasing the under-5 slice by {sensitivity.under_5_slice_ratio}×.
+                Of which {formatBn(result.legs.subsidy.static_cost_bn)} is the subsidy.
+                This is the headline figure, and the top of the range.
               </div>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm text-slate-500">Both legs, rebased</div>
+              <div className="text-sm text-slate-500">
+                Both legs, on the published fee base
+              </div>
               <div className="mt-1 text-3xl font-semibold text-slate-900">
                 {formatBn(sensitivity.combined_cost_bn)}
               </div>
               <div className="mt-2 text-sm text-slate-500">
-                Against {formatBn(result.legs.combined.static_cost_bn)} as modelled.
+                Of which {formatBn(sensitivity.subsidy_cost_bn)} is the subsidy. The bottom
+                of the range: free hours are unaffected, so they set a floor.
               </div>
             </div>
           </div>

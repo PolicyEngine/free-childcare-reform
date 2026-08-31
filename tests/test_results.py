@@ -123,7 +123,9 @@ def test_the_known_gaps_are_flagged_rather_than_hidden(results):
         for benchmark in results["by_year"]["2027"]["benchmarks"]
     }
     assert kinds["Tax-Free Childcare"] == "Award gap"
-    assert kinds["Universal Credit childcare element"] == "Not comparable"
+    # It became comparable once measured as a counterfactual rather than by
+    # summing a maximum-amount component; what remains is a caseload gap.
+    assert kinds["Universal Credit childcare element"] == "Caseload gap"
     assert kinds["Parent-paid childcare fees, England, under-5s"] == "Fee base check"
     assert kinds["Childcare spending, all children, UK"] == "Unbenchmarked"
 
