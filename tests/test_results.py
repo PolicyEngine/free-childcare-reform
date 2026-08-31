@@ -267,3 +267,32 @@ def test_the_uc_childcare_element_is_measured_by_abolishing_it(results):
     assert row["model_bn"] == pytest.approx(fiscal, abs=0.01), (
         "the benchmark row must show the counterfactual, not the variable's sum"
     )
+
+
+def test_household_effects_respond_to_the_labour_supply_assumption(results):
+    """The distribution must move with the assumption, not just the cost.
+
+    The participation response is an expected value per person — a probability
+    of entering or leaving work times the gain to work — so it allocates to
+    households and can be read by quintile. An earlier version of this
+    dashboard claimed it could not, and showed static figures under every
+    assumption.
+    """
+    for leg in ("free_hours", "subsidy"):
+        by_bound = results["by_year"]["2027"]["legs"][leg]["household_effects_by_bound"]
+        assert set(by_bound) == {"low", "central", "high"}
+        gains = {
+            bound: [
+                row["average_gain_gbp"]
+                for row in effects["by_income_quintile_families_with_under_5s"]
+            ]
+            for bound, effects in by_bound.items()
+        }
+        assert gains["low"] != gains["central"] != gains["high"], leg
+        static = [
+            row["average_gain_gbp"]
+            for row in results["by_year"]["2027"]["legs"][leg]["household_effects"][
+                "by_income_quintile_families_with_under_5s"
+            ]
+        ]
+        assert gains["central"] != static, leg

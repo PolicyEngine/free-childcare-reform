@@ -64,7 +64,15 @@ export default function DistributionTab({ data, year, bound }) {
   const [legId, setLegId] = useState("combined");
 
   const result = data.by_year[String(year)];
-  const effects = result.legs[legId].household_effects;
+  // The distribution on the same behavioural assumption as the cost. The
+  // participation response is an expected value per person — a probability of
+  // entering or leaving work times the gain to work — so it allocates to
+  // households and can be read by quintile like any other income change.
+  const leg = result.legs[legId];
+  const effects =
+    bound && bound !== "none" && leg.household_effects_by_bound?.[bound]
+      ? leg.household_effects_by_bound[bound]
+      : leg.household_effects;
   const measure = MEASURES.find((m) => m.id === measureId);
   const population = POPULATIONS.find((p) => p.id === populationId);
   const rows = effects[populationId] || [];
@@ -75,14 +83,6 @@ export default function DistributionTab({ data, year, bound }) {
   return (
     <div className="space-y-10">
       <section>
-        {bound && bound !== "none" ? (
-          <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-            These figures do not change with the labour supply assumption. The
-            participation response is an expected-value aggregate — a number of entrants
-            and the revenue they bring — and is not allocated to individual households, so
-            it cannot be shown by income quintile. Everything below is the static effect.
-          </div>
-        ) : null}
         <SectionHeading
           title="Who gains, and by how much"
           description={
@@ -92,7 +92,10 @@ export default function DistributionTab({ data, year, bound }) {
               households in the UK — not only those with young children. Free childcare
               hours are counted at the DfE funding rate the model applies, which is what
               the government pays a provider, not what a family would have paid on the open
-              market.
+              market.{" "}
+              {bound && bound !== "none"
+                ? "These figures include the labour supply response at the assumption chosen above: each person's expected change in net income from entering or leaving work is added to their household's gain. It falls mostly on the bottom quintile, where the entrants are."
+                : "These figures are static. Choosing a labour supply assumption above adds each person's expected gain from entering or leaving work."}
             </>
           }
         />

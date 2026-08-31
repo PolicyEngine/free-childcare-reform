@@ -406,6 +406,7 @@ def prepare(
         "employment_income": employment_income,
         "imputed_wages": imputed_wages,
         "reform_gain": reform_gain,
+        "gain_to_work_reform": gtw_reform,
         "weights": weights,
     }
 
@@ -462,7 +463,16 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     )
     net_revenue = revenue_from_entrants - revenue_lost_to_leavers
 
+    # The same response at person level, so it can be allocated to households.
+    # Entering work raises household net income by the gain to work; leaving
+    # loses it. Expected values, so a person contributes their probability
+    # times that gain rather than a drawn outcome.
+    expected_net_income_change = (
+        entry_probability - exit_probability
+    ) * prepared["gain_to_work_reform"]
+
     return {
+        "expected_net_income_change_per_person": expected_net_income_change,
         "entrants": entrants,
         "leavers": leavers,
         "net_entrants": net_entrants,

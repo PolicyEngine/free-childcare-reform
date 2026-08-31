@@ -137,10 +137,32 @@ def _quintile(sim, year: int, entity: str = "household") -> np.ndarray:
     return np.where(decile >= 1, np.clip(((decile - 1) // 2 + 1).astype(int), 1, 5), 0)
 
 
-def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
-    """Change in household net income, by income quintile and by family type."""
+def _household_effects(
+    baseline_sim, reform_sim, year: int, extra_person_income: np.ndarray | None = None
+) -> dict:
+    """Change in household net income, by income quintile and by family type.
+
+    ``extra_person_income`` is the expected net-income effect of the labour
+    supply response, per person. It is added to the household's static gain so
+    the distribution can be read on the same behavioural assumption as the
+    cost, rather than only statically.
+    """
     baseline_income = np.asarray(baseline_sim.calculate("household_net_income", year).values, float)
     reform_income = np.asarray(reform_sim.calculate("household_net_income", year).values, float)
+    if extra_person_income is not None:
+        person_household = np.asarray(
+            baseline_sim.calculate("household_id", year, map_to="person").values
+        )
+        household_order = np.asarray(baseline_sim.calculate("household_id", year).values)
+        by_household = (
+            pd.DataFrame({"household_id": person_household, "gain": extra_person_income})
+            .groupby("household_id")["gain"]
+            .sum()
+            .reindex(household_order)
+            .fillna(0.0)
+            .to_numpy()
+        )
+        reform_income = reform_income + by_household
     weights = np.asarray(baseline_sim.calculate("household_weight", year).values, float)
     quintile = _quintile(baseline_sim, year)
     # family_type is a benefit-unit enum and youngest_child_age a benefit-unit
@@ -573,10 +595,35 @@ def run_year(dataset, year: int) -> dict:
             ]
         }
 
-    responses = _responses_against(combined)
+    responses_full = _responses_against(combined)
+    responses = {
+        bound: {
+            key: value
+            for key, value in response.items()
+            if key != "expected_net_income_change_per_person"
+        }
+        for bound, response in responses_full.items()
+    }
     for name, sim in (("free_hours", free_hours), ("subsidy", subsidy)):
         leg_responses = _responses_against(sim)
-        legs[name]["labour_supply"] = leg_responses
+        legs[name]["labour_supply"] = {
+            bound: {
+                key: value
+                for key, value in response.items()
+                if key != "expected_net_income_change_per_person"
+            }
+            for bound, response in leg_responses.items()
+        }
+        # The distribution on the same behavioural assumption as the cost.
+        legs[name]["household_effects_by_bound"] = {
+            bound: _household_effects(
+                baseline,
+                sim,
+                year,
+                response["expected_net_income_change_per_person"],
+            )
+            for bound, response in leg_responses.items()
+        }
         legs[name]["dynamic_cost"] = {
             bound: {
                 "static_cost_bn": legs[name]["static_cost_bn"],
