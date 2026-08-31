@@ -107,11 +107,21 @@ export default function MethodologyTab({ data, year }) {
             support from out-of-work income.
           </li>
           <li>
-            Two upstream bugs had been suppressing the positive side and are corrected
-            here: a units error crediting a non-worker with about <strong>£194</strong> of
-            annual earnings for part-time work rather than roughly £21,600, and the absence
-            of any imputation of what a potential entrant would <em>pay</em> for childcare,
-            which left 85% of eligible non-workers with a subsidy applied to zero.
+            Two upstream defects are worked around here and reported as{" "}
+            <a
+              href="https://github.com/PolicyEngine/policyengine-uk/issues/1839"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              policyengine-uk#1839
+            </a>
+            : a units error crediting a non-worker with about <strong>£194</strong> of
+            annual earnings for entering part-time work rather than roughly £21,600, and
+            the absence of any imputation of what a potential entrant would{" "}
+            <em>pay</em> for childcare, which leaves 85% of eligible non-workers with a
+            subsidy applied to zero. Both suppress the extensive margin; the fixes belong
+            upstream rather than in this repo.
           </li>
           <li>
             Elasticities are the OBR&apos;s, by gender, partner employment, age of youngest
@@ -134,13 +144,10 @@ export default function MethodologyTab({ data, year }) {
             non-eligible child still needs care. Only the extensive margin is modelled, and{" "}
             {A(src.bettendorf_jongen_muller, "Dutch evidence")} suggests hours respond about
             twice as much as employment, so this is a floor rather than the whole response.
-            Two methods are reported side by side: the gain-to-work model, which can go
-            either way because the reform also removes work conditions, and a
-            price-elasticity cross-check, which can only be positive. In{" "}
-            {formatFiscalYear(year)} they give{" "}
-            {result.dynamic_cost.central.net_entrants.toLocaleString("en-GB")} and{" "}
-            {result.price_elasticity_cross_check?.central.entrants.toLocaleString("en-GB")}{" "}
-            net entrants.
+            The elasticity bounds are the handle on uncertainty: the central childcare
+            price elasticity of {assumptions.price_elasticity_central} scales to{" "}
+            {assumptions.price_elasticity_low} and {assumptions.price_elasticity_high} for
+            the low and high cases.
           </li>
         </Block>
       </section>
@@ -153,13 +160,14 @@ export default function MethodologyTab({ data, year }) {
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
           <ul className="list-inside list-disc space-y-2 text-sm leading-6 text-slate-600">
             <li>
-              <strong>Take-up is assumed complete.</strong> The model&apos;s claim switches
-              default to true, so every eligible family receives every entitlement. Real
-              take-up of Tax-Free Childcare is about 46%, and take-up of free hours for
-              under-3s is well below 100%. This pushes the cost up.
+              <strong>Take-up is held fixed at the baseline rates.</strong> The Enhanced
+              FRS does apply a take-up haircut — about 88% for Tax-Free Childcare, 81% for
+              the working-parent entitlement, 56% for universal and 59% for the
+              disadvantaged offer — so this is not a full-take-up costing. What is assumed
+              is that those rates do not change under the reform.
             </li>
             <li>
-              <strong>Take-up is also assumed unresponsive.</strong> Making 15 hours
+              <strong>That assumption is the important one.</strong> Making 15 hours
               unconditional would draw in families who use no formal childcare today, which
               pushes the cost the other way. The 2024-25 expansion came in 26-28% above
               forecast on take-up alone.

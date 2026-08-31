@@ -17,7 +17,7 @@ def test_every_requested_year_is_present(results):
 
 
 def test_the_registry_is_emitted(results):
-    for key in ["assumptions", "sources", "comparable_costings", "income_cliff_context"]:
+    for key in ["assumptions", "sources", "comparable_costings"]:
         assert results[key], f"{key} missing from the results JSON"
 
 
@@ -58,16 +58,6 @@ def test_elasticity_bounds_order_the_response(results):
         central = abs(responses["central"]["net_entrants"])
         high = abs(responses["high"]["net_entrants"])
         assert low <= central <= high
-
-
-def test_the_price_elasticity_cross_check_can_only_be_positive(results):
-    # It sees the price fall and nothing else, so it brackets the gain-to-work
-    # model from above rather than confirming it.
-    for year in YEARS:
-        for bound in ["low", "central", "high"]:
-            check = results["by_year"][year]["price_elasticity_cross_check"][bound]
-            assert check["entrants"] >= 0
-            assert check["effective_price_change"] < 0
 
 
 def test_quintiles_are_complete_and_gains_are_non_negative(results):
@@ -215,10 +205,10 @@ def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
     # earlier version of this analysis wrongly concluded it did not.
     for programme in rows:
         assert rows[programme]["official_spending_bn"] > 0, programme
-    # The working-parent figure is a lower bound: DfE's two-year-old line mixes
-    # the working-parent and disadvantaged offers and is not split.
-    assert rows["extended"]["official_spending_bn"] == pytest.approx(3.4)
-    assert "lower bound" in rows["extended"]["official_spending_label"]
+    # The entitlement figures are the DSG early years block allocations for
+    # 2024-25, which is the year the model is read at.
+    assert rows["universal"]["official_spending_bn"] == pytest.approx(1.7)
+    assert rows["extended"]["official_spending_bn"] == pytest.approx(2.5)
     for programme, row in rows.items():
         assert row["comparison_year"] < row["costed_year"], programme
         # The costed-year figures are reported for context and must never be

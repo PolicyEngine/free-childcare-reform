@@ -36,7 +36,8 @@ FREE_HOURS_ADDITIONALITY = 163 / 570  # ~0.286
 FREE_HOURS_DISPLACEMENT = 1 - FREE_HOURS_ADDITIONALITY  # ~0.714
 
 # Childcare price elasticity of maternal employment, extensive margin. Used for
-# the independent cross-check of the gain-to-work model, not as its input.
+# the low and high bounds on the participation response, by scaling the OBR
+# elasticities in the same ratio.
 # Akgunduz and Plantenga's meta-analysis of 43 estimates gives a mean of -0.277,
 # but with a European/Canadian mean of -0.19 against a US mean of -0.35, clear
 # publication bias (larger and peer-reviewed samples give smaller estimates),
@@ -321,24 +322,6 @@ COMPARABLE_COSTINGS = [
     },
 ]
 
-# The £100,000 adjusted net income cliff the reform's second tier retains.
-INCOME_CLIFF_CONTEXT = {
-    "threshold_gbp": 100_000,
-    "frozen_since": 2017,
-    "inflation_indexed_equivalent_gbp": 137_000,
-    "children_affected": "50,500-99,000 in 2025-26",
-    "support_forgone_bn": 0.874,
-    "note": (
-        "DfE estimates released under FOI put 50,500 to 99,000 children in "
-        "families above the threshold in 2025-26, with up to £874m of funded "
-        "childcare support unavailable to them. A two-child family loses nearly "
-        "£30,000 of support on crossing £100,000 and needs about £156,000 of "
-        "gross income to restore its disposable income at £99,000. This reform "
-        "keeps the cliff for the second 15 hours but removes it from the first, "
-        "which cuts the size of the step without abolishing it."
-    ),
-    "url": "https://www.gov.uk/government/organisations/department-for-education",
-}
 
 
 # ---------------------------------------------------------------------------
@@ -442,7 +425,6 @@ def as_json(model_parameters: dict[str, Any]) -> dict:
             ),
         },
         "comparable_costings": COMPARABLE_COSTINGS,
-        "income_cliff_context": INCOME_CLIFF_CONTEXT,
         "sources": {
             "ifs_free_childcare": asdict(IFS_FREE_CHILDCARE),
             "akgunduz_plantenga": asdict(AKGUNDUZ_PLANTENGA),
@@ -479,19 +461,16 @@ BASELINE_PROGRAMMES = [
         "label": "Universal entitlement (15 hours, 3-4 year olds)",
         "spending_variable": "universal_childcare_entitlement",
         "caseload_variable": "is_child_receiving_universal_childcare",
-        "official_spending_bn": 2.7,
-        "official_spending_label": "DfE £2.7bn universal-hours funding, England, 2025-26 — an illustrative allocation for rate-setting (762,852.50 universal-hours PTEs), not an outturn",
+        "official_spending_bn": 1.7,
+        "official_spending_label": "£1.7bn, England, 2024-25, from the dedicated schools grant early years block allocations",
         "official_caseload": 416_537,
         "official_caseload_label": "DfE, January 2024: 778,327 registered excluding reception, less 361,790 on the working-parent entitlement",
         "period": "January 2024",
         "comparison_year": 2024,
         "geography": "England",
-        "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2025-to-2026/2025-to-2026-early-years-national-funding-formulae-technical-note",
+        "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
         "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2026",
         "note": (
-            "Spending is an illustrative DfE allocation for 2025-26 against a "
-            "model read at 2024, so it indicates scale rather than measuring a "
-            "gap. The caseload comparison is like-for-like. "
             "The comparator nets off the working-parent entitlement because "
             "policyengine-uk models the two as mutually exclusive: "
             "universal_childcare_entitlement_eligible ends with "
@@ -504,18 +483,16 @@ BASELINE_PROGRAMMES = [
         "label": "Working-parent entitlement (30 hours, under £100k)",
         "spending_variable": "extended_childcare_entitlement",
         "caseload_variable": "is_child_receiving_extended_childcare",
-        "official_spending_bn": 3.4,
-        "official_spending_label": "DfE, England, 2025-26: £1.1bn additional hours for 3-4 year olds plus £2.3bn for under-2s. A lower bound — DfE's £2.1bn two-year-old line mixes the working-parent and disadvantaged offers and is not split. Illustrative allocations, not outturn",
+        "official_spending_bn": 2.5,
+        "official_spending_label": "£2.5bn, England, 2024-25, from the dedicated schools grant early years block allocations",
         "official_caseload": 621_500,
         "official_caseload_label": "DfE, January 2025: 379,000 three- and four-year-olds plus 242,500 two-year-olds",
         "period": "January 2025",
         "comparison_year": 2024,
         "geography": "England",
-        "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2025-to-2026/2025-to-2026-early-years-national-funding-formulae-technical-note",
+        "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
         "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2025",
         "note": (
-            "Spending is an illustrative DfE allocation for 2025-26 and a lower "
-            "bound, so it indicates scale rather than measuring a gap. "
             "The census is January 2025 but the model is read at 2024, which is "
             "the basis policyengine-uk-data calibrates on. January 2024 cannot "
             "serve this scheme — the two-year-old offer only began in April "

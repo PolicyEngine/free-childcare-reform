@@ -33,7 +33,6 @@ from .labour_supply import (
     childcare_cost_when_working,
     participation_response,
     prepare,
-    price_elasticity_response,
     responds_to_childcare,
 )
 from .reforms import (
@@ -636,17 +635,6 @@ def run_year(dataset, year: int) -> dict:
             for bound, response in leg_responses.items()
         }
 
-    # Independent cross-check on the participation result, using the childcare
-    # price elasticity directly rather than the whole tax-benefit system.
-    price_check = {
-        bound: price_elasticity_response(baseline, combined, year, elasticity)
-        for bound, elasticity in [
-            ("central", sources.PRICE_ELASTICITY_CENTRAL),
-            ("low", sources.PRICE_ELASTICITY_LOW),
-            ("high", sources.PRICE_ELASTICITY_HIGH),
-        ]
-    }
-
     # Fee-base sensitivity. The subsidy leg is a flat share of childcare
     # spending, so its cost is linear in the spending base. The model's
     # childcare_expenses aggregate is well above the fee base implied by the
@@ -719,7 +707,6 @@ def run_year(dataset, year: int) -> dict:
         ),
         "legs": legs,
         "labour_supply": responses,
-        "price_elasticity_cross_check": price_check,
         "fee_base_sensitivity": fee_base_sensitivity,
         "dynamic_cost": dynamic,
         "model_parameters": _model_parameters(baseline, year),

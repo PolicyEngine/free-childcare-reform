@@ -81,15 +81,6 @@
       "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/"
     }
   ],
-  "income_cliff_context": {
-    "threshold_gbp": 100000,
-    "frozen_since": 2017,
-    "inflation_indexed_equivalent_gbp": 137000,
-    "children_affected": "50,500-99,000 in 2025-26",
-    "support_forgone_bn": 0.874,
-    "note": "DfE estimates released under FOI put 50,500 to 99,000 children in families above the threshold in 2025-26, with up to \u00a3874m of funded childcare support unavailable to them. A two-child family loses nearly \u00a330,000 of support on crossing \u00a3100,000 and needs about \u00a3156,000 of gross income to restore its disposable income at \u00a399,000. This reform keeps the cliff for the second 15 hours but removes it from the first, which cuts the size of the step without abolishing it.",
-    "url": "https://www.gov.uk/government/organisations/department-for-education"
-  },
   "sources": {
     "ifs_free_childcare": {
       "label": "Brewer, Cattan, Crawford and Rabe \u2014 Does more free childcare help parents work more?",
@@ -154,9 +145,9 @@
           "costed_year_caseload": 396866,
           "comparison_year": 2024,
           "model_spending_bn": 1.2968,
-          "official_spending_bn": 2.7,
-          "official_spending_label": "DfE \u00a32.7bn universal-hours funding, England, 2025-26 \u2014 an illustrative allocation for rate-setting (762,852.50 universal-hours PTEs), not an outturn",
-          "spending_ratio": 0.48,
+          "official_spending_bn": 1.7,
+          "official_spending_label": "\u00a31.7bn, England, 2024-25, from the dedicated schools grant early years block allocations",
+          "spending_ratio": 0.763,
           "model_caseload": 386917,
           "official_caseload": 416537,
           "official_caseload_label": "DfE, January 2024: 778,327 registered excluding reception, less 361,790 on the working-parent entitlement",
@@ -164,8 +155,8 @@
           "period": "January 2024",
           "geography": "England",
           "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2026",
-          "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2025-to-2026/2025-to-2026-early-years-national-funding-formulae-technical-note",
-          "note": "Spending is an illustrative DfE allocation for 2025-26 against a model read at 2024, so it indicates scale rather than measuring a gap. The caseload comparison is like-for-like. The comparator nets off the working-parent entitlement because policyengine-uk models the two as mutually exclusive: universal_childcare_entitlement_eligible ends with & ~has_extended_childcare. The headline 1.13 million is not the right figure to compare against."
+          "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
+          "note": "The comparator nets off the working-parent entitlement because policyengine-uk models the two as mutually exclusive: universal_childcare_entitlement_eligible ends with & ~has_extended_childcare. The headline 1.13 million is not the right figure to compare against."
         },
         {
           "programme": "extended",
@@ -175,9 +166,9 @@
           "costed_year_caseload": 999915,
           "comparison_year": 2024,
           "model_spending_bn": 2.768,
-          "official_spending_bn": 3.4,
-          "official_spending_label": "DfE, England, 2025-26: \u00a31.1bn additional hours for 3-4 year olds plus \u00a32.3bn for under-2s. A lower bound \u2014 DfE's \u00a32.1bn two-year-old line mixes the working-parent and disadvantaged offers and is not split. Illustrative allocations, not outturn",
-          "spending_ratio": 0.814,
+          "official_spending_bn": 2.5,
+          "official_spending_label": "\u00a32.5bn, England, 2024-25, from the dedicated schools grant early years block allocations",
+          "spending_ratio": 1.107,
           "model_caseload": 719707,
           "official_caseload": 621500,
           "official_caseload_label": "DfE, January 2025: 379,000 three- and four-year-olds plus 242,500 two-year-olds",
@@ -185,8 +176,8 @@
           "period": "January 2025",
           "geography": "England",
           "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2025",
-          "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2025-to-2026/2025-to-2026-early-years-national-funding-formulae-technical-note",
-          "note": "Spending is an illustrative DfE allocation for 2025-26 and a lower bound, so it indicates scale rather than measuring a gap. The census is January 2025 but the model is read at 2024, which is the basis policyengine-uk-data calibrates on. January 2024 cannot serve this scheme \u2014 the two-year-old offer only began in April 2024, so that census misses half of it \u2014 while the model's own 2025 already contains the September 2025 expansion to 30 hours for under-threes, which the January 2025 census predates. Reading the model at 2025 against this figure gives 1.61x, almost all of it that expansion. The mixed basis is a known limitation rather than a solved problem. DfE also warns that some two-year-olds eligible for both this and the disadvantaged offer were recorded here contrary to guidance, which moves children between this row and the next."
+          "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
+          "note": "The census is January 2025 but the model is read at 2024, which is the basis policyengine-uk-data calibrates on. January 2024 cannot serve this scheme \u2014 the two-year-old offer only began in April 2024, so that census misses half of it \u2014 while the model's own 2025 already contains the September 2025 expansion to 30 hours for under-threes, which the January 2025 census predates. Reading the model at 2025 against this figure gives 1.61x, almost all of it that expansion. The mixed basis is a known limitation rather than a solved problem. DfE also warns that some two-year-olds eligible for both this and the disadvantaged offer were recorded here contrary to guidance, which moves children between this row and the next."
         },
         {
           "programme": "targeted",
@@ -1779,41 +1770,6 @@
           "mean_gain_to_work_change_pct": 0.0684
         }
       },
-      "price_elasticity_cross_check": {
-        "central": {
-          "price_elasticity": -0.15,
-          "net_childcare_price_change": -0.477,
-          "additionality": 0.286,
-          "effective_price_change": -0.1364,
-          "employment_change_pct": 0.0205,
-          "mothers_in_band_employed_m": 1.377,
-          "mothers_in_band_not_working_m": 0.649,
-          "entrants": 28181,
-          "net_ftes": 14128
-        },
-        "low": {
-          "price_elasticity": -0.05,
-          "net_childcare_price_change": -0.477,
-          "additionality": 0.286,
-          "effective_price_change": -0.1364,
-          "employment_change_pct": 0.0068,
-          "mothers_in_band_employed_m": 1.377,
-          "mothers_in_band_not_working_m": 0.649,
-          "entrants": 9394,
-          "net_ftes": 4709
-        },
-        "high": {
-          "price_elasticity": -0.3,
-          "net_childcare_price_change": -0.477,
-          "additionality": 0.286,
-          "effective_price_change": -0.1364,
-          "employment_change_pct": 0.0409,
-          "mothers_in_band_employed_m": 1.377,
-          "mothers_in_band_not_working_m": 0.649,
-          "entrants": 56361,
-          "net_ftes": 28256
-        }
-      },
       "fee_base_sensitivity": {
         "model_childcare_expenses_bn": 11.061,
         "model_under_5_bn": 7.539,
@@ -1891,9 +1847,9 @@
           "costed_year_caseload": 399425,
           "comparison_year": 2024,
           "model_spending_bn": 1.2968,
-          "official_spending_bn": 2.7,
-          "official_spending_label": "DfE \u00a32.7bn universal-hours funding, England, 2025-26 \u2014 an illustrative allocation for rate-setting (762,852.50 universal-hours PTEs), not an outturn",
-          "spending_ratio": 0.48,
+          "official_spending_bn": 1.7,
+          "official_spending_label": "\u00a31.7bn, England, 2024-25, from the dedicated schools grant early years block allocations",
+          "spending_ratio": 0.763,
           "model_caseload": 386917,
           "official_caseload": 416537,
           "official_caseload_label": "DfE, January 2024: 778,327 registered excluding reception, less 361,790 on the working-parent entitlement",
@@ -1901,8 +1857,8 @@
           "period": "January 2024",
           "geography": "England",
           "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2026",
-          "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2025-to-2026/2025-to-2026-early-years-national-funding-formulae-technical-note",
-          "note": "Spending is an illustrative DfE allocation for 2025-26 against a model read at 2024, so it indicates scale rather than measuring a gap. The caseload comparison is like-for-like. The comparator nets off the working-parent entitlement because policyengine-uk models the two as mutually exclusive: universal_childcare_entitlement_eligible ends with & ~has_extended_childcare. The headline 1.13 million is not the right figure to compare against."
+          "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
+          "note": "The comparator nets off the working-parent entitlement because policyengine-uk models the two as mutually exclusive: universal_childcare_entitlement_eligible ends with & ~has_extended_childcare. The headline 1.13 million is not the right figure to compare against."
         },
         {
           "programme": "extended",
@@ -1912,9 +1868,9 @@
           "costed_year_caseload": 1008780,
           "comparison_year": 2024,
           "model_spending_bn": 2.768,
-          "official_spending_bn": 3.4,
-          "official_spending_label": "DfE, England, 2025-26: \u00a31.1bn additional hours for 3-4 year olds plus \u00a32.3bn for under-2s. A lower bound \u2014 DfE's \u00a32.1bn two-year-old line mixes the working-parent and disadvantaged offers and is not split. Illustrative allocations, not outturn",
-          "spending_ratio": 0.814,
+          "official_spending_bn": 2.5,
+          "official_spending_label": "\u00a32.5bn, England, 2024-25, from the dedicated schools grant early years block allocations",
+          "spending_ratio": 1.107,
           "model_caseload": 719707,
           "official_caseload": 621500,
           "official_caseload_label": "DfE, January 2025: 379,000 three- and four-year-olds plus 242,500 two-year-olds",
@@ -1922,8 +1878,8 @@
           "period": "January 2025",
           "geography": "England",
           "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2025",
-          "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2025-to-2026/2025-to-2026-early-years-national-funding-formulae-technical-note",
-          "note": "Spending is an illustrative DfE allocation for 2025-26 and a lower bound, so it indicates scale rather than measuring a gap. The census is January 2025 but the model is read at 2024, which is the basis policyengine-uk-data calibrates on. January 2024 cannot serve this scheme \u2014 the two-year-old offer only began in April 2024, so that census misses half of it \u2014 while the model's own 2025 already contains the September 2025 expansion to 30 hours for under-threes, which the January 2025 census predates. Reading the model at 2025 against this figure gives 1.61x, almost all of it that expansion. The mixed basis is a known limitation rather than a solved problem. DfE also warns that some two-year-olds eligible for both this and the disadvantaged offer were recorded here contrary to guidance, which moves children between this row and the next."
+          "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
+          "note": "The census is January 2025 but the model is read at 2024, which is the basis policyengine-uk-data calibrates on. January 2024 cannot serve this scheme \u2014 the two-year-old offer only began in April 2024, so that census misses half of it \u2014 while the model's own 2025 already contains the September 2025 expansion to 30 hours for under-threes, which the January 2025 census predates. Reading the model at 2025 against this figure gives 1.61x, almost all of it that expansion. The mixed basis is a known limitation rather than a solved problem. DfE also warns that some two-year-olds eligible for both this and the disadvantaged offer were recorded here contrary to guidance, which moves children between this row and the next."
         },
         {
           "programme": "targeted",
@@ -3525,41 +3481,6 @@
           "mean_gain_to_work_change_pct": 0.0696
         }
       },
-      "price_elasticity_cross_check": {
-        "central": {
-          "price_elasticity": -0.15,
-          "net_childcare_price_change": -0.4771,
-          "additionality": 0.286,
-          "effective_price_change": -0.1364,
-          "employment_change_pct": 0.0205,
-          "mothers_in_band_employed_m": 1.383,
-          "mothers_in_band_not_working_m": 0.652,
-          "entrants": 28303,
-          "net_ftes": 14189
-        },
-        "low": {
-          "price_elasticity": -0.05,
-          "net_childcare_price_change": -0.4771,
-          "additionality": 0.286,
-          "effective_price_change": -0.1364,
-          "employment_change_pct": 0.0068,
-          "mothers_in_band_employed_m": 1.383,
-          "mothers_in_band_not_working_m": 0.652,
-          "entrants": 9434,
-          "net_ftes": 4730
-        },
-        "high": {
-          "price_elasticity": -0.3,
-          "net_childcare_price_change": -0.4771,
-          "additionality": 0.286,
-          "effective_price_change": -0.1364,
-          "employment_change_pct": 0.0409,
-          "mothers_in_band_employed_m": 1.383,
-          "mothers_in_band_not_working_m": 0.652,
-          "entrants": 56605,
-          "net_ftes": 28378
-        }
-      },
       "fee_base_sensitivity": {
         "model_childcare_expenses_bn": 11.328,
         "model_under_5_bn": 7.72,
@@ -3637,9 +3558,9 @@
           "costed_year_caseload": 402336,
           "comparison_year": 2024,
           "model_spending_bn": 1.2968,
-          "official_spending_bn": 2.7,
-          "official_spending_label": "DfE \u00a32.7bn universal-hours funding, England, 2025-26 \u2014 an illustrative allocation for rate-setting (762,852.50 universal-hours PTEs), not an outturn",
-          "spending_ratio": 0.48,
+          "official_spending_bn": 1.7,
+          "official_spending_label": "\u00a31.7bn, England, 2024-25, from the dedicated schools grant early years block allocations",
+          "spending_ratio": 0.763,
           "model_caseload": 386917,
           "official_caseload": 416537,
           "official_caseload_label": "DfE, January 2024: 778,327 registered excluding reception, less 361,790 on the working-parent entitlement",
@@ -3647,8 +3568,8 @@
           "period": "January 2024",
           "geography": "England",
           "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2026",
-          "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2025-to-2026/2025-to-2026-early-years-national-funding-formulae-technical-note",
-          "note": "Spending is an illustrative DfE allocation for 2025-26 against a model read at 2024, so it indicates scale rather than measuring a gap. The caseload comparison is like-for-like. The comparator nets off the working-parent entitlement because policyengine-uk models the two as mutually exclusive: universal_childcare_entitlement_eligible ends with & ~has_extended_childcare. The headline 1.13 million is not the right figure to compare against."
+          "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
+          "note": "The comparator nets off the working-parent entitlement because policyengine-uk models the two as mutually exclusive: universal_childcare_entitlement_eligible ends with & ~has_extended_childcare. The headline 1.13 million is not the right figure to compare against."
         },
         {
           "programme": "extended",
@@ -3658,9 +3579,9 @@
           "costed_year_caseload": 1008915,
           "comparison_year": 2024,
           "model_spending_bn": 2.768,
-          "official_spending_bn": 3.4,
-          "official_spending_label": "DfE, England, 2025-26: \u00a31.1bn additional hours for 3-4 year olds plus \u00a32.3bn for under-2s. A lower bound \u2014 DfE's \u00a32.1bn two-year-old line mixes the working-parent and disadvantaged offers and is not split. Illustrative allocations, not outturn",
-          "spending_ratio": 0.814,
+          "official_spending_bn": 2.5,
+          "official_spending_label": "\u00a32.5bn, England, 2024-25, from the dedicated schools grant early years block allocations",
+          "spending_ratio": 1.107,
           "model_caseload": 719707,
           "official_caseload": 621500,
           "official_caseload_label": "DfE, January 2025: 379,000 three- and four-year-olds plus 242,500 two-year-olds",
@@ -3668,8 +3589,8 @@
           "period": "January 2025",
           "geography": "England",
           "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2025",
-          "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2025-to-2026/2025-to-2026-early-years-national-funding-formulae-technical-note",
-          "note": "Spending is an illustrative DfE allocation for 2025-26 and a lower bound, so it indicates scale rather than measuring a gap. The census is January 2025 but the model is read at 2024, which is the basis policyengine-uk-data calibrates on. January 2024 cannot serve this scheme \u2014 the two-year-old offer only began in April 2024, so that census misses half of it \u2014 while the model's own 2025 already contains the September 2025 expansion to 30 hours for under-threes, which the January 2025 census predates. Reading the model at 2025 against this figure gives 1.61x, almost all of it that expansion. The mixed basis is a known limitation rather than a solved problem. DfE also warns that some two-year-olds eligible for both this and the disadvantaged offer were recorded here contrary to guidance, which moves children between this row and the next."
+          "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
+          "note": "The census is January 2025 but the model is read at 2024, which is the basis policyengine-uk-data calibrates on. January 2024 cannot serve this scheme \u2014 the two-year-old offer only began in April 2024, so that census misses half of it \u2014 while the model's own 2025 already contains the September 2025 expansion to 30 hours for under-threes, which the January 2025 census predates. Reading the model at 2025 against this figure gives 1.61x, almost all of it that expansion. The mixed basis is a known limitation rather than a solved problem. DfE also warns that some two-year-olds eligible for both this and the disadvantaged offer were recorded here contrary to guidance, which moves children between this row and the next."
         },
         {
           "programme": "targeted",
@@ -5269,41 +5190,6 @@
           "elasticity_scale": 2.0,
           "responding_adults_m": 3.2155,
           "mean_gain_to_work_change_pct": 0.071
-        }
-      },
-      "price_elasticity_cross_check": {
-        "central": {
-          "price_elasticity": -0.15,
-          "net_childcare_price_change": -0.4778,
-          "additionality": 0.286,
-          "effective_price_change": -0.1366,
-          "employment_change_pct": 0.0205,
-          "mothers_in_band_employed_m": 1.395,
-          "mothers_in_band_not_working_m": 0.648,
-          "entrants": 28599,
-          "net_ftes": 14338
-        },
-        "low": {
-          "price_elasticity": -0.05,
-          "net_childcare_price_change": -0.4778,
-          "additionality": 0.286,
-          "effective_price_change": -0.1366,
-          "employment_change_pct": 0.0068,
-          "mothers_in_band_employed_m": 1.395,
-          "mothers_in_band_not_working_m": 0.648,
-          "entrants": 9533,
-          "net_ftes": 4779
-        },
-        "high": {
-          "price_elasticity": -0.3,
-          "net_childcare_price_change": -0.4778,
-          "additionality": 0.286,
-          "effective_price_change": -0.1366,
-          "employment_change_pct": 0.041,
-          "mothers_in_band_employed_m": 1.395,
-          "mothers_in_band_not_working_m": 0.648,
-          "entrants": 57198,
-          "net_ftes": 28675
         }
       },
       "fee_base_sensitivity": {

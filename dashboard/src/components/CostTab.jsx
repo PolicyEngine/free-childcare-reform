@@ -40,7 +40,7 @@ function Stat({ label, value, sub, footnote, tone = "default" }) {
 // What each labour supply assumption actually is, in the reader's view.
 const BOUND_NOTES = {
   central: (a) =>
-    `Central: the OBR participation elasticities as published, with a childcare price elasticity of ${a.price_elasticity_central} for the cross-check.`,
+    `Central: the OBR participation elasticities as published, matching a childcare price elasticity of ${a.price_elasticity_central}.`,
   low: (a) =>
     `Low: OBR elasticities scaled by ${a.elasticity_scale_low?.toFixed(2)}×, the ratio of a ${a.price_elasticity_low} price elasticity to the central ${a.price_elasticity_central}.`,
   high: (a) =>
@@ -58,7 +58,6 @@ export default function CostTab({ data, year, bound }) {
   const isStatic = bound === "none";
   const dynamic = isStatic ? null : result.dynamic_cost[bound];
   const response = isStatic ? null : result.labour_supply[bound];
-  const priceCheck = isStatic ? null : result.price_elasticity_cross_check?.[bound];
   const src = data.sources || {};
   const A = (source, text) =>
     source ? (
@@ -71,7 +70,6 @@ export default function CostTab({ data, year, bound }) {
 
   const assumptions = data.assumptions || {};
   const feeBase = result.fee_base_sensitivity;
-  const cliff = data.income_cliff_context;
 
   const yearRows = data.years.map((y) => ({
     year: formatFiscalYear(y),
@@ -108,7 +106,7 @@ export default function CostTab({ data, year, bound }) {
             sub={
               isStatic
                 ? "15 hours for every child from 9 months, plus 15 more where parents work and earn under £100,000."
-                : `15 hours for every child from 9 months, plus 15 more where parents work and earn under £100,000. Static ${formatBn(legs.free_hours.static_cost_bn)}; labour supply ${formatSignedBn(-legs.free_hours.dynamic_cost[bound].labour_supply_offset_bn)} on ${legs.free_hours.dynamic_cost[bound].net_entrants.toLocaleString("en-GB")} net entrants — making 15 hours unconditional removes a reason to work, so this leg costs more once behaviour moves.`
+                : `Static ${formatBn(legs.free_hours.static_cost_bn)}, plus ${formatSignedBn(-legs.free_hours.dynamic_cost[bound].labour_supply_offset_bn)} of labour supply on ${formatCount(legs.free_hours.dynamic_cost[bound].net_entrants)} net entrants. Unconditional hours remove a reason to work, so this leg costs more.`
             }
           />
           <Stat
@@ -121,7 +119,7 @@ export default function CostTab({ data, year, bound }) {
             sub={
               isStatic
                 ? `Replacing Tax-Free Childcare. On the published fee base this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`
-                : `Replacing Tax-Free Childcare. Static ${formatBn(legs.subsidy.static_cost_bn)}; labour supply ${formatSignedBn(-legs.subsidy.dynamic_cost[bound].labour_supply_offset_bn)} on ${legs.subsidy.dynamic_cost[bound].net_entrants.toLocaleString("en-GB")} net entrants — cutting the price of childcare makes work pay, so this leg costs less.`
+                : `Static ${formatBn(legs.subsidy.static_cost_bn)}, plus ${formatSignedBn(-legs.subsidy.dynamic_cost[bound].labour_supply_offset_bn)} of labour supply on ${formatCount(legs.subsidy.dynamic_cost[bound].net_entrants)} net entrants. Cheaper childcare makes work pay, so this leg costs less.`
             }
           />
           {isStatic ? (
@@ -136,11 +134,9 @@ export default function CostTab({ data, year, bound }) {
               value={formatSignedBn(-dynamic.labour_supply_offset_bn)}
               sub={`${dynamic.net_entrants >= 0 ? "+" : "−"}${formatCount(
                 Math.abs(dynamic.net_entrants),
-              )} net entrants (${formatCount(
-                Math.abs(dynamic.net_ftes),
-              )} full-time equivalents), among ${response.responding_adults_m.toFixed(1)}m parents whose youngest child is eligible. The two legs pull against each other — free hours remove a work condition, the subsidy cuts the price of working — so this is not the sum of the two figures above. At ${(
+              )} net entrants among ${response.responding_adults_m.toFixed(1)}m eligible parents. The legs pull against each other, so this is not their sum. At ${(
                 dynamic.offset_share_of_static_cost * 100
-              ).toFixed(1)}% of the static cost the effect is small on every assumption.`}
+              ).toFixed(1)}% of the static cost, small on every assumption.`}
               footnote={BOUND_NOTES[bound]?.(assumptions)}
             />
           )}
@@ -152,7 +148,7 @@ export default function CostTab({ data, year, bound }) {
           <h2 className="text-lg font-semibold tracking-tight text-slate-900">
             What is being costed
           </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-slate-600">
             Two changes, priced separately and never added together. Support is shown as
             it lands on a family, by where its income sits.
           </p>
@@ -249,7 +245,7 @@ export default function CostTab({ data, year, bound }) {
             <h2 className="text-lg font-semibold tracking-tight text-slate-900">
               What moves employment, and in which direction
             </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+            <p className="mt-2 text-sm leading-6 text-slate-600">
               Two forces pull against each other. The reported response is the net of
               them, which is why it is small.
             </p>
@@ -287,29 +283,16 @@ export default function CostTab({ data, year, bound }) {
                 <dd className="mt-2 text-sm leading-6 text-slate-600">
                   <ul className="list-disc space-y-1 pl-5">
                     <li>
-                      The 75% subsidy cuts the price of the care that working requires.
+                      The 75% subsidy cuts the price of the care that working requires, so
+                      the gain to work rises for parents who would be paying for childcare.
                     </li>
                     <li>
-                      Applying{" "}
-                      {A(
-                        src.akgunduz_plantenga,
-                        "a childcare price elasticity of maternal employment",
-                      )}{" "}
-                      to that price fall, scaled by{" "}
-                      {A(src.ifs_free_childcare, "29% additionality")}, brackets the
-                      positive channel on its own — it cannot be negative by construction.
+                      This is the channel that produces the subsidy leg&apos;s{" "}
+                      <strong>
+                        {formatCount(result.legs.subsidy.dynamic_cost[bound].net_entrants)}
+                      </strong>{" "}
+                      net entrants.
                     </li>
-                    {priceCheck ? (
-                      <li>
-                        Elasticity <strong>{priceCheck.price_elasticity}</strong>, effective
-                        price change{" "}
-                        <strong>
-                          {(priceCheck.effective_price_change * 100).toFixed(1)}%
-                        </strong>
-                        , implying <strong>{formatCount(priceCheck.entrants)}</strong>{" "}
-                        entrants.
-                      </li>
-                    ) : null}
                   </ul>
                 </dd>
               </div>
@@ -318,59 +301,6 @@ export default function CostTab({ data, year, bound }) {
         </section>
       )}
 
-      {cliff ? (
-        <section>
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900">
-              The £100,000 cliff, half-removed
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              The first 15 hours become unconditional, but the work and income test stays
-              on the second 15. So the cliff gets smaller — it does not go away.
-            </p>
-            <dl className="mt-5 grid gap-6 sm:grid-cols-3">
-              <div>
-                <dt className="text-sm text-slate-500">
-                  Threshold, frozen since {cliff.frozen_since}
-                </dt>
-                <dd className="mt-1 text-3xl font-semibold text-slate-900">
-                  £{cliff.threshold_gbp.toLocaleString("en-GB")}
-                </dd>
-                <dd className="mt-1 text-sm text-slate-500">
-                  £{cliff.inflation_indexed_equivalent_gbp.toLocaleString("en-GB")} had it
-                  been indexed.
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm text-slate-500">Children in families above it</dt>
-                <dd className="mt-1 text-3xl font-semibold text-slate-900">
-                  {cliff.children_affected}
-                </dd>
-                <dd className="mt-1 text-sm text-slate-500">
-                  England, 2025-26, from DfE estimates released under FOI.
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm text-slate-500">Support they cannot claim</dt>
-                <dd className="mt-1 text-3xl font-semibold text-slate-900">
-                  {formatBn(cliff.support_forgone_bn)}
-                </dd>
-                <dd className="mt-1 text-sm text-slate-500">
-                  A two-child family loses nearly £30,000 of support on crossing the
-                  threshold.
-                </dd>
-              </div>
-            </dl>
-            <p className="mt-5 max-w-3xl text-sm leading-6 text-slate-600">
-              Because the loss is a cliff rather than a taper, a two-child family earning
-              £99,000 needs about <strong>£156,000</strong> of gross income to get back to
-              the same disposable income once it crosses. This reform removes the test from
-              the first 15 hours, which cuts the size of the step; keeping it on the second
-              15 means a step remains.
-            </p>
-          </div>
-        </section>
-      ) : null}
     </div>
   );
 }
