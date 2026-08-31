@@ -19,6 +19,8 @@ jobs:
         run: ruff check src tests
       - name: Test
         run: pytest -q
+      - name: Assert the committed results are present and consistent
+        run: pytest -q tests/test_artifacts.py
 
   dashboard-build:
     name: Dashboard build and site-shell check
@@ -29,6 +31,12 @@ jobs:
       - name: Install deps
         working-directory: dashboard
         run: bun install --frozen-lockfile
+      - name: Assert the dashboard has data to serve
+        run: |
+          f=dashboard/public/data/free_childcare_reform_results.json
+          test -s "$f" || { echo "MISSING or empty: $f"; exit 1; }
+          python3 -c "import json,sys; json.load(open('$f'))" \
+            || { echo "not valid JSON: $f"; exit 1; }
       - name: Build
         working-directory: dashboard
         run: bun run build

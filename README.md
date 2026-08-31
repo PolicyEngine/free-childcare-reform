@@ -106,6 +106,10 @@ Central elasticity −0.15, bounds −0.05 and −0.30, from Akgündüz and Plan
 - `dashboard/` — Next.js dashboard: Reform (budget impact and household effects), Baseline and Methodology.
 - `data/` and `dashboard/public/data/` — generated results JSON.
 
+## Reproducing a result
+
+`uv.lock` pins the full dependency set, so `uv sync --frozen` reproduces the environment the results were built in. Each results file also records what produced it — the analysis commit, whether the working tree was dirty, the Python version, the generation time, the Enhanced FRS revision and the PolicyEngine package versions — under `provenance`. A figure can therefore be traced to a commit rather than only to a package version.
+
 ## Run
 
 ```bash

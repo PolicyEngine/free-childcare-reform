@@ -20,6 +20,9 @@ import argparse
 import importlib.metadata
 import json
 import os
+import subprocess
+import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -562,6 +565,40 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
     }
 
 
+def _provenance() -> dict:
+    """What produced this file, so a result can be traced back to a commit.
+
+    The dataset revision and package versions were already recorded; the
+    analysis commit, the Python version and the time were not, so two runs of
+    different code against the same data were indistinguishable.
+    """
+    try:
+        commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        dirty = bool(
+            subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.strip()
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        commit, dirty = None, None
+    return {
+        "analysis_commit": commit,
+        "working_tree_dirty": dirty,
+        "python_version": sys.version.split()[0],
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+    }
+
+
 def run_year(dataset, year: int) -> dict:
     print(f"  {year}: baseline ...")
     baseline = _build(dataset)
@@ -803,6 +840,7 @@ def run(args: argparse.Namespace) -> None:
         "dataset_revision": DATASET_REVISION,
         "policyengine_uk_version": importlib.metadata.version("policyengine-uk"),
         "policyengine_version": importlib.metadata.version("policyengine"),
+        "provenance": _provenance(),
         "reform_definition": {
             "free_hours": (
                 "15 hours a week of free childcare for every child from 9 months to "

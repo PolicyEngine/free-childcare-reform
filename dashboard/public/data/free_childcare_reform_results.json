@@ -9,6 +9,12 @@
   "dataset_revision": "7b0a06f0f08bec4bdb81c5d0fdb4057fe4e7fd1a",
   "policyengine_uk_version": "2.94.0",
   "policyengine_version": "5.3.0",
+  "provenance": {
+    "analysis_commit": "2724d97d3fa2dacae0fef2e01337041a76e1d048",
+    "working_tree_dirty": true,
+    "python_version": "3.13.15",
+    "generated_at": "2026-09-01T08:35:57+00:00"
+  },
   "reform_definition": {
     "free_hours": "15 hours a week of free childcare for every child from 9 months to school age, plus a further 15 hours where parents work and earn under \u00a3100,000 \u2014 replacing 30 hours for working parents under \u00a3100,000 and 15 hours for 3-4 year olds.",
     "subsidy": "A 75% subsidy of childcare costs for all, replacing Tax-Free Childcare's 25% top-up on parental spend capped at \u00a32,000 a child. The Universal Credit childcare element is kept unchanged."
