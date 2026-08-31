@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { formatFiscalYear } from "../src/lib/formatters";
 import BaselineTab from "../src/components/BaselineTab";
 import CostTab from "../src/components/CostTab";
 import DistributionTab from "../src/components/DistributionTab";
@@ -37,6 +38,8 @@ function Dashboard() {
   const [year, setYear] = useState(null);
   // Sub-tabs within "The reform": what it costs, and who gains.
   const [reformView, setReformView] = useState("budget");
+  // Shared by both reform views, so the controls sit above the switcher.
+  const [bound, setBound] = useState("central");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -130,6 +133,43 @@ function Dashboard() {
           <>
             {activeTab === "reform" && (
               <div>
+          <div className="mb-5 grid gap-3 sm:grid-cols-2">
+            <label className="min-w-0">
+              <span className="mb-1 block text-xs font-medium text-slate-500">Year</span>
+              <select
+                value={year}
+                onChange={(event) => setYear(Number(event.target.value))}
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
+              >
+                {data.years.map((y) => (
+                  <option key={y} value={y}>{formatFiscalYear(y)}</option>
+                ))}
+              </select>
+            </label>
+            <label className="min-w-0">
+              <span className="mb-1 block text-xs font-medium text-slate-500">
+                Labour supply assumption
+              </span>
+              <select
+                value={bound}
+                onChange={(event) => setBound(event.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
+              >
+                <option value="none">None — static only</option>
+                <option value="central">
+                  Central — price elasticity {(data.assumptions || {}).price_elasticity_central}
+                </option>
+                <option value="low">
+                  Low — {(data.assumptions || {}).price_elasticity_low} (OBR ×
+                  {(data.assumptions || {}).elasticity_scale_low?.toFixed(2)})
+                </option>
+                <option value="high">
+                  High — {(data.assumptions || {}).price_elasticity_high} (OBR ×
+                  {(data.assumptions || {}).elasticity_scale_high?.toFixed(2)})
+                </option>
+              </select>
+            </label>
+          </div>
                 <div className="mb-8 flex w-fit gap-1 rounded-xl bg-slate-100 p-1">
                   {[
                     { id: "budget", label: "Budget impact" },
@@ -150,9 +190,9 @@ function Dashboard() {
                   ))}
                 </div>
                 {reformView === "budget" ? (
-                  <CostTab data={data} year={year} onYearChange={setYear} />
+                  <CostTab data={data} year={year} bound={bound} />
                 ) : (
-                  <DistributionTab data={data} year={year} onYearChange={setYear} />
+                  <DistributionTab data={data} year={year} bound={bound} />
                 )}
               </div>
             )}

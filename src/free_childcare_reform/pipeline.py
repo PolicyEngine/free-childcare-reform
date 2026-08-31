@@ -536,28 +536,58 @@ def run_year(dataset, year: int) -> dict:
     # work-incentive channel would be invisible for exactly the people who
     # might move. See childcare_cost_when_working.
     responding = responds_to_childcare(baseline, year)
-    prepared = prepare(
-        baseline,
-        combined,
-        year,
-        childcare_cost_when_working(
-            baseline, year, responding, _childcare_cost_per_person(baseline, year)
-        ),
-        childcare_cost_when_working(
-            combined, year, responding, _childcare_cost_per_person(combined, year)
-        ),
-        _benunit_variable_per_person(baseline, year, "tax_free_childcare"),
-        _benunit_variable_per_person(combined, year, "tax_free_childcare"),
-    )
-    responses = {}
-    for bound, scale in [
-        ("central", sources.ELASTICITY_SCALE_CENTRAL),
-        ("low", sources.ELASTICITY_SCALE_LOW),
-        ("high", sources.ELASTICITY_SCALE_HIGH),
-    ]:
-        responses[bound] = {
-            key: (round(value, 4) if isinstance(value, float) else value)
-            for key, value in participation_response(prepared, elasticity_scale=scale).items()
+
+    def _responses_against(reform_sim) -> dict:
+        """Participation response of one reform against the baseline.
+
+        Run per leg as well as for both together, because a reader choosing a
+        labour supply assumption expects the cost of the thing they are looking
+        at to move. The legs pull in opposite directions — free hours remove a
+        work condition, the subsidy cuts the price of working — so the response
+        to each is not the response to both, and neither is a share of it.
+        """
+        prepared = prepare(
+            baseline,
+            reform_sim,
+            year,
+            childcare_cost_when_working(
+                baseline, year, responding, _childcare_cost_per_person(baseline, year)
+            ),
+            childcare_cost_when_working(
+                reform_sim, year, responding, _childcare_cost_per_person(reform_sim, year)
+            ),
+            _benunit_variable_per_person(baseline, year, "tax_free_childcare"),
+            _benunit_variable_per_person(reform_sim, year, "tax_free_childcare"),
+        )
+        return {
+            bound: {
+                key: (round(value, 4) if isinstance(value, float) else value)
+                for key, value in participation_response(
+                    prepared, elasticity_scale=scale
+                ).items()
+            }
+            for bound, scale in [
+                ("central", sources.ELASTICITY_SCALE_CENTRAL),
+                ("low", sources.ELASTICITY_SCALE_LOW),
+                ("high", sources.ELASTICITY_SCALE_HIGH),
+            ]
+        }
+
+    responses = _responses_against(combined)
+    for name, sim in (("free_hours", free_hours), ("subsidy", subsidy)):
+        leg_responses = _responses_against(sim)
+        legs[name]["labour_supply"] = leg_responses
+        legs[name]["dynamic_cost"] = {
+            bound: {
+                "static_cost_bn": legs[name]["static_cost_bn"],
+                "labour_supply_offset_bn": round(response["net_revenue_gbp"] / 1e9, 4),
+                "dynamic_cost_bn": round(
+                    legs[name]["static_cost_bn"] - response["net_revenue_gbp"] / 1e9, 3
+                ),
+                "net_entrants": round(response["net_entrants"]),
+                "net_ftes": round(response["net_ftes"]),
+            }
+            for bound, response in leg_responses.items()
         }
 
     # Independent cross-check on the participation result, using the childcare

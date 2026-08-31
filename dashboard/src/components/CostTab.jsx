@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -21,7 +20,7 @@ import {
 } from "../lib/formatters";
 import SectionHeading from "./SectionHeading";
 
-function Stat({ label, value, sub, tone = "default" }) {
+function Stat({ label, value, sub, footnote, tone = "default" }) {
   const valueClass =
     tone === "negative" ? "text-slate-900" : "text-slate-900";
   return (
@@ -29,17 +28,31 @@ function Stat({ label, value, sub, tone = "default" }) {
       <div className="text-sm text-slate-500">{label}</div>
       <div className={`mt-1 text-3xl font-semibold ${valueClass}`}>{value}</div>
       {sub ? <div className="mt-2 text-sm leading-6 text-slate-500">{sub}</div> : null}
+      {footnote ? (
+        <div className="mt-3 border-t border-slate-100 pt-2 text-xs leading-5 text-slate-500">
+          {footnote}
+        </div>
+      ) : null}
     </div>
   );
 }
+
+// What each labour supply assumption actually is, in the reader's view.
+const BOUND_NOTES = {
+  central: (a) =>
+    `Central: the OBR participation elasticities as published, with a childcare price elasticity of ${a.price_elasticity_central} for the cross-check.`,
+  low: (a) =>
+    `Low: OBR elasticities scaled by ${a.elasticity_scale_low?.toFixed(2)}×, the ratio of a ${a.price_elasticity_low} price elasticity to the central ${a.price_elasticity_central}.`,
+  high: (a) =>
+    `High: OBR elasticities scaled by ${a.elasticity_scale_high?.toFixed(2)}×, the ratio of a ${a.price_elasticity_high} price elasticity to the central ${a.price_elasticity_central}.`,
+};
 
 const LEG_LABELS = {
   free_hours: "15 free hours for all, from 9 months",
   subsidy: "75% subsidy replacing Tax-Free Childcare",
 };
 
-export default function CostTab({ data, year, onYearChange }) {
-  const [bound, setBound] = useState("central");
+export default function CostTab({ data, year, bound }) {
   const result = data.by_year[String(year)];
   const legs = result.legs;
   const isStatic = bound === "none";
@@ -56,6 +69,7 @@ export default function CostTab({ data, year, onYearChange }) {
       text
     );
 
+  const assumptions = data.assumptions || {};
   const feeBase = result.fee_base_sensitivity;
   const cliff = data.income_cliff_context;
 
@@ -83,46 +97,32 @@ export default function CostTab({ data, year, onYearChange }) {
             </>
           }
         />
-        <div className="mb-5 grid gap-3 sm:grid-cols-2">
-          <label className="min-w-0">
-            <span className="mb-1 block text-xs font-medium text-slate-500">Year</span>
-            <select
-              value={year}
-              onChange={(event) => onYearChange(Number(event.target.value))}
-              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
-            >
-              {data.years.map((y) => (
-                <option key={y} value={y}>{formatFiscalYear(y)}</option>
-              ))}
-            </select>
-          </label>
-          <label className="min-w-0">
-            <span className="mb-1 block text-xs font-medium text-slate-500">
-              Labour supply assumption
-            </span>
-            <select
-              value={bound}
-              onChange={(event) => setBound(event.target.value)}
-              className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
-            >
-              <option value="none">None — static only</option>
-              <option value="central">Central</option>
-              <option value="low">Low response</option>
-              <option value="high">High response</option>
-            </select>
-          </label>
-        </div>
-
         <div className="grid gap-4 sm:grid-cols-3">
           <Stat
             label={`Free hours, ${formatFiscalYear(year)}`}
-            value={formatBn(legs.free_hours.static_cost_bn)}
-            sub="15 hours for every child from 9 months, plus 15 more where parents work and earn under £100,000."
+            value={formatBn(
+              isStatic
+                ? legs.free_hours.static_cost_bn
+                : legs.free_hours.dynamic_cost[bound].dynamic_cost_bn,
+            )}
+            sub={
+              isStatic
+                ? "15 hours for every child from 9 months, plus 15 more where parents work and earn under £100,000."
+                : `15 hours for every child from 9 months, plus 15 more where parents work and earn under £100,000. Static ${formatBn(legs.free_hours.static_cost_bn)}; labour supply ${formatSignedBn(-legs.free_hours.dynamic_cost[bound].labour_supply_offset_bn)} on ${legs.free_hours.dynamic_cost[bound].net_entrants.toLocaleString("en-GB")} net entrants — making 15 hours unconditional removes a reason to work, so this leg costs more once behaviour moves.`
+            }
           />
           <Stat
             label={`75% subsidy, ${formatFiscalYear(year)}`}
-            value={formatBn(legs.subsidy.static_cost_bn)}
-            sub={`Replacing Tax-Free Childcare. On the published fee base this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`}
+            value={formatBn(
+              isStatic
+                ? legs.subsidy.static_cost_bn
+                : legs.subsidy.dynamic_cost[bound].dynamic_cost_bn,
+            )}
+            sub={
+              isStatic
+                ? `Replacing Tax-Free Childcare. On the published fee base this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`
+                : `Replacing Tax-Free Childcare. Static ${formatBn(legs.subsidy.static_cost_bn)}; labour supply ${formatSignedBn(-legs.subsidy.dynamic_cost[bound].labour_supply_offset_bn)} on ${legs.subsidy.dynamic_cost[bound].net_entrants.toLocaleString("en-GB")} net entrants — cutting the price of childcare makes work pay, so this leg costs less.`
+            }
           />
           {isStatic ? (
             <Stat
@@ -132,15 +132,16 @@ export default function CostTab({ data, year, onYearChange }) {
             />
           ) : (
             <Stat
-              label="Labour supply effect on cost"
+              label="Labour supply, both legs together"
               value={formatSignedBn(-dynamic.labour_supply_offset_bn)}
               sub={`${dynamic.net_entrants >= 0 ? "+" : "−"}${formatCount(
                 Math.abs(dynamic.net_entrants),
               )} net entrants (${formatCount(
                 Math.abs(dynamic.net_ftes),
-              )} full-time equivalents), among ${response.responding_adults_m.toFixed(1)}m parents whose youngest child is eligible. This applies to the reform as a whole, not to either leg on its own — which is why the two costs above do not move when you change this assumption. At ${(
+              )} full-time equivalents), among ${response.responding_adults_m.toFixed(1)}m parents whose youngest child is eligible. The two legs pull against each other — free hours remove a work condition, the subsidy cuts the price of working — so this is not the sum of the two figures above. At ${(
                 dynamic.offset_share_of_static_cost * 100
               ).toFixed(1)}% of the static cost the effect is small on every assumption.`}
+              footnote={BOUND_NOTES[bound]?.(assumptions)}
             />
           )}
         </div>

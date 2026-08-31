@@ -468,6 +468,76 @@
               "share_gaining": 0.0948,
               "average_gain_pct_of_income": 0.7908
             }
+          },
+          "labour_supply": {
+            "central": {
+              "entrants": 0.0009,
+              "leavers": 13263.9173,
+              "net_entrants": -13263.9164,
+              "net_ftes": -6649.6434,
+              "earnings_gained_gbp": 18.3783,
+              "earnings_lost_gbp": 249818439.1529,
+              "net_earnings_gbp": -249818420.7746,
+              "revenue_from_entrants_gbp": 4.872,
+              "revenue_lost_to_leavers_gbp": 21388397.1694,
+              "net_revenue_gbp": -21388392.2974,
+              "elasticity_scale": 1.0,
+              "responding_adults_m": 3.1887,
+              "mean_gain_to_work_change_pct": -0.0442
+            },
+            "low": {
+              "entrants": 0.0003,
+              "leavers": 4486.6476,
+              "net_entrants": -4486.6473,
+              "net_ftes": -2249.3058,
+              "earnings_gained_gbp": 6.1261,
+              "earnings_lost_gbp": 84154319.7429,
+              "net_earnings_gbp": -84154313.6168,
+              "revenue_from_entrants_gbp": 1.624,
+              "revenue_lost_to_leavers_gbp": 6968612.0036,
+              "net_revenue_gbp": -6968610.3796,
+              "elasticity_scale": 0.3333,
+              "responding_adults_m": 3.1887,
+              "mean_gain_to_work_change_pct": -0.0442
+            },
+            "high": {
+              "entrants": 0.0019,
+              "leavers": 25969.9598,
+              "net_entrants": -25969.9579,
+              "net_ftes": -13019.6056,
+              "earnings_gained_gbp": 36.7566,
+              "earnings_lost_gbp": 490950830.0308,
+              "net_earnings_gbp": -490950793.2742,
+              "revenue_from_entrants_gbp": 9.7441,
+              "revenue_lost_to_leavers_gbp": 43596328.6209,
+              "net_revenue_gbp": -43596318.8768,
+              "elasticity_scale": 2.0,
+              "responding_adults_m": 3.1887,
+              "mean_gain_to_work_change_pct": -0.0442
+            }
+          },
+          "dynamic_cost": {
+            "central": {
+              "static_cost_bn": 1.966,
+              "labour_supply_offset_bn": -0.0214,
+              "dynamic_cost_bn": 1.987,
+              "net_entrants": -13264,
+              "net_ftes": -6650
+            },
+            "low": {
+              "static_cost_bn": 1.966,
+              "labour_supply_offset_bn": -0.007,
+              "dynamic_cost_bn": 1.973,
+              "net_entrants": -4487,
+              "net_ftes": -2249
+            },
+            "high": {
+              "static_cost_bn": 1.966,
+              "labour_supply_offset_bn": -0.0436,
+              "dynamic_cost_bn": 2.01,
+              "net_entrants": -25970,
+              "net_ftes": -13020
+            }
           }
         },
         "subsidy": {
@@ -615,6 +685,76 @@
               "average_gain_gbp_among_gainers": 4878.15,
               "share_gaining": 0.2547,
               "average_gain_pct_of_income": 1.6324
+            }
+          },
+          "labour_supply": {
+            "central": {
+              "entrants": 14223.9523,
+              "leavers": 0.0,
+              "net_entrants": 14223.9523,
+              "net_ftes": 7130.9414,
+              "earnings_gained_gbp": 234944537.4853,
+              "earnings_lost_gbp": 0.0,
+              "net_earnings_gbp": 234944537.4853,
+              "revenue_from_entrants_gbp": 41911397.632,
+              "revenue_lost_to_leavers_gbp": 0.0,
+              "net_revenue_gbp": 41911397.632,
+              "elasticity_scale": 1.0,
+              "responding_adults_m": 3.1887,
+              "mean_gain_to_work_change_pct": 0.1109
+            },
+            "low": {
+              "entrants": 4741.3174,
+              "leavers": 0.0,
+              "net_entrants": 4741.3174,
+              "net_ftes": 2376.9805,
+              "earnings_gained_gbp": 78314845.8284,
+              "earnings_lost_gbp": 0.0,
+              "net_earnings_gbp": 78314845.8284,
+              "revenue_from_entrants_gbp": 13970465.8773,
+              "revenue_lost_to_leavers_gbp": 0.0,
+              "net_revenue_gbp": 13970465.8773,
+              "elasticity_scale": 0.3333,
+              "responding_adults_m": 3.1887,
+              "mean_gain_to_work_change_pct": 0.1109
+            },
+            "high": {
+              "entrants": 28397.7841,
+              "leavers": 0.0,
+              "net_entrants": 28397.7841,
+              "net_ftes": 14236.7557,
+              "earnings_gained_gbp": 469198092.1202,
+              "earnings_lost_gbp": 0.0,
+              "net_earnings_gbp": 469198092.1202,
+              "revenue_from_entrants_gbp": 83577639.8103,
+              "revenue_lost_to_leavers_gbp": 0.0,
+              "net_revenue_gbp": 83577639.8103,
+              "elasticity_scale": 2.0,
+              "responding_adults_m": 3.1887,
+              "mean_gain_to_work_change_pct": 0.1109
+            }
+          },
+          "dynamic_cost": {
+            "central": {
+              "static_cost_bn": 4.839,
+              "labour_supply_offset_bn": 0.0419,
+              "dynamic_cost_bn": 4.797,
+              "net_entrants": 14224,
+              "net_ftes": 7131
+            },
+            "low": {
+              "static_cost_bn": 4.839,
+              "labour_supply_offset_bn": 0.014,
+              "dynamic_cost_bn": 4.825,
+              "net_entrants": 4741,
+              "net_ftes": 2377
+            },
+            "high": {
+              "static_cost_bn": 4.839,
+              "labour_supply_offset_bn": 0.0836,
+              "dynamic_cost_bn": 4.755,
+              "net_entrants": 28398,
+              "net_ftes": 14237
             }
           }
         },
@@ -1235,6 +1375,76 @@
               "share_gaining": 0.0948,
               "average_gain_pct_of_income": 0.7947
             }
+          },
+          "labour_supply": {
+            "central": {
+              "entrants": 0.0012,
+              "leavers": 13415.0943,
+              "net_entrants": -13415.0932,
+              "net_ftes": -6725.4334,
+              "earnings_gained_gbp": 22.2192,
+              "earnings_lost_gbp": 257900237.6143,
+              "net_earnings_gbp": -257900215.395,
+              "revenue_from_entrants_gbp": 8.9091,
+              "revenue_lost_to_leavers_gbp": 22409951.0492,
+              "net_revenue_gbp": -22409942.14,
+              "elasticity_scale": 1.0,
+              "responding_adults_m": 3.2014,
+              "mean_gain_to_work_change_pct": -0.0444
+            },
+            "low": {
+              "entrants": 0.0004,
+              "leavers": 4541.2544,
+              "net_entrants": -4541.254,
+              "net_ftes": -2276.682,
+              "earnings_gained_gbp": 7.4064,
+              "earnings_lost_gbp": 86927903.6717,
+              "net_earnings_gbp": -86927896.2653,
+              "revenue_from_entrants_gbp": 2.9697,
+              "revenue_lost_to_leavers_gbp": 7303400.1152,
+              "net_revenue_gbp": -7303397.1455,
+              "elasticity_scale": 0.3333,
+              "responding_adults_m": 3.2014,
+              "mean_gain_to_work_change_pct": -0.0444
+            },
+            "high": {
+              "entrants": 0.0023,
+              "leavers": 26214.762,
+              "net_entrants": -26214.7596,
+              "net_ftes": -13142.3328,
+              "earnings_gained_gbp": 44.4385,
+              "earnings_lost_gbp": 506012703.8525,
+              "net_earnings_gbp": -506012659.414,
+              "revenue_from_entrants_gbp": 17.8183,
+              "revenue_lost_to_leavers_gbp": 45680697.5385,
+              "net_revenue_gbp": -45680679.7202,
+              "elasticity_scale": 2.0,
+              "responding_adults_m": 3.2014,
+              "mean_gain_to_work_change_pct": -0.0444
+            }
+          },
+          "dynamic_cost": {
+            "central": {
+              "static_cost_bn": 2.013,
+              "labour_supply_offset_bn": -0.0224,
+              "dynamic_cost_bn": 2.035,
+              "net_entrants": -13415,
+              "net_ftes": -6725
+            },
+            "low": {
+              "static_cost_bn": 2.013,
+              "labour_supply_offset_bn": -0.0073,
+              "dynamic_cost_bn": 2.02,
+              "net_entrants": -4541,
+              "net_ftes": -2277
+            },
+            "high": {
+              "static_cost_bn": 2.013,
+              "labour_supply_offset_bn": -0.0457,
+              "dynamic_cost_bn": 2.059,
+              "net_entrants": -26215,
+              "net_ftes": -13142
+            }
           }
         },
         "subsidy": {
@@ -1382,6 +1592,76 @@
               "average_gain_gbp_among_gainers": 4978.33,
               "share_gaining": 0.2546,
               "average_gain_pct_of_income": 1.6417
+            }
+          },
+          "labour_supply": {
+            "central": {
+              "entrants": 14343.1202,
+              "leavers": 0.0,
+              "net_entrants": 14343.1202,
+              "net_ftes": 7190.6843,
+              "earnings_gained_gbp": 241831108.8097,
+              "earnings_lost_gbp": 0.0,
+              "net_earnings_gbp": 241831108.8097,
+              "revenue_from_entrants_gbp": 42355885.935,
+              "revenue_lost_to_leavers_gbp": 0.0,
+              "net_revenue_gbp": 42355885.935,
+              "elasticity_scale": 1.0,
+              "responding_adults_m": 3.2014,
+              "mean_gain_to_work_change_pct": 0.1123
+            },
+            "low": {
+              "entrants": 4781.0401,
+              "leavers": 0.0,
+              "net_entrants": 4781.0401,
+              "net_ftes": 2396.8948,
+              "earnings_gained_gbp": 80610369.6032,
+              "earnings_lost_gbp": 0.0,
+              "net_earnings_gbp": 80610369.6032,
+              "revenue_from_entrants_gbp": 14118628.645,
+              "revenue_lost_to_leavers_gbp": 0.0,
+              "net_revenue_gbp": 14118628.645,
+              "elasticity_scale": 0.3333,
+              "responding_adults_m": 3.2014,
+              "mean_gain_to_work_change_pct": 0.1123
+            },
+            "high": {
+              "entrants": 28635.0555,
+              "leavers": 0.0,
+              "net_entrants": 28635.0555,
+              "net_ftes": 14355.7078,
+              "earnings_gained_gbp": 482941741.4223,
+              "earnings_lost_gbp": 0.0,
+              "net_earnings_gbp": 482941741.4223,
+              "revenue_from_entrants_gbp": 84454776.795,
+              "revenue_lost_to_leavers_gbp": 0.0,
+              "net_revenue_gbp": 84454776.795,
+              "elasticity_scale": 2.0,
+              "responding_adults_m": 3.2014,
+              "mean_gain_to_work_change_pct": 0.1123
+            }
+          },
+          "dynamic_cost": {
+            "central": {
+              "static_cost_bn": 4.956,
+              "labour_supply_offset_bn": 0.0424,
+              "dynamic_cost_bn": 4.914,
+              "net_entrants": 14343,
+              "net_ftes": 7191
+            },
+            "low": {
+              "static_cost_bn": 4.956,
+              "labour_supply_offset_bn": 0.0141,
+              "dynamic_cost_bn": 4.942,
+              "net_entrants": 4781,
+              "net_ftes": 2397
+            },
+            "high": {
+              "static_cost_bn": 4.956,
+              "labour_supply_offset_bn": 0.0845,
+              "dynamic_cost_bn": 4.872,
+              "net_entrants": 28635,
+              "net_ftes": 14356
             }
           }
         },
@@ -2002,6 +2282,76 @@
               "share_gaining": 0.0949,
               "average_gain_pct_of_income": 0.7996
             }
+          },
+          "labour_supply": {
+            "central": {
+              "entrants": 0.0006,
+              "leavers": 13472.3112,
+              "net_entrants": -13472.3106,
+              "net_ftes": -6754.1184,
+              "earnings_gained_gbp": 12.8016,
+              "earnings_lost_gbp": 264662957.061,
+              "net_earnings_gbp": -264662944.2594,
+              "revenue_from_entrants_gbp": 6.661,
+              "revenue_lost_to_leavers_gbp": 22917674.4485,
+              "net_revenue_gbp": -22917667.7875,
+              "elasticity_scale": 1.0,
+              "responding_adults_m": 3.2155,
+              "mean_gain_to_work_change_pct": -0.0446
+            },
+            "low": {
+              "entrants": 0.0002,
+              "leavers": 4576.1336,
+              "net_entrants": -4576.1334,
+              "net_ftes": -2294.1682,
+              "earnings_gained_gbp": 4.2672,
+              "earnings_lost_gbp": 89450712.2654,
+              "net_earnings_gbp": -89450707.9982,
+              "revenue_from_entrants_gbp": 2.2203,
+              "revenue_lost_to_leavers_gbp": 7448102.7548,
+              "net_revenue_gbp": -7448100.5345,
+              "elasticity_scale": 0.3333,
+              "responding_adults_m": 3.2155,
+              "mean_gain_to_work_change_pct": -0.0446
+            },
+            "high": {
+              "entrants": 0.0012,
+              "leavers": 26322.4097,
+              "net_entrants": -26322.4084,
+              "net_ftes": -13196.3008,
+              "earnings_gained_gbp": 25.6033,
+              "earnings_lost_gbp": 519230568.3863,
+              "net_earnings_gbp": -519230542.783,
+              "revenue_from_entrants_gbp": 13.322,
+              "revenue_lost_to_leavers_gbp": 46671117.8148,
+              "net_revenue_gbp": -46671104.4927,
+              "elasticity_scale": 2.0,
+              "responding_adults_m": 3.2155,
+              "mean_gain_to_work_change_pct": -0.0446
+            }
+          },
+          "dynamic_cost": {
+            "central": {
+              "static_cost_bn": 2.062,
+              "labour_supply_offset_bn": -0.0229,
+              "dynamic_cost_bn": 2.085,
+              "net_entrants": -13472,
+              "net_ftes": -6754
+            },
+            "low": {
+              "static_cost_bn": 2.062,
+              "labour_supply_offset_bn": -0.0074,
+              "dynamic_cost_bn": 2.069,
+              "net_entrants": -4576,
+              "net_ftes": -2294
+            },
+            "high": {
+              "static_cost_bn": 2.062,
+              "labour_supply_offset_bn": -0.0467,
+              "dynamic_cost_bn": 2.109,
+              "net_entrants": -26322,
+              "net_ftes": -13196
+            }
           }
         },
         "subsidy": {
@@ -2149,6 +2499,76 @@
               "average_gain_gbp_among_gainers": 5085.44,
               "share_gaining": 0.2546,
               "average_gain_pct_of_income": 1.6538
+            }
+          },
+          "labour_supply": {
+            "central": {
+              "entrants": 15067.2801,
+              "leavers": 0.0,
+              "net_entrants": 15067.2801,
+              "net_ftes": 7553.7297,
+              "earnings_gained_gbp": 263309694.9679,
+              "earnings_lost_gbp": 0.0,
+              "net_earnings_gbp": 263309694.9679,
+              "revenue_from_entrants_gbp": 44676069.236,
+              "revenue_lost_to_leavers_gbp": 0.0,
+              "net_revenue_gbp": 44676069.236,
+              "elasticity_scale": 1.0,
+              "responding_adults_m": 3.2155,
+              "mean_gain_to_work_change_pct": 0.1137
+            },
+            "low": {
+              "entrants": 5022.4267,
+              "leavers": 0.0,
+              "net_entrants": 5022.4267,
+              "net_ftes": 2517.9099,
+              "earnings_gained_gbp": 87769898.3226,
+              "earnings_lost_gbp": 0.0,
+              "net_earnings_gbp": 87769898.3226,
+              "revenue_from_entrants_gbp": 14892023.0787,
+              "revenue_lost_to_leavers_gbp": 0.0,
+              "net_revenue_gbp": 14892023.0787,
+              "elasticity_scale": 0.3333,
+              "responding_adults_m": 3.2155,
+              "mean_gain_to_work_change_pct": 0.1137
+            },
+            "high": {
+              "entrants": 30083.8112,
+              "leavers": 0.0,
+              "net_entrants": 30083.8112,
+              "net_ftes": 15082.0174,
+              "earnings_gained_gbp": 525882904.2471,
+              "earnings_lost_gbp": 0.0,
+              "net_earnings_gbp": 525882904.2471,
+              "revenue_from_entrants_gbp": 89085768.8749,
+              "revenue_lost_to_leavers_gbp": 0.0,
+              "net_revenue_gbp": 89085768.8749,
+              "elasticity_scale": 2.0,
+              "responding_adults_m": 3.2155,
+              "mean_gain_to_work_change_pct": 0.1137
+            }
+          },
+          "dynamic_cost": {
+            "central": {
+              "static_cost_bn": 5.088,
+              "labour_supply_offset_bn": 0.0447,
+              "dynamic_cost_bn": 5.043,
+              "net_entrants": 15067,
+              "net_ftes": 7554
+            },
+            "low": {
+              "static_cost_bn": 5.088,
+              "labour_supply_offset_bn": 0.0149,
+              "dynamic_cost_bn": 5.073,
+              "net_entrants": 5022,
+              "net_ftes": 2518
+            },
+            "high": {
+              "static_cost_bn": 5.088,
+              "labour_supply_offset_bn": 0.0891,
+              "dynamic_cost_bn": 4.999,
+              "net_entrants": 30084,
+              "net_ftes": 15082
             }
           }
         },
