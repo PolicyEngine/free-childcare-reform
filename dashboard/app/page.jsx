@@ -35,6 +35,8 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState(() => getInitialTab(searchParams.get("tab")));
   const [data, setData] = useState(null);
   const [year, setYear] = useState(null);
+  // Sub-tabs within "The reform": what it costs, and who gains.
+  const [reformView, setReformView] = useState("budget");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -129,9 +131,31 @@ function Dashboard() {
         {!loading && !error && data && year && (
           <>
             {activeTab === "reform" && (
-              <div className="space-y-10">
-                <CostTab data={data} year={year} onYearChange={setYear} />
-                <DistributionTab data={data} year={year} />
+              <div>
+                <div className="mb-8 flex w-fit gap-1 rounded-xl bg-slate-100 p-1">
+                  {[
+                    { id: "budget", label: "Budget impact" },
+                    { id: "households", label: "Household effects" },
+                  ].map((view) => (
+                    <button
+                      key={view.id}
+                      type="button"
+                      onClick={() => setReformView(view.id)}
+                      className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                        reformView === view.id
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      {view.label}
+                    </button>
+                  ))}
+                </div>
+                {reformView === "budget" ? (
+                  <CostTab data={data} year={year} onYearChange={setYear} />
+                ) : (
+                  <DistributionTab data={data} year={year} onYearChange={setYear} />
+                )}
               </div>
             )}
             {activeTab === "baseline" && <BaselineTab data={data} year={year} />}

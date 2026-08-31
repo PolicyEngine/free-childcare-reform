@@ -12,11 +12,7 @@ Costing of a two-part universal childcare reform for the UK, 2027 to 2029, on th
 
 Static cost of both legs together, and the same with the central labour supply response:
 
-| Year | Free hours | 75% subsidy |
-| --- | --- | --- |
-| 2027-28 | £1.97bn | £4.84bn |
-| 2028-29 | £2.01bn | £4.96bn |
-| 2029-30 | £2.06bn | £5.09bn |
+**Free hours cost £1.97bn in 2027-28, rising to £2.06bn by 2029-30. The 75% subsidy costs £4.84bn, rising to £5.09bn.**
 
 **The two legs are reported separately and should not be added.** Free hours displace paid care — about 71% of a new free offer replaces care families were already buying — so running both at once shrinks the base the 75% subsidy applies to. Summing the columns overstates the cost of doing both.
 

@@ -212,26 +212,6 @@ export default function CostTab({ data, year, onYearChange }) {
               />
             </BarChart>
           </ResponsiveContainer>
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-500">
-                  <th className="py-2 pr-4 font-medium">Year</th>
-                  <th className="py-2 pr-4 font-medium">Free hours</th>
-                  <th className="py-2 pr-4 font-medium">75% subsidy</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {yearRows.map((row) => (
-                  <tr key={row.year} className={formatFiscalYear(year) === row.year ? "font-semibold" : ""}>
-                    <td className="py-2 pr-4">{row.year}</td>
-                    <td className="py-2 pr-4">{formatBn(row.free_hours)}</td>
-                    <td className="py-2 pr-4">{formatBn(row.subsidy)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       </section>
 

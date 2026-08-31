@@ -5,18 +5,6 @@ import { Fragment, useState } from "react";
 import { formatBn, formatFiscalYear } from "../lib/formatters";
 import SectionHeading from "./SectionHeading";
 
-// Programmes are compared at the year their published figure covers. The UC
-// childcare element is not a programme in that sense and carries its own
-// basis, so it sits below the scheme rows.
-// The fee base is not listed here: it has its own section below, and the
-// entitlement schemes above have no official spending line to compare with.
-const EXTRA_MEASURES = ["Universal Credit childcare element"];
-
-const BADGE = {
-  "Caseload gap": "bg-amber-50 text-amber-700 border-amber-200",
-  "Not comparable": "bg-slate-100 text-slate-600 border-slate-200",
-  "Fee base check": "bg-amber-50 text-amber-700 border-amber-200",
-};
 
 function money(value) {
   return value === null || value === undefined ? "—" : formatBn(value);
@@ -43,9 +31,6 @@ export default function BaselineTab({ data, year }) {
   const programmes = result.baseline_programmes;
   const sensitivity = result.fee_base_sensitivity;
   const costings = data.comparable_costings || [];
-  const extras = (result.benchmarks || []).filter((row) =>
-    EXTRA_MEASURES.includes(row.measure),
-  );
   const [open, setOpen] = useState(null);
 
   return (
@@ -155,52 +140,6 @@ export default function BaselineTab({ data, year }) {
                   </Fragment>
                 );
               })}
-
-              {extras.map((row) => (
-                <tr
-                  key={row.measure}
-                  className="border-b border-slate-100 align-top last:border-0"
-                >
-                  <td className="px-6 py-4">
-                    <div className="font-semibold text-slate-900">{row.measure}</div>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                      <span
-                        className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 font-medium ${
-                          BADGE[row.kind] || BADGE["Not comparable"]
-                        }`}
-                      >
-                        {row.kind}
-                      </span>
-                      <span>
-                        {row.geography}, {row.period}
-                      </span>
-                      <a
-                        href={row.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[color:var(--pe-color-primary-600)] underline"
-                      >
-                        source
-                      </a>
-                    </div>
-                    <div className="mt-2 max-w-3xl space-y-2 text-xs leading-5 text-slate-500">
-                      {String(row.note)
-                        .split("\n\n")
-                        .map((paragraph) => (
-                          <p key={paragraph.slice(0, 32)}>{paragraph}</p>
-                        ))}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-right tabular-nums text-slate-700">
-                    {money(row.model_bn)}
-                  </td>
-                  <td className="px-4 py-4 text-right tabular-nums text-slate-700">
-                    {money(row.official_bn)}
-                  </td>
-                  <td className="px-4 py-4 text-right text-slate-400">—</td>
-                  <td className="px-6 py-4 text-right text-slate-400">—</td>
-                </tr>
-              ))}
             </tbody>
           </table>
         </div>
