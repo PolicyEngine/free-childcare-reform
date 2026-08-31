@@ -137,7 +137,18 @@ export default function CostTab({ data, year, bound }) {
               )} net entrants among ${response.responding_adults_m.toFixed(1)}m eligible parents. The legs pull against each other, so this is not their sum. At ${(
                 dynamic.offset_share_of_static_cost * 100
               ).toFixed(1)}% of the static cost, small on every assumption.`}
-              footnote={BOUND_NOTES[bound]?.(assumptions)}
+              footnote={
+                <>
+                  {BOUND_NOTES[bound]?.(assumptions)}{" "}
+                  {A(src.obr_labour_supply, "OBR participation elasticities")}
+                  {src.akgunduz_plantenga ? (
+                    <>
+                      {" · "}
+                      {A(src.akgunduz_plantenga, "price elasticity evidence")}
+                    </>
+                  ) : null}
+                </>
+              }
             />
           )}
         </div>

@@ -45,9 +45,15 @@ const MEASURES = [
 const POPULATIONS = [
   {
     id: "by_income_quintile_families_with_under_5s",
-    label: "Households with a child under 5",
+    label: "Income quintile — families with a child under 5",
+    grouping: "quintile",
   },
-  { id: "by_income_quintile", label: "All households" },
+  { id: "by_income_quintile", label: "Income quintile — all households", grouping: "quintile" },
+  {
+    id: "by_family_type_families_with_under_5s",
+    label: "Family type — families with a child under 5",
+    grouping: "family type",
+  },
 ];
 
 const LEGS = [
@@ -76,7 +82,6 @@ export default function DistributionTab({ data, year, bound }) {
   const measure = MEASURES.find((m) => m.id === measureId);
   const population = POPULATIONS.find((p) => p.id === populationId);
   const rows = effects[populationId] || [];
-  const familyRows = effects.by_family_type_families_with_under_5s || [];
   const headline = effects.families_with_under_5s;
   const all = effects.all_households;
 
@@ -153,7 +158,7 @@ export default function DistributionTab({ data, year, bound }) {
             </label>
             <label className="min-w-0">
               <span className="mb-1 block text-xs font-medium text-slate-500">
-                Population
+                Breakdown
               </span>
               <select
                 value={populationId}
@@ -183,7 +188,7 @@ export default function DistributionTab({ data, year, bound }) {
             </label>
           </div>
           <h3 className="mb-4 text-sm font-semibold text-slate-700">
-            {measure.label} by income quintile — {population.label.toLowerCase()} (
+            {measure.label} by {population.grouping} — {population.label.toLowerCase()} (
             {measure.unit}, {formatFiscalYear(year)})
           </h3>
           <ResponsiveContainer width="100%" height={320}>
@@ -200,55 +205,13 @@ export default function DistributionTab({ data, year, bound }) {
             </BarChart>
           </ResponsiveContainer>
           <p className="mt-4 text-sm leading-6 text-slate-500">
-            Q1 is the lowest-income fifth of households. Lower quintiles gain less in cash
-            because families on Universal Credit already receive 85% of childcare costs
-            through the UC childcare element, which this reform keeps unchanged, and
-            because low-income families use fewer paid childcare hours to begin with. As a
-            share of net income the picture is different — switch the measure above.
+            {population?.grouping === "quintile"
+            ? "Q1 is the lowest-income fifth of households. Lower quintiles gain less in cash because families on Universal Credit already receive 85% of childcare costs through the UC childcare element, which this reform keeps unchanged, and because low-income families use fewer paid childcare hours to begin with. As a share of net income the picture is different — switch the measure above."
+            : "Couples with children hold most of the gain because there are more of them and they use more paid childcare; lone parents are more likely to be on Universal Credit, whose childcare element this reform leaves unchanged."}
           </p>
         </div>
       </section>
 
-      <section>
-        <SectionHeading
-          title="By family type"
-          description="Households with a child under 5, ranked by average gain."
-        />
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-500">
-                  <th className="px-6 py-3 font-medium">Family type</th>
-                  <th className="px-6 py-3 font-medium">Households</th>
-                  <th className="px-6 py-3 font-medium">Average gain</th>
-                  <th className="px-6 py-3 font-medium">Share gaining</th>
-                  <th className="px-6 py-3 font-medium">Total gain</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {familyRows.map((row) => (
-                  <tr key={row.group}>
-                    <td className="px-6 py-3 text-slate-900">{row.group}</td>
-                    <td className="px-6 py-3 text-slate-600">
-                      {row.households_m.toFixed(2)}m
-                    </td>
-                    <td className="px-6 py-3 text-slate-600">
-                      {formatCurrency(row.average_gain_gbp)}
-                    </td>
-                    <td className="px-6 py-3 text-slate-600">
-                      {formatPct(row.share_gaining * 100, 0)}
-                    </td>
-                    <td className="px-6 py-3 text-slate-600">
-                      {formatBn(row.total_gain_bn)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
