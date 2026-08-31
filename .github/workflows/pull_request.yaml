@@ -32,11 +32,16 @@ jobs:
       - name: Build
         working-directory: dashboard
         run: bun run build
-      - name: Assert the PolicyEngine site shell is in the built HTML
+      - name: Assert the page shell and provenance line are in the built HTML
         working-directory: dashboard
         run: |
           html=.next/server/app/index.html
-          for needle in "PolicyEngine" ">Research<" ">Model<" ">API<" ">Donate<" "About us" "Developer tools" "Privacy policy" "Terms and conditions"; do
+          # The site nav and the footer link list are deliberately not rendered
+          # here: this page is a single analysis, and the footer states what
+          # produced the numbers instead. What must be present is the brand
+          # mark and that provenance line, so a build cannot ship without
+          # saying which code and which dataset produced it.
+          for needle in "PolicyEngine" "Replication code" "PolicyEngine/free-childcare-reform" "policyengine.py" "Enhanced FRS"; do
             grep -qF -- "$needle" "$html" || { echo "MISSING from built HTML: $needle"; exit 1; }
           done
-          echo "Site shell present (brand, nav labels, footer links)."
+          echo "Brand mark and provenance line present."

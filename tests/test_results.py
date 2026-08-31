@@ -206,8 +206,26 @@ def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
     expansion to 30 hours for under-threes, which the census predates.
     """
     rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
-    assert set(rows) == {"universal", "extended", "targeted", "tfc"}
+    assert set(rows) == {
+        "universal",
+        "extended",
+        "targeted",
+        "tfc",
+        "entitlements_total",
+    }
+    # DfE publishes one England total for the three entitlements rather than a
+    # line each, so that figure is carried on its own row instead of being
+    # split across the two rows it cannot be attributed to.
+    total = rows["entitlements_total"]
+    assert total["official_spending_bn"] == pytest.approx(8.7)
+    assert total["model_caseload"] is None, (
+        "a child can hold more than one entitlement, so the rows do not sum"
+    )
+    assert rows["universal"]["official_spending_bn"] is None
+    assert rows["extended"]["official_spending_bn"] is None
     for programme, row in rows.items():
+        if programme == "entitlements_total":
+            continue
         assert row["comparison_year"] < row["costed_year"], programme
         # The costed-year figures are reported for context and must never be
         # the numerator of a ratio against an older published figure.
@@ -228,7 +246,8 @@ def test_the_baseline_agrees_with_the_data_builds_own_release_check(results):
     this whole analysis has hit twice.
     """
     rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
-    # Release 1.57.2, from the push.yaml calibration log.
+    # Release 1.57.2, from the push.yaml calibration log. The entitlements
+    # total row has no caseload: a child can hold more than one entitlement.
     expected_caseload = {"universal": 0.93, "extended": 1.16, "targeted": 0.78, "tfc": 1.01}
     for programme, ratio in expected_caseload.items():
         assert rows[programme]["caseload_ratio"] == pytest.approx(ratio, abs=0.02), programme

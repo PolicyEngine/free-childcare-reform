@@ -276,6 +276,25 @@ def _baseline_programmes(sim, year: int) -> list[dict]:
     each row carries the period it is drawn from.
     """
     rows = []
+    entitlement_total = {
+        "programme": "entitlements_total",
+        "label": "All three free entitlements, England",
+        "model_spending_bn": 0.0,
+        "official_spending_bn": 8.7,
+        "official_spending_label": "IFS £8.7bn, England, 2025-26 prices",
+        "official_caseload": None,
+        "official_caseload_label": "No single published headcount: a child can hold more than one entitlement",
+        "period": "2025-26",
+        "comparison_year": 2024,
+        "geography": "England",
+        "url": "https://ifs.org.uk/publications/annual-report-education-spending-england-2025-26",
+        "note": (
+            "DfE does not publish the universal, working-parent and "
+            "disadvantaged entitlements as separate spending lines, so the "
+            "official column is blank on those rows and carried here instead. "
+            "The model figure is the sum of the three."
+        ),
+    }
     for programme in sources.BASELINE_PROGRAMMES:
         compare_year = programme["comparison_year"]
         # Costed-year values, for context: this is the baseline the reform is
@@ -321,6 +340,30 @@ def _baseline_programmes(sim, year: int) -> list[dict]:
                 "note": programme["note"],
             }
         )
+        if programme["programme"] in ("universal", "extended", "targeted"):
+            entitlement_total["model_spending_bn"] = round(
+                entitlement_total["model_spending_bn"] + model_spending, 4
+            )
+    entitlement_total["spending_ratio"] = round(
+        entitlement_total["model_spending_bn"] / entitlement_total["official_spending_bn"],
+        3,
+    )
+    entitlement_total["model_caseload"] = None
+    entitlement_total["caseload_ratio"] = None
+    entitlement_total["costed_year"] = year
+    entitlement_total["costed_year_spending_bn"] = round(
+        float(
+            sum(
+                sim.calculate(p["spending_variable"], year).sum()
+                for p in sources.BASELINE_PROGRAMMES
+                if p["programme"] in ("universal", "extended", "targeted")
+            )
+        )
+        / 1e9,
+        4,
+    )
+    entitlement_total["costed_year_caseload"] = None
+    rows.append(entitlement_total)
     return rows
 
 

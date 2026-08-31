@@ -49,18 +49,23 @@ For scale, the IFS found the move from 15 to 30 hours put about 12,000 more moth
 
 Each programme's baseline, compared at the year its published figure covers rather than at the costed year:
 
-| Programme | Spending | Official | | Children | Official | |
-| --- | --- | --- | --- | --- | --- | --- |
-| Universal entitlement, 3-4 | £1.30bn | not published separately | | 386,917 | 416,537 | 0.93× |
-| Working-parent entitlement | £4.57bn | not published separately | | 719,707 | 621,500 | 1.16× |
-| Disadvantaged two-year-olds | £0.43bn | £0.57bn | 0.75× | 90,587 | 115,852 | 0.78× |
-| Tax-Free Childcare | £0.63bn | £0.63bn | 0.99× | 1,099,437 | 1,085,020 | 1.01× |
+| Programme | Modelled spending | Official spending | Children, modelled | Children, official |
+| --- | --- | --- | --- | --- |
+| Universal entitlement, 3-4 | £1.30bn | not published separately | 386,917 | 416,537 |
+| Working-parent entitlement | £2.77bn | not published separately | 719,707 | 621,500 |
+| Disadvantaged two-year-olds | £0.43bn | £0.57bn | 90,587 | 115,852 |
+| Tax-Free Childcare | £0.63bn | £0.63bn | 1,099,437 | 1,085,020 |
+| **All three entitlements, England** | **£4.49bn** | **£8.70bn** | — | — |
 
-These are the same four ratios `policyengine-uk-data` checks its own release against, on the same published figures, so this table and the data build agree by construction. DfE reports the universal and working-parent entitlements as one £8.7bn England total rather than separately, which is why two spending cells are empty.
+DfE publishes one £8.7bn England total for the three entitlements rather than a line each, so that figure is carried on its own row rather than split across rows it cannot be attributed to. There is no official combined headcount, because a child can hold more than one entitlement.
 
-**The ratios are taken at each figure's own year, not at 2027.** Dividing a 2027 model figure by a January 2025 census measures the gap between the two dates as much as it measures the model: on the working-parent entitlement that reads 1.61×, and almost all of it is the September 2025 expansion to 30 hours for under-threes, which the census predates. The costed-year baseline is still reported in the dashboard's Baseline tab, labelled as such and deliberately not divided by an older statistic.
+The entitlements total is the row to look at: **£4.49bn modelled against £8.70bn published**. Part of that is scope — the published figure is England-only spending in 2025-26 prices while the model is read at 2024 — but not all of it, and it is the largest unexplained gap in this baseline. It does not feed the reform costing, which is measured as a difference from the baseline rather than as a level, but it is the first thing to check before treating any level in this analysis as a spending estimate.
 
-Two rows are worth knowing about. The **working-parent entitlement at 1.16×** compares an annual model period against a January stock, on a scheme that was mid-rollout — a known mixed basis rather than a solved problem, and the subject of an open review point upstream. The **disadvantaged two-year-old offer at 0.78×** is the weakest fit here; registrations have been falling year on year as the working-parent entitlement absorbs families who would previously have taken that offer, and DfE separately warns that some two-year-olds eligible for both were recorded under working-parent contrary to guidance, which moves children between those two rows.
+The four programme rows reproduce the comparison `policyengine-uk-data` checks its own release against, on the same published figures, so this table and the data build agree by construction.
+
+**Each comparison is drawn at its own figure's year, not at 2027.** Setting a 2027 model figure against a January 2025 census measures the gap between the two dates as much as it measures the model: on the working-parent entitlement that reads 1.61×, and almost all of it is the September 2025 expansion to 30 hours for under-threes, which the census predates. The costed-year baseline is still reported in the dashboard's Baseline tab, labelled as such and deliberately not set against an older statistic.
+
+Two rows are worth knowing about. The **working-parent entitlement**, at 719,707 children against 621,500, compares an annual model period against a January stock, on a scheme that was mid-rollout — a known mixed basis rather than a solved problem, and the subject of an open review point upstream. The **disadvantaged two-year-old offer**, at 90,587 against 115,852, is the weakest fit here; registrations have been falling year on year as the working-parent entitlement absorbs families who would previously have taken that offer, and DfE separately warns that some two-year-olds eligible for both were recorded under working-parent contrary to guidance, which moves children between those two rows.
 
 ## How it is modelled
 

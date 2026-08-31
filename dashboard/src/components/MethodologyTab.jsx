@@ -269,9 +269,9 @@ export default function MethodologyTab({ data, year }) {
 
       <section>
         <SectionHeading title="Sources" description="Every external number used, with its origin." />
-        <div className="space-y-3">
+        <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
           {Object.values(src).map((source) => (
-            <div key={source.url} className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div key={source.url} className="p-6">
               <a
                 href={source.url}
                 target="_blank"

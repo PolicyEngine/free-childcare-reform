@@ -77,7 +77,13 @@ function Dashboard() {
     <div className="app-shell min-h-screen">
       <header className="title-row">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4 md:px-8">
-          <h1>Free childcare reform</h1>
+          <h1>
+            15 free childcare hours for all, plus a 75% subsidy
+          </h1>
+          <p className="mt-2 text-lg font-normal leading-7 text-slate-500">
+            What two childcare reforms would cost the UK in 2027 to 2029, statically and
+            with a labour supply response
+          </p>
         </div>
       </header>
 
