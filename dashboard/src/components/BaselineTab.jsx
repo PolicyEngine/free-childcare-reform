@@ -31,7 +31,7 @@ export default function BaselineTab({ data, year }) {
               side by side because they answer different questions — whether the model pays
               the right amount, and whether it reaches the right number of families.
               Tax-Free Childcare is why that distinction is here: before the correction
-              described in Benchmarks it was close on children while paying nearly double,
+              described below it was close on children while paying nearly double,
               so a headcount-only check would have passed it. Select any row for the source
               and the reason the comparison is drawn where it is.
             </>

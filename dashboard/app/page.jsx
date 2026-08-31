@@ -12,7 +12,6 @@ const TAB_OPTIONS = [
   { id: "cost", label: "Budget impact" },
   { id: "baseline", label: "Baseline" },
   { id: "distribution", label: "Household effects" },
-  { id: "benchmarks", label: "Benchmarks" },
   { id: "methodology", label: "Methodology" },
 ];
 
@@ -80,10 +79,6 @@ function Dashboard() {
           <h1>
             15 free childcare hours for all, plus a 75% subsidy
           </h1>
-          <p className="mt-2 text-lg font-normal leading-7 text-slate-500">
-            What two childcare reforms would cost the UK in 2027 to 2029, statically and
-            with a labour supply response
-          </p>
         </div>
       </header>
 
@@ -107,11 +102,9 @@ function Dashboard() {
           tab shows who gains, by income quintile. The{" "}
           <TabLink onSelect={() => handleTabChange("baseline")}>Baseline</TabLink> tab sets
           the modelled baseline for each childcare programme against its published figure,
-          on spending and on children covered. The{" "}
-          <TabLink onSelect={() => handleTabChange("benchmarks")}>Benchmarks</TabLink> tab
-          checks every baseline against published outturns and comparable costings, and is
-          the place to start if you want to know how much weight the headline numbers bear.
-          The{" "}
+          on spending and on children covered, and checks the rest against published
+          outturns and comparable costings. It is the place to start if you want to know how
+          much weight the headline numbers bear. The{" "}
           <TabLink onSelect={() => handleTabChange("methodology")}>Methodology</TabLink> tab
           explains how each result is computed, with a source for every assumption.
         </p>
@@ -147,8 +140,12 @@ function Dashboard() {
             {activeTab === "distribution" && (
               <DistributionTab data={data} year={year} onYearChange={setYear} />
             )}
-            {activeTab === "baseline" && <BaselineTab data={data} year={year} />}
-            {activeTab === "benchmarks" && <BenchmarkTab data={data} year={year} />}
+            {activeTab === "baseline" && (
+              <div className="space-y-10">
+                <BaselineTab data={data} year={year} />
+                <BenchmarkTab data={data} year={year} />
+              </div>
+            )}
             {activeTab === "methodology" && <MethodologyTab data={data} year={year} />}
           </>
         )}

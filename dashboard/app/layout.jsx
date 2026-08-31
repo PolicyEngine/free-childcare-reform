@@ -1,7 +1,3 @@
-import results from "../public/data/free_childcare_reform_results.json";
-import PolicyEngineFooter from "../src/components/PolicyEngineFooter";
-import PolicyEngineHeader from "../src/components/PolicyEngineHeader";
-
 import "./globals.css";
 
 export const metadata = {
@@ -14,11 +10,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        <PolicyEngineHeader />
-        {children}
-        <PolicyEngineFooter data={results} />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
