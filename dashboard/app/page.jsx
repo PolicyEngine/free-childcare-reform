@@ -75,9 +75,7 @@ function Dashboard() {
     <div className="app-shell min-h-screen">
       <header className="title-row">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4 md:px-8">
-          <h1>
-            15 free childcare hours for all, plus a 75% subsidy
-          </h1>
+          <h1>Childcare reform costing</h1>
         </div>
       </header>
 
@@ -155,10 +153,10 @@ function Dashboard() {
               PolicyEngine/free-childcare-reform
             </a>
             . Built with{" "}
-            <a href="https://pypi.org/project/policyengine-uk/" target="_blank" rel="noreferrer">
-              policyengine-uk
+            <a href="https://pypi.org/project/policyengine/" target="_blank" rel="noreferrer">
+              policyengine.py
             </a>{" "}
-            v{data?.policyengine_uk_version} on the Enhanced FRS 2024-25.
+            v{data?.policyengine_version} on the Enhanced FRS 2024-25.
           </p>
         </footer>
       </main>

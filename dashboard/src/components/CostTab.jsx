@@ -135,6 +135,46 @@ export default function CostTab({ data, year, onYearChange }) {
       </section>
 
       <section>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+            What is being costed
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+            Two changes, priced separately and together. Support is shown as it lands on a
+            family, by where its income sits.
+          </p>
+          <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl bg-slate-50 p-4">
+              <dt className="text-sm font-semibold text-slate-900">
+                Leg 1 — 15 free hours for everyone, plus 15 more for working parents
+              </dt>
+              <dd className="mt-2 text-sm leading-6 text-slate-600">
+                Today: 15 hours for 3-4 year olds, and 30 hours where parents work and earn
+                under £100,000. After: <strong>15 hours free for every child</strong> from 9
+                months to school age, with no work or income test, and{" "}
+                <strong>a further 15 hours</strong> where parents work and earn under
+                £100,000. A non-working family gains 15 hours it does not have today; a
+                working family under £100,000 keeps the 30 it already has.
+              </dd>
+            </div>
+            <div className="rounded-xl bg-slate-50 p-4">
+              <dt className="text-sm font-semibold text-slate-900">
+                Leg 2 — a 75% subsidy replacing Tax-Free Childcare
+              </dt>
+              <dd className="mt-2 text-sm leading-6 text-slate-600">
+                Today: Tax-Free Childcare tops up 25% of what a parent pays into an account,
+                capped at £2,000 a child, with a work test and a £100,000 cliff. After:{" "}
+                <strong>75% of childcare costs</strong>, uncapped, with no work test and no
+                cliff — so it reaches above £100,000 too. Families on Universal Credit keep
+                the <strong>85% childcare element</strong> instead, unchanged, rather than
+                stacking the two.
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section>
         <SectionHeading
           title="Cost by year and by leg"
           description={

@@ -5,13 +5,12 @@ import { Fragment, useState } from "react";
 import { formatBn } from "../lib/formatters";
 import SectionHeading from "./SectionHeading";
 
-// Programmes are compared at the year their published figure covers. These two
-// are not programmes and have no such year, so they carry their own basis and
-// sit below the scheme rows.
-const EXTRA_MEASURES = [
-  "Universal Credit childcare element",
-  "Parent-paid childcare fees, England, under-5s",
-];
+// Programmes are compared at the year their published figure covers. The UC
+// childcare element is not a programme in that sense and carries its own
+// basis, so it sits below the scheme rows.
+// The fee base is not listed here: it has its own section below, and the
+// entitlement schemes above have no official spending line to compare with.
+const EXTRA_MEASURES = ["Universal Credit childcare element"];
 
 const BADGE = {
   "Not comparable": "bg-slate-100 text-slate-600 border-slate-200",
@@ -20,6 +19,16 @@ const BADGE = {
 
 function money(value) {
   return value === null || value === undefined ? "—" : formatBn(value);
+}
+
+// cost_bn carries its own qualifier for some entries ("3.0-3.4 net",
+// "4.1 by 2027-28"), so "bn" belongs after the number, not after the string.
+function formatCosting(value) {
+  const text = String(value);
+  const match = text.match(/^([\d.\u2013-]+)(.*)$/);
+  if (!match) return `£${text}bn`;
+  const [, number, qualifier] = match;
+  return `£${number}bn${qualifier}`;
 }
 
 function count(value) {
@@ -243,7 +252,7 @@ export default function BaselineTab({ data, year }) {
                   {costing.proposal}
                 </h3>
                 <span className="text-lg font-semibold text-[color:var(--pe-color-primary-600)]">
-                  £{costing.cost_bn}bn
+                  {formatCosting(costing.cost_bn)}
                 </span>
               </div>
               <div className="mt-1 text-sm text-slate-500">

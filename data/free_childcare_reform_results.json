@@ -46,7 +46,7 @@
   "comparable_costings": [
     {
       "proposal": "15 hours free for all children 9 months to 4, no work test",
-      "source": "New Economics Foundation, with the Public Services Trust and JRF",
+      "source": "New Economics Foundation, with Pregnant Then Screwed and JRF",
       "date": "July 2025",
       "cost_bn": "3.0-3.4 net",
       "geography": "England",
@@ -57,7 +57,7 @@
       "proposal": "30 hours for all 3-4 year olds, work test removed",
       "source": "Sutton Trust and IFS (Farquharson), A Fair Start?",
       "date": "August 2021",
-      "cost_bn": "0.25",
+      "cost_bn": "0.25 central",
       "geography": "England",
       "note": "Predates the under-3 expansion entirely, so it cannot be scaled to today's system, but it is the only IFS-authored costing of removing a work test.",
       "url": "https://www.suttontrust.com/our-research/a-fair-start-equalising-access-to-early-education/"
@@ -68,17 +68,17 @@
       "date": "March 2023",
       "cost_bn": "4.1 by 2027-28",
       "geography": "England",
-      "note": "Costed with about 60,000 entrants to employment by 2027-28, on a plausible range of 55,000 to 240,000. Useful both as a cost anchor and as the government's own labour supply assumption. Outturn ran 26-28% above forecast on take-up alone.",
+      "note": "Costed with about 60,000 entrants to employment by 2027-28, on a central estimate. (The OBR's 55,000 to 240,000 band is the uncertainty around the labour supply effect of all Spring Budget 2023 measures, central 110,000 \u2014 not around this 60,000.) Useful both as a cost anchor and as the government's own labour supply assumption. Outturn ran above forecast: take-up reported in March 2025 ran 26% above the December 2023 estimate, and 2024-25 spending about 28% above budget.",
       "url": "https://www.gov.uk/government/publications/spring-budget-2023"
     },
     {
       "proposal": "Nordic-style universal childcare, 40 hours, 6 months to school age",
       "source": "Women's Budget Group (De Henau)",
       "date": "2020",
-      "cost_bn": "38-55 gross, 9-16 net",
+      "cost_bn": "38-57 gross, 1.7-6.1 net",
       "geography": "UK",
-      "note": "A far larger offer than this reform. Cited only as an upper bound.",
-      "url": "https://wbg.org.uk/analysis/uk-policy-briefings/2020-briefing-a-care-led-recovery-from-coronavirus/"
+      "note": "A far larger offer than this reform \u2014 40 hours a week, 48 weeks a year, from 6 months. Cited only as an upper bound. WBG puts tax and benefit recoupment at 89-95% of the gross cost, which is what makes the net range so much smaller. An earlier version of this file gave the net range as \u00a39-16bn and the gross as \u00a338-55bn; the first has no published source and the second mixed the 2017 base with the 2020 update.",
+      "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/"
     }
   ],
   "income_cliff_context": {
@@ -230,28 +230,13 @@
           "geography": "UK",
           "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-june-2025",
           "note": "Both sides annual. HMRC also publishes a point-in-time monthly count; comparing an annual model aggregate against that stock manufactures a gap that is not there. This is the only programme here whose spending the Enhanced FRS is directly calibrated on, at 0.99x its target on release 1.57.2."
-        },
-        {
-          "programme": "entitlements_total",
-          "label": "All three free entitlements, England",
-          "model_spending_bn": 4.4923,
-          "official_spending_bn": 8.7,
-          "official_spending_label": "IFS \u00a38.7bn, England, 2025-26 prices",
-          "official_caseload": null,
-          "official_caseload_label": "No single published headcount: a child can hold more than one entitlement",
-          "period": "2025-26",
-          "comparison_year": 2024,
-          "geography": "England",
-          "url": "https://ifs.org.uk/publications/annual-report-education-spending-england-2025-26",
-          "note": "DfE does not publish the universal, working-parent and disadvantaged entitlements as separate spending lines, so the official column is blank on those rows and carried here instead. The model figure is the sum of the three.",
-          "spending_ratio": 0.516,
-          "model_caseload": null,
-          "caseload_ratio": null,
-          "costed_year": 2027,
-          "costed_year_spending_bn": 7.178,
-          "costed_year_caseload": null
         }
       ],
+      "uc_childcare_fiscal_cost": {
+        "fiscal_cost_bn": 1.7903,
+        "maximum_amount_component_bn": 8.686,
+        "benefit_units_receiving": 425981
+      },
       "benchmarks": [
         {
           "measure": "Free early years entitlements, total",
@@ -297,11 +282,12 @@
           "geography": "Great Britain",
           "period": "2024-25",
           "kind": "Not comparable",
-          "note": "uc_childcare_element is the childcare element of the UC maximum amount, before the earnings taper reduces the award. It is not government spending and is not counted as such here. DWP's \u00a3611m is the spending figure.",
+          "model_measure": "uc_childcare_fiscal_cost",
+          "note": "Measured by abolishing it: the change in government spending when the 85% coverage rate is set to zero. Summing uc_childcare_element instead gives \u00a38.69bn, because it is a component of the UC maximum amount before the earnings taper \u2014 most of that face value never reaches a household, so setting it against an outturn produces a 14x gap that is an artefact of the comparison rather than a model error. The counterfactual is the comparable quantity.",
           "url": "https://www.gov.uk/government/publications/benefit-expenditure-and-caseload-tables-2026",
-          "model_bn": 8.686,
-          "model_variables": "uc_childcare_element",
-          "ratio_model_to_official": 14.24
+          "model_bn": 1.79,
+          "model_variables": "abolition counterfactual on gov_spending",
+          "ratio_model_to_official": 2.93
         },
         {
           "measure": "Parent-paid childcare fees, England, under-5s",
@@ -458,15 +444,6 @@
                 "average_gain_gbp_among_gainers": 6086.6,
                 "share_gaining": 0.0972,
                 "average_gain_pct_of_income": 0.6878
-              },
-              {
-                "group": "Couple No Children",
-                "households_m": 0.002,
-                "total_gain_bn": 0.0,
-                "average_gain_gbp": 0.0,
-                "average_gain_gbp_among_gainers": 0.0,
-                "share_gaining": 0.0,
-                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -615,15 +592,6 @@
                 "average_gain_gbp_among_gainers": 3919.97,
                 "share_gaining": 0.0235,
                 "average_gain_pct_of_income": 0.2047
-              },
-              {
-                "group": "Couple No Children",
-                "households_m": 0.002,
-                "total_gain_bn": 0.0,
-                "average_gain_gbp": 0.0,
-                "average_gain_gbp_among_gainers": 0.0,
-                "share_gaining": 0.0,
-                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -772,15 +740,6 @@
                 "average_gain_gbp_among_gainers": 6319.07,
                 "share_gaining": 0.1497,
                 "average_gain_pct_of_income": 2.1008
-              },
-              {
-                "group": "Couple No Children",
-                "households_m": 0.002,
-                "total_gain_bn": 0.0,
-                "average_gain_gbp": 0.0,
-                "average_gain_gbp_among_gainers": 0.0,
-                "share_gaining": 0.0,
-                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -1034,28 +993,13 @@
           "geography": "UK",
           "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-june-2025",
           "note": "Both sides annual. HMRC also publishes a point-in-time monthly count; comparing an annual model aggregate against that stock manufactures a gap that is not there. This is the only programme here whose spending the Enhanced FRS is directly calibrated on, at 0.99x its target on release 1.57.2."
-        },
-        {
-          "programme": "entitlements_total",
-          "label": "All three free entitlements, England",
-          "model_spending_bn": 4.4923,
-          "official_spending_bn": 8.7,
-          "official_spending_label": "IFS \u00a38.7bn, England, 2025-26 prices",
-          "official_caseload": null,
-          "official_caseload_label": "No single published headcount: a child can hold more than one entitlement",
-          "period": "2025-26",
-          "comparison_year": 2024,
-          "geography": "England",
-          "url": "https://ifs.org.uk/publications/annual-report-education-spending-england-2025-26",
-          "note": "DfE does not publish the universal, working-parent and disadvantaged entitlements as separate spending lines, so the official column is blank on those rows and carried here instead. The model figure is the sum of the three.",
-          "spending_ratio": 0.516,
-          "model_caseload": null,
-          "caseload_ratio": null,
-          "costed_year": 2028,
-          "costed_year_spending_bn": 7.3932,
-          "costed_year_caseload": null
         }
       ],
+      "uc_childcare_fiscal_cost": {
+        "fiscal_cost_bn": 1.8243,
+        "maximum_amount_component_bn": 8.8682,
+        "benefit_units_receiving": 425235
+      },
       "benchmarks": [
         {
           "measure": "Free early years entitlements, total",
@@ -1101,11 +1045,12 @@
           "geography": "Great Britain",
           "period": "2024-25",
           "kind": "Not comparable",
-          "note": "uc_childcare_element is the childcare element of the UC maximum amount, before the earnings taper reduces the award. It is not government spending and is not counted as such here. DWP's \u00a3611m is the spending figure.",
+          "model_measure": "uc_childcare_fiscal_cost",
+          "note": "Measured by abolishing it: the change in government spending when the 85% coverage rate is set to zero. Summing uc_childcare_element instead gives \u00a38.69bn, because it is a component of the UC maximum amount before the earnings taper \u2014 most of that face value never reaches a household, so setting it against an outturn produces a 14x gap that is an artefact of the comparison rather than a model error. The counterfactual is the comparable quantity.",
           "url": "https://www.gov.uk/government/publications/benefit-expenditure-and-caseload-tables-2026",
-          "model_bn": 8.868,
-          "model_variables": "uc_childcare_element",
-          "ratio_model_to_official": 14.54
+          "model_bn": 1.824,
+          "model_variables": "abolition counterfactual on gov_spending",
+          "ratio_model_to_official": 2.99
         },
         {
           "measure": "Parent-paid childcare fees, England, under-5s",
@@ -1262,15 +1207,6 @@
                 "average_gain_gbp_among_gainers": 6205.4,
                 "share_gaining": 0.0971,
                 "average_gain_pct_of_income": 0.6905
-              },
-              {
-                "group": "Couple No Children",
-                "households_m": 0.002,
-                "total_gain_bn": 0.0,
-                "average_gain_gbp": 0.0,
-                "average_gain_gbp_among_gainers": 0.0,
-                "share_gaining": 0.0,
-                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -1419,15 +1355,6 @@
                 "average_gain_gbp_among_gainers": 3998.72,
                 "share_gaining": 0.0235,
                 "average_gain_pct_of_income": 0.206
-              },
-              {
-                "group": "Couple No Children",
-                "households_m": 0.002,
-                "total_gain_bn": 0.0,
-                "average_gain_gbp": 0.0,
-                "average_gain_gbp_among_gainers": 0.0,
-                "share_gaining": 0.0,
-                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -1576,15 +1503,6 @@
                 "average_gain_gbp_among_gainers": 6445.73,
                 "share_gaining": 0.1497,
                 "average_gain_pct_of_income": 2.1143
-              },
-              {
-                "group": "Couple No Children",
-                "households_m": 0.002,
-                "total_gain_bn": 0.0,
-                "average_gain_gbp": 0.0,
-                "average_gain_gbp_among_gainers": 0.0,
-                "share_gaining": 0.0,
-                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -1838,28 +1756,13 @@
           "geography": "UK",
           "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-june-2025",
           "note": "Both sides annual. HMRC also publishes a point-in-time monthly count; comparing an annual model aggregate against that stock manufactures a gap that is not there. This is the only programme here whose spending the Enhanced FRS is directly calibrated on, at 0.99x its target on release 1.57.2."
-        },
-        {
-          "programme": "entitlements_total",
-          "label": "All three free entitlements, England",
-          "model_spending_bn": 4.4923,
-          "official_spending_bn": 8.7,
-          "official_spending_label": "IFS \u00a38.7bn, England, 2025-26 prices",
-          "official_caseload": null,
-          "official_caseload_label": "No single published headcount: a child can hold more than one entitlement",
-          "period": "2025-26",
-          "comparison_year": 2024,
-          "geography": "England",
-          "url": "https://ifs.org.uk/publications/annual-report-education-spending-england-2025-26",
-          "note": "DfE does not publish the universal, working-parent and disadvantaged entitlements as separate spending lines, so the official column is blank on those rows and carried here instead. The model figure is the sum of the three.",
-          "spending_ratio": 0.516,
-          "model_caseload": null,
-          "caseload_ratio": null,
-          "costed_year": 2029,
-          "costed_year_spending_bn": 7.5654,
-          "costed_year_caseload": null
         }
       ],
+      "uc_childcare_fiscal_cost": {
+        "fiscal_cost_bn": 1.8552,
+        "maximum_amount_component_bn": 9.0576,
+        "benefit_units_receiving": 435418
+      },
       "benchmarks": [
         {
           "measure": "Free early years entitlements, total",
@@ -1905,11 +1808,12 @@
           "geography": "Great Britain",
           "period": "2024-25",
           "kind": "Not comparable",
-          "note": "uc_childcare_element is the childcare element of the UC maximum amount, before the earnings taper reduces the award. It is not government spending and is not counted as such here. DWP's \u00a3611m is the spending figure.",
+          "model_measure": "uc_childcare_fiscal_cost",
+          "note": "Measured by abolishing it: the change in government spending when the 85% coverage rate is set to zero. Summing uc_childcare_element instead gives \u00a38.69bn, because it is a component of the UC maximum amount before the earnings taper \u2014 most of that face value never reaches a household, so setting it against an outturn produces a 14x gap that is an artefact of the comparison rather than a model error. The counterfactual is the comparable quantity.",
           "url": "https://www.gov.uk/government/publications/benefit-expenditure-and-caseload-tables-2026",
-          "model_bn": 9.058,
-          "model_variables": "uc_childcare_element",
-          "ratio_model_to_official": 14.85
+          "model_bn": 1.855,
+          "model_variables": "abolition counterfactual on gov_spending",
+          "ratio_model_to_official": 3.04
         },
         {
           "measure": "Parent-paid childcare fees, England, under-5s",
@@ -2066,15 +1970,6 @@
                 "average_gain_gbp_among_gainers": 6329.07,
                 "share_gaining": 0.0971,
                 "average_gain_pct_of_income": 0.6945
-              },
-              {
-                "group": "Couple No Children",
-                "households_m": 0.002,
-                "total_gain_bn": 0.0,
-                "average_gain_gbp": 0.0,
-                "average_gain_gbp_among_gainers": 0.0,
-                "share_gaining": 0.0,
-                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -2223,15 +2118,6 @@
                 "average_gain_gbp_among_gainers": 4079.08,
                 "share_gaining": 0.0235,
                 "average_gain_pct_of_income": 0.2077
-              },
-              {
-                "group": "Couple No Children",
-                "households_m": 0.002,
-                "total_gain_bn": 0.0,
-                "average_gain_gbp": 0.0,
-                "average_gain_gbp_among_gainers": 0.0,
-                "share_gaining": 0.0,
-                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {
@@ -2380,15 +2266,6 @@
                 "average_gain_gbp_among_gainers": 6574.85,
                 "share_gaining": 0.1497,
                 "average_gain_pct_of_income": 2.1321
-              },
-              {
-                "group": "Couple No Children",
-                "households_m": 0.002,
-                "total_gain_bn": 0.0,
-                "average_gain_gbp": 0.0,
-                "average_gain_gbp_among_gainers": 0.0,
-                "share_gaining": 0.0,
-                "average_gain_pct_of_income": 0.0
               }
             ],
             "all_households": {

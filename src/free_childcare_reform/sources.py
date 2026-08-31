@@ -187,11 +187,15 @@ BENCHMARKS = [
         "geography": "Great Britain",
         "period": "2024-25",
         "kind": "Not comparable",
+        "model_measure": "uc_childcare_fiscal_cost",
         "note": (
-            "uc_childcare_element is the childcare element of the UC maximum "
-            "amount, before the earnings taper reduces the award. It is not "
-            "government spending and is not counted as such here. DWP's £611m is "
-            "the spending figure."
+            "Measured by abolishing it: the change in government spending when "
+            "the 85% coverage rate is set to zero. Summing uc_childcare_element "
+            "instead gives £8.69bn, because it is a component of the UC maximum "
+            "amount before the earnings taper — most of that face value never "
+            "reaches a household, so setting it against an outturn produces a "
+            "14x gap that is an artefact of the comparison rather than a model "
+            "error. The counterfactual is the comparable quantity."
         ),
         "url": "https://www.gov.uk/government/publications/benefit-expenditure-and-caseload-tables-2026",
     },
@@ -246,7 +250,7 @@ BENCHMARKS = [
 COMPARABLE_COSTINGS = [
     {
         "proposal": "15 hours free for all children 9 months to 4, no work test",
-        "source": "New Economics Foundation, with the Public Services Trust and JRF",
+        "source": "New Economics Foundation, with Pregnant Then Screwed and JRF",
         "date": "July 2025",
         "cost_bn": "3.0-3.4 net",
         "geography": "England",
@@ -262,7 +266,7 @@ COMPARABLE_COSTINGS = [
         "proposal": "30 hours for all 3-4 year olds, work test removed",
         "source": "Sutton Trust and IFS (Farquharson), A Fair Start?",
         "date": "August 2021",
-        "cost_bn": "0.25",
+        "cost_bn": "0.25 central",
         "geography": "England",
         "note": (
             "Predates the under-3 expansion entirely, so it cannot be scaled to "
@@ -279,9 +283,14 @@ COMPARABLE_COSTINGS = [
         "geography": "England",
         "note": (
             "Costed with about 60,000 entrants to employment by 2027-28, on a "
-            "plausible range of 55,000 to 240,000. Useful both as a cost anchor "
+            "central estimate. (The OBR's 55,000 to 240,000 band is the "
+            "uncertainty around the labour supply effect of all Spring Budget "
+            "2023 measures, central 110,000 — not around this 60,000.) Useful "
+            "both as a cost anchor "
             "and as the government's own labour supply assumption. Outturn ran "
-            "26-28% above forecast on take-up alone."
+            "above forecast: take-up reported in March 2025 ran 26% above the "
+            "December 2023 estimate, and 2024-25 spending about 28% above "
+            "budget."
         ),
         "url": "https://www.gov.uk/government/publications/spring-budget-2023",
     },
@@ -289,10 +298,18 @@ COMPARABLE_COSTINGS = [
         "proposal": "Nordic-style universal childcare, 40 hours, 6 months to school age",
         "source": "Women's Budget Group (De Henau)",
         "date": "2020",
-        "cost_bn": "38-55 gross, 9-16 net",
+        "cost_bn": "38-57 gross, 1.7-6.1 net",
         "geography": "UK",
-        "note": "A far larger offer than this reform. Cited only as an upper bound.",
-        "url": "https://wbg.org.uk/analysis/uk-policy-briefings/2020-briefing-a-care-led-recovery-from-coronavirus/",
+        "note": (
+            "A far larger offer than this reform — 40 hours a week, 48 weeks a "
+            "year, from 6 months. Cited only as an upper bound. WBG puts "
+            "tax and benefit recoupment at 89-95% of the gross cost, which is "
+            "what makes the net range so much smaller. An earlier version of "
+            "this file gave the net range as £9-16bn and the gross as £38-55bn; "
+            "the first has no published source and the second mixed the 2017 "
+            "base with the 2020 update."
+        ),
+        "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/",
     },
 ]
 

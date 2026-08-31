@@ -206,26 +206,12 @@ def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
     expansion to 30 hours for under-threes, which the census predates.
     """
     rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
-    assert set(rows) == {
-        "universal",
-        "extended",
-        "targeted",
-        "tfc",
-        "entitlements_total",
-    }
+    assert set(rows) == {"universal", "extended", "targeted", "tfc"}
     # DfE publishes one England total for the three entitlements rather than a
-    # line each, so that figure is carried on its own row instead of being
-    # split across the two rows it cannot be attributed to.
-    total = rows["entitlements_total"]
-    assert total["official_spending_bn"] == pytest.approx(8.7)
-    assert total["model_caseload"] is None, (
-        "a child can hold more than one entitlement, so the rows do not sum"
-    )
+    # line each, so these two rows have no official spending figure to carry.
     assert rows["universal"]["official_spending_bn"] is None
     assert rows["extended"]["official_spending_bn"] is None
     for programme, row in rows.items():
-        if programme == "entitlements_total":
-            continue
         assert row["comparison_year"] < row["costed_year"], programme
         # The costed-year figures are reported for context and must never be
         # the numerator of a ratio against an older published figure.
@@ -252,3 +238,30 @@ def test_the_baseline_agrees_with_the_data_builds_own_release_check(results):
     for programme, ratio in expected_caseload.items():
         assert rows[programme]["caseload_ratio"] == pytest.approx(ratio, abs=0.02), programme
     assert rows["tfc"]["spending_ratio"] == pytest.approx(0.99, abs=0.02)
+
+
+def test_the_uc_childcare_element_is_measured_by_abolishing_it(results):
+    """Summing the variable gives an entitlement component, not spending.
+
+    `uc_childcare_element` is part of the UC maximum amount, before the
+    earnings taper. Its sum is £8.69bn against DWP's £611m outturn — a 14x
+    gap that is an artefact of the comparison. The comparable figure is what
+    abolishing it costs.
+    """
+    for year in YEARS:
+        measured = results["by_year"][year]["uc_childcare_fiscal_cost"]
+        assert measured["fiscal_cost_bn"] < measured["maximum_amount_component_bn"] / 3, (
+            "most of the maximum-amount component is withdrawn by the taper and "
+            "never reaches a household"
+        )
+        assert measured["benefit_units_receiving"] > 0
+
+    row = next(
+        row
+        for row in results["by_year"]["2027"]["benchmarks"]
+        if row["measure"] == "Universal Credit childcare element"
+    )
+    fiscal = results["by_year"]["2027"]["uc_childcare_fiscal_cost"]["fiscal_cost_bn"]
+    assert row["model_bn"] == pytest.approx(fiscal, abs=0.01), (
+        "the benchmark row must show the counterfactual, not the variable's sum"
+    )

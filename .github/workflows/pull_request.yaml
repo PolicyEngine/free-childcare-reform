@@ -40,7 +40,7 @@ jobs:
           # bar, no footer. Only the title and intro are server-rendered — the
           # tabs mount once the results JSON loads — so those are what a
           # static check can assert. A broken layout fails here.
-          for needle in "15 free childcare hours for all" "75% subsidy of childcare costs"; do
+          for needle in "Childcare reform costing" "75% subsidy of childcare costs"; do
             grep -qF -- "$needle" "$html" || { echo "MISSING from built HTML: $needle"; exit 1; }
           done
           echo "Title and tabs present."
