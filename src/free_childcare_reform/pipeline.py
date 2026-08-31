@@ -587,8 +587,6 @@ def run_year(dataset, year: int) -> dict:
             childcare_cost_when_working(
                 reform_sim, year, responding, _childcare_cost_per_person(reform_sim, year)
             ),
-            _benunit_variable_per_person(baseline, year, "tax_free_childcare"),
-            _benunit_variable_per_person(reform_sim, year, "tax_free_childcare"),
         )
         return {
             bound: {

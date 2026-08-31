@@ -233,12 +233,24 @@ def _gain_to_work(
     )
     out_of_work = net_income.copy()
     in_work = net_income.copy()
+    # Cost-contingent childcare support a non-worker would still receive.
+    # Measured with employment switched off rather than assumed: baseline
+    # Tax-Free Childcare carries a work test and falls to zero, but the
+    # reform's subsidy does not, so it persists. Taking it at baseline
+    # employment subtracted the baseline's support even though the
+    # recomputation had already removed it.
+    out_of_work_support = np.zeros_like(net_income)
 
-    def recompute(employment: np.ndarray) -> np.ndarray:
+    def recompute(employment: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         sim.reset_calculations()
         sim.set_input("employment_income", year, employment)
-        return np.asarray(
-            sim.calculate("household_net_income", year, map_to="person").values, float
+        return (
+            np.asarray(
+                sim.calculate("household_net_income", year, map_to="person").values, float
+            ),
+            np.asarray(
+                sim.calculate("tax_free_childcare", year, map_to="person").values, float
+            ),
         )
 
     for index in range(1, count_adults + 1):
@@ -247,19 +259,27 @@ def _gain_to_work(
             continue
         without = original.copy()
         without[is_adult] = 0
-        out_of_work[is_adult] = recompute(without)[is_adult]
+        without_income, without_support = recompute(without)
+        out_of_work[is_adult] = without_income[is_adult]
+        out_of_work_support[is_adult] = without_support[is_adult]
 
         with_work = original.copy()
         with_work[is_adult] = np.where(
             original[is_adult] > 0, original[is_adult], entrant_earnings[is_adult]
         )
-        in_work[is_adult] = recompute(with_work)[is_adult]
+        in_work[is_adult] = recompute(with_work)[0][is_adult]
 
     # Restore the simulation to the state it was handed to us in.
     sim.reset_calculations()
     sim.set_input("employment_income", year, original)
 
-    return pd.DataFrame({"in_work_income": in_work, "out_of_work_income": out_of_work})
+    return pd.DataFrame(
+        {
+            "in_work_income": in_work,
+            "out_of_work_income": out_of_work,
+            "out_of_work_support": out_of_work_support,
+        }
+    )
 
 
 def responds_to_childcare(sim, year: int) -> np.ndarray:
@@ -292,7 +312,6 @@ def _net_gain_to_work(
     sim,
     year: int,
     childcare_cost_when_working: np.ndarray,
-    cost_contingent_support: np.ndarray,
     entrant_earnings: np.ndarray,
     count_adults: int = 2,
 ) -> pd.DataFrame:
@@ -322,14 +341,14 @@ def _net_gain_to_work(
     frame = _gain_to_work(sim, year, entrant_earnings, count_adults)
     frame["childcare_cost_when_working"] = childcare_cost_when_working
     frame["in_work_income_net_of_childcare"] = frame["in_work_income"] - childcare_cost_when_working
-    # Out-of-work income is left as it is. `household_net_income` does not
-    # include Tax-Free Childcare or the subsidy that replaces it, so the
-    # in-work side already credits the subsidy by netting it off the childcare
-    # a worker pays. Subtracting cost-contingent support here as well would
-    # count the same subsidy twice — once as a lower cost of working, once as
-    # a lower income out of work — and overstate the gain to work by its full
-    # value for every potential entrant.
-    frame["out_of_work_income_net_of_childcare"] = frame["out_of_work_income"]
+    # Only the support a non-worker would actually still receive is netted
+    # off, measured with employment switched off rather than at baseline
+    # employment. In the baseline that is zero, because Tax-Free Childcare is
+    # work-tested and the recomputation has already removed it; under the
+    # reform the subsidy has no work test, so it persists and must come out.
+    frame["out_of_work_income_net_of_childcare"] = (
+        frame["out_of_work_income"] - frame["out_of_work_support"]
+    )
     frame["gain_to_work"] = (
         frame["in_work_income_net_of_childcare"] - frame["out_of_work_income_net_of_childcare"]
     )
@@ -342,8 +361,6 @@ def prepare(
     year: int,
     baseline_childcare_cost: np.ndarray,
     reform_childcare_cost: np.ndarray,
-    baseline_cost_contingent_support: np.ndarray,
-    reform_cost_contingent_support: np.ndarray,
     count_adults: int = 2,
 ) -> dict:
     """Everything the response needs that does not depend on the elasticity.
@@ -362,7 +379,6 @@ def prepare(
         baseline_sim,
         year,
         baseline_childcare_cost,
-        baseline_cost_contingent_support,
         entrant_earnings,
         count_adults,
     )
@@ -370,7 +386,6 @@ def prepare(
         reform_sim,
         year,
         reform_childcare_cost,
-        reform_cost_contingent_support,
         entrant_earnings,
         count_adults,
     )
@@ -542,9 +557,8 @@ def _effective_subsidy_rate(sim, year: int, working: np.ndarray) -> float:
 
     Read from the simulation rather than restated, so it reflects whichever
     scenario is being measured: Tax-Free Childcare's capped top-up in the
-    baseline, the flat share under the reform. The Universal Credit childcare
-    element is excluded because the reform leaves it unchanged, so it cancels
-    out of the *difference* in the gain to work that drives the response.
+    baseline, the flat share under the reform. Survey-weighted — an earlier
+    version divided raw sample sums.
     """
     expenses = np.asarray(sim.calculate("childcare_expenses", year, map_to="benunit").values, float)
     support = np.asarray(sim.calculate("tax_free_childcare", year, map_to="benunit").values, float)
@@ -615,5 +629,14 @@ def childcare_cost_when_working(
             continue
         imputed[entrants] = mean_cost * (HOURS_FOR_NEW_ENTRANTS / mean_hours)
 
+    # A worker's cost is what they record, gross: `household_net_income`
+    # already contains the subsidy they receive on it, so netting it off here
+    # too would count it twice.
+    #
+    # An entrant's cost is net of the subsidy, and that is not the same
+    # double-count. `childcare_expenses` is a fixed input, so a non-worker
+    # records roughly nothing and their in-work income carries no subsidy —
+    # the model cannot know they would start buying care. Applying the rate to
+    # the imputed cost is the only place the subsidy reaches them.
     net_of_subsidy = 1 - _effective_subsidy_rate(sim, year, working)
     return np.where(working, actual_cost, imputed * net_of_subsidy)
