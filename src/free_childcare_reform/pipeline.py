@@ -506,6 +506,41 @@ def _build(dataset, scenario=None, childcare_expenses=None, year=None):
     return sim
 
 
+def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
+    """The subsidy leg at baseline take-up, and at 100% within the same scope.
+
+    "75% for all" does not describe what is costed. The reform keeps
+    Tax-Free Childcare's `would_claim_tfc` take-up along with its
+    qualifying-child, provider and UK-connection rules, and its exclusion of
+    Universal Credit and tax-credit families. Removing the work test and the
+    £100,000 cliff is what changes; universal participation is not modelled.
+    Both figures are reported so the difference is visible rather than
+    inferred.
+    """
+    baseline_spend = float(baseline.calculate("tax_free_childcare", year).sum())
+    coded = _build(dataset, scenario=subsidy_scenario())
+    full = _build(dataset, scenario=subsidy_scenario())
+    claims = np.asarray(full.calculate("would_claim_tfc", year))
+    full.set_input("would_claim_tfc", year, np.ones(len(claims), dtype=bool))
+    full.reset_calculations()
+    return {
+        "as_coded_bn": round(
+            (float(coded.calculate("tax_free_childcare", year).sum()) - baseline_spend) / 1e9, 4
+        ),
+        "at_full_take_up_bn": round(
+            (float(full.calculate("tax_free_childcare", year).sum()) - baseline_spend) / 1e9, 4
+        ),
+        "baseline_take_up_rate": round(float(claims.mean()), 4),
+        "note": (
+            "Neither figure models new childcare use. The coded scope keeps "
+            "Tax-Free Childcare's take-up, qualifying-child, provider and "
+            "UK-connection rules and its exclusion of Universal Credit and "
+            "tax-credit families; it removes the work test and the £100,000 "
+            "cliff."
+        ),
+    }
+
+
 def run_year(dataset, year: int) -> dict:
     print(f"  {year}: baseline ...")
     baseline = _build(dataset)
@@ -715,6 +750,7 @@ def run_year(dataset, year: int) -> dict:
         "year": year,
         "baseline_spending": baseline_spending,
         "baseline_programmes": _baseline_programmes(baseline, year),
+        "subsidy_take_up": _subsidy_take_up_scenario(dataset, baseline, year),
         "uc_childcare_fiscal_cost": uc_childcare,
         "benchmarks": _benchmark_comparison(
             baseline, year, {"uc_childcare_fiscal_cost": uc_childcare}

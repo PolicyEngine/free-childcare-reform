@@ -171,17 +171,32 @@ def impute_entrant_earnings(
 def potential_earnings_quintile(sim, year: int, entrant_earnings: np.ndarray) -> np.ndarray:
     """Earnings quintile on *potential* earnings, across adults only.
 
-    ``calculate_earnings_quintile`` upstream applies ``pd.qcut`` to raw
-    ``employment_income`` over every person in the dataset — children included.
-    More than half that population has no earnings, so its bottom two quintiles
-    are entirely non-earners and every non-worker lands in Q1 or Q2. Since the
-    OBR's Table A1 elasticities rise steeply as the quintile falls, that hands
-    every potential entrant close to the top elasticity in the table.
+    Placement against the weighted quintile boundaries of working adults'
+    observed earnings, which is what policyengine-uk's
+    ``calculate_earnings_quintile`` now does. Workers are placed on their
+    actual earnings, non-workers on the earnings imputed here.
 
-    The OBR's quintiles are of the relevant adult population, on potential
-    earnings — actual for workers, imputed for non-workers, which is what the
-    upstream docstring describes but not what it does. That is what this
-    computes.
+    An earlier version of this function ranked adults by cumulative weight
+    instead, to split the point masses that imputed earnings create — many
+    non-workers share one imputed value per age band. That reasoning had two
+    stated grounds, both now stale: upstream no longer applies ``pd.qcut``
+    over every person including children, and the hourly-wage units bug it
+    worked around is fixed. It also had a defect of its own. Ranking forces
+    equal population shares and splits a tied mass across a boundary by input
+    row order, so two adults with identical circumstances could draw different
+    elasticities according to their position in the file. Threshold placement
+    puts a mass wholly in the quintile its value belongs to, and the OBR's
+    Table A1 is indexed on position in the earnings distribution rather than
+    on equal shares of adults.
+
+    The change matters: net entrants move from about -5,600 to -10,400 in
+    2027-28. Scaling imputed entrant earnings to full-time equivalent before
+    placing them, as upstream does, would give about -14,600 instead. That
+    scaling is an unvalidated assumption upstream, so it is not adopted here,
+    and the difference is reported as a bound rather than resolved.
+
+    The local imputation of entrant earnings is kept: it is by age of youngest
+    child, which is the margin this reform moves.
     """
     employment_income = np.asarray(sim.calculate("employment_income", year), float)
     adult = np.asarray(sim.calculate("adult_index", year), float) > 0
@@ -189,28 +204,16 @@ def potential_earnings_quintile(sim, year: int, entrant_earnings: np.ndarray) ->
     potential = np.where(employment_income > 0, employment_income, entrant_earnings)
 
     quintile = np.ones(len(potential), dtype=int)
-    index = np.flatnonzero(adult)
-    if not len(index):
-        return quintile
-    values, adult_weights = potential[index], weights[index]
-    total = adult_weights.sum()
-    if total <= 0:
+    working_adults = adult & (employment_income > 0)
+    if not working_adults.any():
         return quintile
 
-    # Assign by weighted rank rather than by value cutoffs. Every non-worker in
-    # a given band shares one imputed value, so potential earnings carry large
-    # point masses; cutting on values would drop a whole mass into a single
-    # quintile and leave others empty. Ranking splits ties across the boundary
-    # instead. The sort is stable, so the result is deterministic.
-    order = np.argsort(values, kind="stable")
-    cumulative = np.cumsum(adult_weights[order])
-    # Midpoint of each person's own weight, so a mass straddling a boundary is
-    # divided rather than assigned whole to either side.
-    position = (cumulative - adult_weights[order] / 2) / total
-    ranked = np.clip((position * 5).astype(int) + 1, 1, 5)
-    quintile[index[order]] = ranked
+    observed = MicroSeries(
+        employment_income[working_adults], weights=weights[working_adults]
+    )
+    thresholds = [float(observed.quantile(q)) for q in (0.2, 0.4, 0.6, 0.8)]
+    quintile[adult] = np.searchsorted(thresholds, potential[adult], side="right") + 1
     return quintile
-
 
 def _gain_to_work(
     sim,

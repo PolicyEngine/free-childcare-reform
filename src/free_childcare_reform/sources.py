@@ -106,20 +106,21 @@ RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE = True
 # None of these is an input to the estimate. Two of them matter enough to change
 # how the results should be read, and both are flagged in the results JSON:
 #
-#  * Tax-Free Childcare. The model pays £0.67bn against HMRC's £599.8m
-#    outturn — 1.11x. This was 2.06x until the Enhanced FRS release of
-#    30 August 2026 (1.57.2), which corrected the routed-spend proxy and the
-#    calibration target; policyengine-uk-data's own release check now measures
-#    TFC spending at 0.99x its £632.2m target, against 1.87x before.
+#  * Tax-Free Childcare. On the like-for-like comparison — same year, and
+#    children against children — the model pays £0.625bn at 2024 against
+#    HMRC's £632.2m, 0.99x, on 1,099,437 children against 1,085,020, 1.01x.
+#    The average award is £569 against £583.
 #
-#    The correction also flipped where the residual sits. It used to be
-#    entirely the average award — £1,353 against HMRC's £691, with claimants
-#    close to right at 1.05x. It is now the other way round: the average award
-#    is £600 against £691 (0.87x) and the claimant count is 1.11m against
-#    868,095 (1.28x). Part of that is projection rather than error, since the
-#    caseload has been growing about 5% a year and these are 2027 figures,
-#    but not all of it. The remaining overshoot is a caseload question now,
-#    not a fee-base one.
+#    This was 2.06x until Enhanced FRS 1.57.2 corrected the routed-spend proxy
+#    (policyengine-uk-data #473) and the calibration targets (#472, #474).
+#
+#    An earlier version of this file reported a 1.28x caseload gap and a 0.87x
+#    award and concluded the residual was a caseload problem. Both figures
+#    were artefacts of the comparison: they set the model's 2027 benefit units
+#    against HMRC's 2025-26 *families*. HMRC publishes 868,095 families and
+#    1,085,020 children for the same outturn, so dividing a benefit-unit count
+#    by a family count is not a caseload ratio, and the three-year gap adds
+#    caseload growth on top. There is no residual to explain.
 #
 #    The comparison has to be annual on both sides. HMRC also publishes a
 #    point-in-time monthly count (601,000 families in March 2026); setting an
@@ -190,53 +191,59 @@ BENCHMARKS = [
         "period": "2025-26",
         "kind": "Award gap",
         "note": (
-            "Was 2.06x; now 1.11x, after the Enhanced FRS release of 30 August "
-            "2026 (1.57.2) corrected the routed-spend proxy and the calibration "
-            "target. policyengine-uk-data's own release check measures TFC "
-            "spending at 0.99x its £632.2m target, against 1.87x before. The "
-            "residual has changed character: the average award is now £600 "
-            "against HMRC's £691 (0.87x) while claimants are 1.11m against "
-            "868,095 (1.28x), where before the award was 1.96x and claimants "
-            "1.05x. Some of the caseload gap is projection — these are 2027 "
-            "figures and the caseload grows about 5% a year — but not all. "
-            "Both sides must be annual: HMRC's point-in-time count of 601,000 "
-            "families in March 2026 is a stock, not the annual flow."
+            "Model £0.625bn against HMRC's £632.2m at 2024 — 0.99x — on "
+            "1,099,437 children against 1,085,020, 1.01x. The average award is "
+            "£569 against £583. That is the like-for-like comparison: same "
+            "year, and children against children."
+            "\n\n"
+            "An earlier version of this file reported a 1.28x caseload gap and "
+            "a 0.87x award, which was wrong on both counts. It set the model's "
+            "2027 benefit units against HMRC's 2025-26 *families*, mixing the "
+            "entity and the year. HMRC publishes both counts for the same "
+            "outturn — 868,095 families and 1,085,020 children — so a model "
+            "benefit-unit count divided by a family count is not a caseload "
+            "ratio, and comparing across three years adds the caseload growth "
+            "on top."
+            "\n\n"
+            "The gap was 2.06x before the routed-spend correction in "
+            "policyengine-uk-data #473 and the calibration targets in #472 and "
+            "#474, all of which ship in Enhanced FRS 1.57.2. The release "
+            "check now measures 0.989x on spending and 1.013x on child "
+            "caseload."
         ),
-        "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-march-2026",
+        "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-june-2025",
     },
     {
         "measure": "Universal Credit childcare element",
         "model_variables": ["uc_childcare_element"],
+        "model_measure": "uc_childcare_fiscal_cost",
         "official_bn": 0.611,
-        "official_label": "DWP £611m, Great Britain, 2024-25 (modelled element split of a measured UC total)",
+        "official_label": "DWP £611m, Great Britain, 2024-25 (a modelled element split of a measured UC total)",
         "geography": "Great Britain",
         "period": "2024-25",
         "kind": "Caseload gap",
-        "model_measure": "uc_childcare_fiscal_cost",
         "note": (
             "Measured by abolishing it: the change in government spending when "
             "the 85% coverage rate is set to zero, at 2024 to match the "
             "published year. Summing uc_childcare_element instead gives "
             "£7.95bn, because it is a component of the UC maximum amount "
             "before the earnings taper — most of that face value never reaches "
-            "a household, so setting it against an outturn produces a 13x gap "
-            "that is an artefact of the comparison rather than a model error. "
+            "a household."
             "\n\n"
-            "Neither side of what is left is exact. DWP's £611m is a modelled "
-            "split of a measured UC total, not a measured childcare outturn: "
-            "the workbook says element breakdowns are 'an estimate designed to "
-            "be consistent with the OBR's Economic and Fiscal Outlook, although "
-            "other credible breakdowns could be reached'. DWP's own caseload "
-            "statistics do not reconcile with it either — 164,000 households at "
-            "£400 a month in May 2026 implies about £790m, some 30% above the "
-            "expenditure line. "
+            "Neither side is exact. DWP's £611m is a modelled split of a "
+            "measured UC total: the workbook says element breakdowns are 'an "
+            "estimate designed to be consistent with the OBR's Economic and "
+            "Fiscal Outlook, although other credible breakdowns could be "
+            "reached'. DWP's own caseload statistics do not reconcile with it "
+            "either — 164,000 households at £400 a month implies about £790m."
             "\n\n"
-            "The gap that remains is caseload, not award size. The model has "
-            "427,000 benefit units gaining from the element against DWP's "
-            "164,000 to 177,000 households, roughly 2.5x, while paying a "
-            "*lower* average award — £315 a month against DWP's £400. That is a "
-            "real overstatement of how many families receive UC childcare "
-            "support, and it is worth recording rather than explaining away."
+            "The gap that remains is caseload: the model has about 427,000 "
+            "benefit units gaining from the element against DWP's 164,000 to "
+            "177,000 households, while paying a lower average award. Nothing "
+            "in policyengine-uk-data targets UC elements and there is no "
+            "element-specific take-up variable, unlike the four childcare "
+            "schemes — see policyengine-uk-data#466. It does not affect this "
+            "reform, which leaves the element unchanged."
         ),
         "url": "https://www.gov.uk/government/statistics/universal-credit-quarterly-statistics-29-april-2013-to-14-may-2026/universal-credit-childcare-element-statistics-to-may-2026",
     },
