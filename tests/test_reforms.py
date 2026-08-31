@@ -66,3 +66,25 @@ def test_hours_worked_is_treated_as_annual():
     # The upstream formula, for contrast.
     broken = (40_000 / (annual_hours * WEEKS_PER_YEAR)) * HOURS_FOR_NEW_ENTRANTS * WEEKS_PER_YEAR
     assert broken < 500
+
+
+def test_the_widened_universal_entitlement_does_not_stack_on_the_targeted_offer():
+    """A 2-year-old must not draw both free entitlements.
+
+    policyengine-uk's exclusions were written for a system where the universal
+    entitlement started at age 3, so `targeted_childcare_entitlement_eligible`
+    excludes extended-eligible families and nothing else. Widening the age
+    floor to 0.75 breaks that assumption: without the reform's added exclusion
+    a non-working family on qualifying benefits draws 570 hours from the
+    targeted offer and 570 from the universal one — 30 free hours a week where
+    the reform gives 15.
+    """
+    import inspect
+
+    from free_childcare_reform.reforms import _universal_excludes_targeted
+
+    source = inspect.getsource(_universal_excludes_targeted)
+    assert "targeted_childcare_entitlement_eligible" in source
+    assert "~(targeted & in_targeted_age)" in source, (
+        "the universal entitlement must step aside where the targeted offer applies"
+    )

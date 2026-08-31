@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 
-import { formatBn } from "../lib/formatters";
+import { formatBn, formatFiscalYear } from "../lib/formatters";
 import SectionHeading from "./SectionHeading";
 
 // Programmes are compared at the year their published figure covers. The UC
@@ -59,7 +59,8 @@ export default function BaselineTab({ data, year }) {
               scheme. Nothing here is an input to the costing — the reform is measured as a
               difference from this baseline, not as a level — but it is what tells you how
               much weight the headline bears. Each comparison is drawn at the year its
-              published figure covers, not at {year}: setting a {year} figure against a
+              published figure covers, not at {formatFiscalYear(year)}: setting a
+                {" "}{formatFiscalYear(year)} figure against a
               January 2025 census would measure the gap between two dates as much as the
               model. Select a row for the source and the reasoning.
             </>

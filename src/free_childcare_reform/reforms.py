@@ -67,6 +67,66 @@ SUBSIDY_RATE = 0.75
 SUBSIDY_INCLUDES_UC_FAMILIES = False
 
 
+def _universal_excludes_targeted():
+    """Stop the widened universal entitlement stacking on the 2-year-old offer.
+
+    policyengine-uk models the DfE schemes as mutually exclusive, but the
+    exclusions were written for a system where universal started at age 3:
+    `targeted_childcare_entitlement_eligible` excludes extended-eligible
+    families and nothing else, because a 2-year-old could not previously hold
+    the universal entitlement.
+
+    Widening the age floor to 0.75 breaks that assumption. Without this, a
+    non-working family on qualifying benefits with a 2-year-old draws 570
+    hours from the targeted offer *and* 570 from the universal one — 30 free
+    hours a week where the reform gives 15. That is 35,252 children and
+    £0.18bn on the pinned dataset.
+
+    The targeted offer is left in place and the universal entitlement steps
+    aside, rather than the other way round: the disadvantaged offer is funded
+    at the 2-year-old rate (£8.28 an hour against £5.88), so keeping it is
+    both the larger entitlement and the existing policy.
+    """
+
+    class universal_childcare_entitlement_eligible(Variable):
+        value_type = bool
+        entity = Person
+        label = "eligible for universal childcare entitlement"
+        definition_period = YEAR
+        defined_for = "would_claim_universal_childcare"
+
+        def formula(person, period, parameters):
+            # policyengine-uk's own formula, with one term added. It cannot be
+            # delegated to, because overriding a variable and then reading it
+            # is circular.
+            country = person.household("country", period)
+            in_england = country == country.possible_values.ENGLAND
+            age = person("age", period)
+            p = parameters(period).gov.dfe.universal_childcare_entitlement
+            meets_age_condition = (age >= p.age.min) & (age < p.age.max)
+            not_compulsory_age = ~person("is_of_compulsory_school_age", period)
+            has_extended_childcare = person.benunit(
+                "extended_childcare_entitlement_eligible", period
+            )
+            # The added term. The targeted offer is benefit-unit eligibility on
+            # a 2-year-old, so it only displaces the universal entitlement for
+            # a child of that age.
+            targeted = person.benunit(
+                "targeted_childcare_entitlement_eligible", period
+            )
+            targeted_p = parameters(period).gov.dfe.targeted_childcare_entitlement
+            in_targeted_age = targeted_p.age_eligibility.calc(age) > 0
+            return (
+                in_england
+                & meets_age_condition
+                & not_compulsory_age
+                & ~has_extended_childcare
+                & ~(targeted & in_targeted_age)
+            )
+
+    return universal_childcare_entitlement_eligible
+
+
 def free_hours_scenario(years: list[int]) -> Scenario:
     """15 free hours from 9 months for all children, keeping the 30-hour tier."""
     return Scenario(
@@ -74,8 +134,14 @@ def free_hours_scenario(years: list[int]) -> Scenario:
             "gov.dfe.universal_childcare_entitlement.age.min": {
                 year: UNIVERSAL_ENTITLEMENT_AGE_MIN for year in years
             }
-        }
+        },
+        simulation_modifier=_no_stacking_modifier,
     )
+
+
+def _no_stacking_modifier(simulation) -> None:
+    simulation.tax_benefit_system.update_variable(_universal_excludes_targeted())
+    simulation.reset_calculations()
 
 
 def _subsidy_variables(rate: float, include_uc_families: bool):

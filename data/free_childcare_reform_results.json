@@ -325,35 +325,35 @@
         "free_hours": {
           "label": "15 free hours for all from 9 months",
           "spending": {
-            "universal_childcare_entitlement": 3.5891,
+            "universal_childcare_entitlement": 3.4088,
             "extended_childcare_entitlement": 5.2644,
             "targeted_childcare_entitlement": 0.4714,
             "tax_free_childcare": 0.6673,
-            "total_childcare_support_bn": 9.9922,
+            "total_childcare_support_bn": 9.8119,
             "uc_childcare_element_maximum_bn": 8.686,
-            "gov_spending_bn": 575.332,
+            "gov_spending_bn": 575.151,
             "childcare_expenses_bn": 11.0612
           },
-          "static_cost_bn": 2.147,
+          "static_cost_bn": 1.966,
           "household_effects": {
             "by_income_quintile": [
               {
                 "group": "Q1",
                 "households_m": 6.838,
-                "total_gain_bn": 0.7755,
-                "average_gain_gbp": 113.4,
-                "average_gain_gbp_among_gainers": 6629.29,
-                "share_gaining": 0.0171,
-                "average_gain_pct_of_income": 0.4806
+                "total_gain_bn": 0.6412,
+                "average_gain_gbp": 93.76,
+                "average_gain_gbp_among_gainers": 6796.1,
+                "share_gaining": 0.0138,
+                "average_gain_pct_of_income": 0.3974
               },
               {
                 "group": "Q2",
                 "households_m": 6.48,
-                "total_gain_bn": 0.5073,
-                "average_gain_gbp": 78.28,
-                "average_gain_gbp_among_gainers": 6075.41,
-                "share_gaining": 0.0129,
-                "average_gain_pct_of_income": 0.2021
+                "total_gain_bn": 0.4612,
+                "average_gain_gbp": 71.17,
+                "average_gain_gbp_among_gainers": 6191.31,
+                "share_gaining": 0.0115,
+                "average_gain_pct_of_income": 0.1838
               },
               {
                 "group": "Q3",
@@ -387,20 +387,20 @@
               {
                 "group": "Q1",
                 "households_m": 0.726,
-                "total_gain_bn": 0.7755,
-                "average_gain_gbp": 1068.29,
-                "average_gain_gbp_among_gainers": 6629.29,
-                "share_gaining": 0.1611,
-                "average_gain_pct_of_income": 2.7394
+                "total_gain_bn": 0.6412,
+                "average_gain_gbp": 883.3,
+                "average_gain_gbp_among_gainers": 6796.1,
+                "share_gaining": 0.13,
+                "average_gain_pct_of_income": 2.2651
               },
               {
                 "group": "Q2",
                 "households_m": 0.755,
-                "total_gain_bn": 0.5073,
-                "average_gain_gbp": 672.3,
-                "average_gain_gbp_among_gainers": 6075.41,
-                "share_gaining": 0.1107,
-                "average_gain_pct_of_income": 1.2479
+                "total_gain_bn": 0.4612,
+                "average_gain_gbp": 611.2,
+                "average_gain_gbp_among_gainers": 6191.31,
+                "share_gaining": 0.0987,
+                "average_gain_pct_of_income": 1.1345
               },
               {
                 "group": "Q3",
@@ -434,39 +434,39 @@
               {
                 "group": "Lone Parent",
                 "households_m": 0.79,
-                "total_gain_bn": 0.6825,
-                "average_gain_gbp": 863.47,
-                "average_gain_gbp_among_gainers": 6763.77,
-                "share_gaining": 0.1277,
-                "average_gain_pct_of_income": 1.9175
+                "total_gain_bn": 0.5331,
+                "average_gain_gbp": 674.46,
+                "average_gain_gbp_among_gainers": 7077.69,
+                "share_gaining": 0.0953,
+                "average_gain_pct_of_income": 1.4978
               },
               {
                 "group": "Couple With Children",
                 "households_m": 2.475,
-                "total_gain_bn": 1.4644,
-                "average_gain_gbp": 591.71,
-                "average_gain_gbp_among_gainers": 6086.6,
-                "share_gaining": 0.0972,
-                "average_gain_pct_of_income": 0.6878
+                "total_gain_bn": 1.4335,
+                "average_gain_gbp": 579.19,
+                "average_gain_gbp_among_gainers": 6111.63,
+                "share_gaining": 0.0948,
+                "average_gain_pct_of_income": 0.6733
               }
             ],
             "all_households": {
               "group": "All",
               "households_m": 31.513,
-              "total_gain_bn": 2.147,
-              "average_gain_gbp": 68.13,
-              "average_gain_gbp_among_gainers": 6286.69,
-              "share_gaining": 0.0108,
-              "average_gain_pct_of_income": 0.1193
+              "total_gain_bn": 1.9666,
+              "average_gain_gbp": 62.41,
+              "average_gain_gbp_among_gainers": 6346.47,
+              "share_gaining": 0.0098,
+              "average_gain_pct_of_income": 0.1093
             },
             "families_with_under_5s": {
               "group": "Families with a child under 5",
               "households_m": 3.267,
-              "total_gain_bn": 2.147,
-              "average_gain_gbp": 657.18,
-              "average_gain_gbp_among_gainers": 6286.69,
-              "share_gaining": 0.1045,
-              "average_gain_pct_of_income": 0.8633
+              "total_gain_bn": 1.9666,
+              "average_gain_gbp": 601.96,
+              "average_gain_gbp_among_gainers": 6346.47,
+              "share_gaining": 0.0948,
+              "average_gain_pct_of_income": 0.7908
             }
           }
         },
@@ -621,35 +621,35 @@
         "combined": {
           "label": "Both legs together",
           "spending": {
-            "universal_childcare_entitlement": 3.5891,
+            "universal_childcare_entitlement": 3.4088,
             "extended_childcare_entitlement": 5.2644,
             "targeted_childcare_entitlement": 0.4714,
             "tax_free_childcare": 5.3917,
-            "total_childcare_support_bn": 14.7166,
-            "uc_childcare_element_maximum_bn": 8.528,
-            "gov_spending_bn": 580.028,
-            "childcare_expenses_bn": 10.8186
+            "total_childcare_support_bn": 14.5363,
+            "uc_childcare_element_maximum_bn": 8.5338,
+            "gov_spending_bn": 579.853,
+            "childcare_expenses_bn": 10.8281
           },
-          "static_cost_bn": 6.843,
+          "static_cost_bn": 6.668,
           "household_effects": {
             "by_income_quintile": [
               {
                 "group": "Q1",
                 "households_m": 6.838,
-                "total_gain_bn": 0.8891,
-                "average_gain_gbp": 130.02,
-                "average_gain_gbp_among_gainers": 4541.41,
-                "share_gaining": 0.0286,
-                "average_gain_pct_of_income": 0.551
+                "total_gain_bn": 0.7606,
+                "average_gain_gbp": 111.23,
+                "average_gain_gbp_among_gainers": 4392.81,
+                "share_gaining": 0.0253,
+                "average_gain_pct_of_income": 0.4714
               },
               {
                 "group": "Q2",
                 "households_m": 6.48,
-                "total_gain_bn": 0.7698,
-                "average_gain_gbp": 118.79,
-                "average_gain_gbp_among_gainers": 4386.85,
-                "share_gaining": 0.0271,
-                "average_gain_pct_of_income": 0.3067
+                "total_gain_bn": 0.7237,
+                "average_gain_gbp": 111.68,
+                "average_gain_gbp_among_gainers": 4347.33,
+                "share_gaining": 0.0257,
+                "average_gain_pct_of_income": 0.2884
               },
               {
                 "group": "Q3",
@@ -683,20 +683,20 @@
               {
                 "group": "Q1",
                 "households_m": 0.726,
-                "total_gain_bn": 0.8446,
-                "average_gain_gbp": 1163.51,
-                "average_gain_gbp_among_gainers": 5800.33,
-                "share_gaining": 0.2006,
-                "average_gain_pct_of_income": 2.9836
+                "total_gain_bn": 0.7161,
+                "average_gain_gbp": 986.47,
+                "average_gain_gbp_among_gainers": 5822.77,
+                "share_gaining": 0.1694,
+                "average_gain_pct_of_income": 2.5296
               },
               {
                 "group": "Q2",
                 "households_m": 0.755,
-                "total_gain_bn": 0.7291,
-                "average_gain_gbp": 966.17,
-                "average_gain_gbp_among_gainers": 5431.31,
-                "share_gaining": 0.1779,
-                "average_gain_pct_of_income": 1.7934
+                "total_gain_bn": 0.683,
+                "average_gain_gbp": 905.07,
+                "average_gain_gbp_among_gainers": 5453.91,
+                "share_gaining": 0.1659,
+                "average_gain_pct_of_income": 1.68
               },
               {
                 "group": "Q3",
@@ -730,123 +730,123 @@
               {
                 "group": "Couple With Children",
                 "households_m": 2.475,
-                "total_gain_bn": 5.3158,
-                "average_gain_gbp": 2147.84,
-                "average_gain_gbp_among_gainers": 5279.57,
-                "share_gaining": 0.4068,
-                "average_gain_pct_of_income": 2.4968
+                "total_gain_bn": 5.2848,
+                "average_gain_gbp": 2135.32,
+                "average_gain_gbp_among_gainers": 5280.56,
+                "share_gaining": 0.4044,
+                "average_gain_pct_of_income": 2.4822
               },
               {
                 "group": "Lone Parent",
                 "households_m": 0.79,
-                "total_gain_bn": 0.7478,
-                "average_gain_gbp": 945.97,
-                "average_gain_gbp_among_gainers": 6319.07,
-                "share_gaining": 0.1497,
-                "average_gain_pct_of_income": 2.1008
+                "total_gain_bn": 0.6041,
+                "average_gain_gbp": 764.27,
+                "average_gain_gbp_among_gainers": 6513.68,
+                "share_gaining": 0.1173,
+                "average_gain_pct_of_income": 1.6972
               }
             ],
             "all_households": {
               "group": "All",
               "households_m": 31.513,
-              "total_gain_bn": 6.8429,
-              "average_gain_gbp": 217.15,
-              "average_gain_gbp_among_gainers": 4594.14,
-              "share_gaining": 0.0473,
-              "average_gain_pct_of_income": 0.3802
+              "total_gain_bn": 6.6683,
+              "average_gain_gbp": 211.6,
+              "average_gain_gbp_among_gainers": 4574.08,
+              "share_gaining": 0.0463,
+              "average_gain_pct_of_income": 0.3705
             },
             "families_with_under_5s": {
               "group": "Families with a child under 5",
               "households_m": 3.267,
-              "total_gain_bn": 6.0635,
-              "average_gain_gbp": 1855.99,
-              "average_gain_gbp_among_gainers": 5388.9,
-              "share_gaining": 0.3444,
-              "average_gain_pct_of_income": 2.4383
+              "total_gain_bn": 5.8889,
+              "average_gain_gbp": 1802.55,
+              "average_gain_gbp_among_gainers": 5385.14,
+              "share_gaining": 0.3347,
+              "average_gain_pct_of_income": 2.368
             }
           }
         }
       },
       "labour_supply": {
         "central": {
-          "entrants": 12615.3701,
-          "leavers": 8064.4869,
-          "net_entrants": 4550.8833,
-          "net_ftes": 2281.5095,
-          "earnings_gained_gbp": 207185596.0469,
-          "earnings_lost_gbp": 147669603.9558,
-          "net_earnings_gbp": 59515992.0911,
-          "revenue_from_entrants_gbp": 42224182.2479,
-          "revenue_lost_to_leavers_gbp": 21162033.7766,
-          "net_revenue_gbp": 21062148.4713,
+          "entrants": 13169.687,
+          "leavers": 7611.5883,
+          "net_entrants": 5558.0988,
+          "net_ftes": 2786.4602,
+          "earnings_gained_gbp": 214818833.0403,
+          "earnings_lost_gbp": 138710124.4722,
+          "net_earnings_gbp": 76108708.5682,
+          "revenue_from_entrants_gbp": 43395072.3336,
+          "revenue_lost_to_leavers_gbp": 15621769.6475,
+          "net_revenue_gbp": 27773302.686,
           "elasticity_scale": 1.0,
           "responding_adults_m": 3.1887,
-          "mean_gain_to_work_change_pct": 0.0616
+          "mean_gain_to_work_change_pct": 0.0684
         },
         "low": {
-          "entrants": 4205.1234,
-          "leavers": 2688.1623,
-          "net_entrants": 1516.9611,
-          "net_ftes": 760.5032,
-          "earnings_gained_gbp": 69061865.349,
-          "earnings_lost_gbp": 49223201.3186,
-          "net_earnings_gbp": 19838664.0304,
-          "revenue_from_entrants_gbp": 14074727.416,
-          "revenue_lost_to_leavers_gbp": 7054011.2589,
-          "net_revenue_gbp": 7020716.1571,
+          "entrants": 4389.8957,
+          "leavers": 2537.1961,
+          "net_entrants": 1852.6996,
+          "net_ftes": 928.8201,
+          "earnings_gained_gbp": 71606277.6801,
+          "earnings_lost_gbp": 46236708.1574,
+          "net_earnings_gbp": 25369569.5227,
+          "revenue_from_entrants_gbp": 14465024.1112,
+          "revenue_lost_to_leavers_gbp": 5207256.5492,
+          "net_revenue_gbp": 9257767.562,
           "elasticity_scale": 0.3333,
           "responding_adults_m": 3.1887,
-          "mean_gain_to_work_change_pct": 0.0616
+          "mean_gain_to_work_change_pct": 0.0684
         },
         "high": {
-          "entrants": 25172.3361,
-          "leavers": 16128.9737,
-          "net_entrants": 9043.3624,
-          "net_ftes": 4533.739,
-          "earnings_gained_gbp": 413566009.0099,
-          "earnings_lost_gbp": 295339207.9116,
-          "net_earnings_gbp": 118226801.0983,
-          "revenue_from_entrants_gbp": 84164942.2303,
-          "revenue_lost_to_leavers_gbp": 42324067.5533,
-          "net_revenue_gbp": 41840874.677,
+          "entrants": 26278.729,
+          "leavers": 15223.1766,
+          "net_entrants": 11055.5525,
+          "net_ftes": 5542.517,
+          "earnings_gained_gbp": 428801589.3357,
+          "earnings_lost_gbp": 277420248.9443,
+          "net_earnings_gbp": 151381340.3914,
+          "revenue_from_entrants_gbp": 86493661.0536,
+          "revenue_lost_to_leavers_gbp": 31243539.2951,
+          "net_revenue_gbp": 55250121.7586,
           "elasticity_scale": 2.0,
           "responding_adults_m": 3.1887,
-          "mean_gain_to_work_change_pct": 0.0616
+          "mean_gain_to_work_change_pct": 0.0684
         }
       },
       "price_elasticity_cross_check": {
         "central": {
           "price_elasticity": -0.15,
-          "net_childcare_price_change": -0.4779,
+          "net_childcare_price_change": -0.477,
           "additionality": 0.286,
-          "effective_price_change": -0.1367,
+          "effective_price_change": -0.1364,
           "employment_change_pct": 0.0205,
           "mothers_in_band_employed_m": 1.377,
           "mothers_in_band_not_working_m": 0.649,
-          "entrants": 28235,
-          "net_ftes": 14155
+          "entrants": 28181,
+          "net_ftes": 14128
         },
         "low": {
           "price_elasticity": -0.05,
-          "net_childcare_price_change": -0.4779,
+          "net_childcare_price_change": -0.477,
           "additionality": 0.286,
-          "effective_price_change": -0.1367,
+          "effective_price_change": -0.1364,
           "employment_change_pct": 0.0068,
           "mothers_in_band_employed_m": 1.377,
           "mothers_in_band_not_working_m": 0.649,
-          "entrants": 9412,
-          "net_ftes": 4718
+          "entrants": 9394,
+          "net_ftes": 4709
         },
         "high": {
           "price_elasticity": -0.3,
-          "net_childcare_price_change": -0.4779,
+          "net_childcare_price_change": -0.477,
           "additionality": 0.286,
-          "effective_price_change": -0.1367,
-          "employment_change_pct": 0.041,
+          "effective_price_change": -0.1364,
+          "employment_change_pct": 0.0409,
           "mothers_in_band_employed_m": 1.377,
           "mothers_in_band_not_working_m": 0.649,
-          "entrants": 56470,
-          "net_ftes": 28310
+          "entrants": 56361,
+          "net_ftes": 28256
         }
       },
       "fee_base_sensitivity": {
@@ -858,33 +858,33 @@
         "rebased_childcare_expenses_bn": 9.567,
         "ratio": 0.865,
         "subsidy_cost_bn": 4.185,
-        "combined_cost_bn": 6.209,
+        "combined_cost_bn": 6.033,
         "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
       },
       "dynamic_cost": {
         "central": {
-          "static_cost_bn": 6.843,
-          "labour_supply_offset_bn": 0.021,
-          "dynamic_cost_bn": 6.822,
-          "offset_share_of_static_cost": 0.0031,
-          "net_entrants": 4551,
-          "net_ftes": 2282
+          "static_cost_bn": 6.668,
+          "labour_supply_offset_bn": 0.028,
+          "dynamic_cost_bn": 6.64,
+          "offset_share_of_static_cost": 0.0042,
+          "net_entrants": 5558,
+          "net_ftes": 2786
         },
         "low": {
-          "static_cost_bn": 6.843,
-          "labour_supply_offset_bn": 0.007,
-          "dynamic_cost_bn": 6.836,
-          "offset_share_of_static_cost": 0.001,
-          "net_entrants": 1517,
-          "net_ftes": 761
+          "static_cost_bn": 6.668,
+          "labour_supply_offset_bn": 0.009,
+          "dynamic_cost_bn": 6.659,
+          "offset_share_of_static_cost": 0.0014,
+          "net_entrants": 1853,
+          "net_ftes": 929
         },
         "high": {
-          "static_cost_bn": 6.843,
-          "labour_supply_offset_bn": 0.042,
-          "dynamic_cost_bn": 6.801,
-          "offset_share_of_static_cost": 0.0061,
-          "net_entrants": 9043,
-          "net_ftes": 4534
+          "static_cost_bn": 6.668,
+          "labour_supply_offset_bn": 0.055,
+          "dynamic_cost_bn": 6.613,
+          "offset_share_of_static_cost": 0.0083,
+          "net_entrants": 11056,
+          "net_ftes": 5543
         }
       },
       "model_parameters": {
@@ -1092,35 +1092,35 @@
         "free_hours": {
           "label": "15 free hours for all from 9 months",
           "spending": {
-            "universal_childcare_entitlement": 3.6768,
+            "universal_childcare_entitlement": 3.4931,
             "extended_childcare_entitlement": 5.431,
             "targeted_childcare_entitlement": 0.4817,
             "tax_free_childcare": 0.6826,
-            "total_childcare_support_bn": 10.2721,
+            "total_childcare_support_bn": 10.0884,
             "uc_childcare_element_maximum_bn": 8.8682,
-            "gov_spending_bn": 585.332,
+            "gov_spending_bn": 585.149,
             "childcare_expenses_bn": 11.3276
           },
-          "static_cost_bn": 2.196,
+          "static_cost_bn": 2.013,
           "household_effects": {
             "by_income_quintile": [
               {
                 "group": "Q1",
                 "households_m": 6.862,
-                "total_gain_bn": 0.7934,
-                "average_gain_gbp": 115.62,
-                "average_gain_gbp_among_gainers": 6774.28,
-                "share_gaining": 0.0171,
-                "average_gain_pct_of_income": 0.484
+                "total_gain_bn": 0.6569,
+                "average_gain_gbp": 95.73,
+                "average_gain_gbp_among_gainers": 6944.4,
+                "share_gaining": 0.0138,
+                "average_gain_pct_of_income": 0.4007
               },
               {
                 "group": "Q2",
                 "households_m": 6.518,
-                "total_gain_bn": 0.5193,
-                "average_gain_gbp": 79.68,
-                "average_gain_gbp_among_gainers": 6184.23,
-                "share_gaining": 0.0129,
-                "average_gain_pct_of_income": 0.2027
+                "total_gain_bn": 0.4721,
+                "average_gain_gbp": 72.43,
+                "average_gain_gbp_among_gainers": 6300.69,
+                "share_gaining": 0.0115,
+                "average_gain_pct_of_income": 0.1842
               },
               {
                 "group": "Q3",
@@ -1154,20 +1154,20 @@
               {
                 "group": "Q1",
                 "households_m": 0.728,
-                "total_gain_bn": 0.7934,
-                "average_gain_gbp": 1089.17,
-                "average_gain_gbp_among_gainers": 6774.28,
-                "share_gaining": 0.1608,
-                "average_gain_pct_of_income": 2.7549
+                "total_gain_bn": 0.6569,
+                "average_gain_gbp": 901.8,
+                "average_gain_gbp_among_gainers": 6944.4,
+                "share_gaining": 0.1299,
+                "average_gain_pct_of_income": 2.281
               },
               {
                 "group": "Q2",
                 "households_m": 0.761,
-                "total_gain_bn": 0.5193,
-                "average_gain_gbp": 682.78,
-                "average_gain_gbp_among_gainers": 6184.23,
-                "share_gaining": 0.1104,
-                "average_gain_pct_of_income": 1.2499
+                "total_gain_bn": 0.4721,
+                "average_gain_gbp": 620.71,
+                "average_gain_gbp_among_gainers": 6300.69,
+                "share_gaining": 0.0985,
+                "average_gain_pct_of_income": 1.1362
               },
               {
                 "group": "Q3",
@@ -1201,39 +1201,39 @@
               {
                 "group": "Lone Parent",
                 "households_m": 0.794,
-                "total_gain_bn": 0.699,
-                "average_gain_gbp": 880.74,
-                "average_gain_gbp_among_gainers": 6899.03,
-                "share_gaining": 0.1277,
-                "average_gain_pct_of_income": 1.9298
+                "total_gain_bn": 0.546,
+                "average_gain_gbp": 687.95,
+                "average_gain_gbp_among_gainers": 7219.24,
+                "share_gaining": 0.0953,
+                "average_gain_pct_of_income": 1.5074
               },
               {
                 "group": "Couple With Children",
                 "households_m": 2.485,
-                "total_gain_bn": 1.4973,
-                "average_gain_gbp": 602.59,
-                "average_gain_gbp_among_gainers": 6205.4,
-                "share_gaining": 0.0971,
-                "average_gain_pct_of_income": 0.6905
+                "total_gain_bn": 1.4666,
+                "average_gain_gbp": 590.23,
+                "average_gain_gbp_among_gainers": 6230.04,
+                "share_gaining": 0.0947,
+                "average_gain_pct_of_income": 0.6763
               }
             ],
             "all_households": {
               "group": "All",
               "households_m": 31.639,
-              "total_gain_bn": 2.1963,
-              "average_gain_gbp": 69.42,
-              "average_gain_gbp_among_gainers": 6410.52,
-              "share_gaining": 0.0108,
-              "average_gain_pct_of_income": 0.1195
+              "total_gain_bn": 2.0126,
+              "average_gain_gbp": 63.61,
+              "average_gain_gbp_among_gainers": 6470.55,
+              "share_gaining": 0.0098,
+              "average_gain_pct_of_income": 0.1095
             },
             "families_with_under_5s": {
               "group": "Families with a child under 5",
               "households_m": 3.28,
-              "total_gain_bn": 2.1963,
-              "average_gain_gbp": 669.59,
-              "average_gain_gbp_among_gainers": 6410.52,
-              "share_gaining": 0.1045,
-              "average_gain_pct_of_income": 0.8672
+              "total_gain_bn": 2.0126,
+              "average_gain_gbp": 613.59,
+              "average_gain_gbp_among_gainers": 6470.55,
+              "share_gaining": 0.0948,
+              "average_gain_pct_of_income": 0.7947
             }
           }
         },
@@ -1388,35 +1388,35 @@
         "combined": {
           "label": "Both legs together",
           "spending": {
-            "universal_childcare_entitlement": 3.6768,
+            "universal_childcare_entitlement": 3.4931,
             "extended_childcare_entitlement": 5.431,
             "targeted_childcare_entitlement": 0.4817,
             "tax_free_childcare": 5.5223,
-            "total_childcare_support_bn": 15.1118,
-            "uc_childcare_element_maximum_bn": 8.707,
-            "gov_spending_bn": 590.143,
-            "childcare_expenses_bn": 11.0787
+            "total_childcare_support_bn": 14.9281,
+            "uc_childcare_element_maximum_bn": 8.713,
+            "gov_spending_bn": 589.965,
+            "childcare_expenses_bn": 11.0885
           },
-          "static_cost_bn": 7.007,
+          "static_cost_bn": 6.829,
           "household_effects": {
             "by_income_quintile": [
               {
                 "group": "Q1",
                 "households_m": 6.862,
-                "total_gain_bn": 0.9105,
-                "average_gain_gbp": 132.69,
-                "average_gain_gbp_among_gainers": 4654.27,
-                "share_gaining": 0.0285,
-                "average_gain_pct_of_income": 0.5554
+                "total_gain_bn": 0.78,
+                "average_gain_gbp": 113.66,
+                "average_gain_gbp_among_gainers": 4505.58,
+                "share_gaining": 0.0252,
+                "average_gain_pct_of_income": 0.4758
               },
               {
                 "group": "Q2",
                 "households_m": 6.518,
-                "total_gain_bn": 0.7877,
-                "average_gain_gbp": 120.84,
-                "average_gain_gbp_among_gainers": 4446.55,
-                "share_gaining": 0.0272,
-                "average_gain_pct_of_income": 0.3074
+                "total_gain_bn": 0.7405,
+                "average_gain_gbp": 113.6,
+                "average_gain_gbp_among_gainers": 4404.96,
+                "share_gaining": 0.0258,
+                "average_gain_pct_of_income": 0.289
               },
               {
                 "group": "Q3",
@@ -1450,20 +1450,20 @@
               {
                 "group": "Q1",
                 "households_m": 0.728,
-                "total_gain_bn": 0.866,
-                "average_gain_gbp": 1188.72,
-                "average_gain_gbp_among_gainers": 5924.49,
-                "share_gaining": 0.2006,
-                "average_gain_pct_of_income": 3.0067
+                "total_gain_bn": 0.7354,
+                "average_gain_gbp": 1009.47,
+                "average_gain_gbp_among_gainers": 5947.72,
+                "share_gaining": 0.1697,
+                "average_gain_pct_of_income": 2.5533
               },
               {
                 "group": "Q2",
                 "households_m": 0.761,
-                "total_gain_bn": 0.7447,
-                "average_gain_gbp": 978.99,
-                "average_gain_gbp_among_gainers": 5546.32,
-                "share_gaining": 0.1765,
-                "average_gain_pct_of_income": 1.7921
+                "total_gain_bn": 0.6974,
+                "average_gain_gbp": 916.92,
+                "average_gain_gbp_among_gainers": 5569.94,
+                "share_gaining": 0.1646,
+                "average_gain_pct_of_income": 1.6785
               },
               {
                 "group": "Q3",
@@ -1497,123 +1497,123 @@
               {
                 "group": "Couple With Children",
                 "households_m": 2.485,
-                "total_gain_bn": 5.4427,
-                "average_gain_gbp": 2190.36,
-                "average_gain_gbp_among_gainers": 5384.72,
-                "share_gaining": 0.4068,
-                "average_gain_pct_of_income": 2.5099
+                "total_gain_bn": 5.412,
+                "average_gain_gbp": 2178.0,
+                "average_gain_gbp_among_gainers": 5385.69,
+                "share_gaining": 0.4044,
+                "average_gain_pct_of_income": 2.4957
               },
               {
                 "group": "Lone Parent",
                 "households_m": 0.794,
-                "total_gain_bn": 0.7658,
-                "average_gain_gbp": 964.93,
-                "average_gain_gbp_among_gainers": 6445.73,
-                "share_gaining": 0.1497,
-                "average_gain_pct_of_income": 2.1143
+                "total_gain_bn": 0.6187,
+                "average_gain_gbp": 779.6,
+                "average_gain_gbp_among_gainers": 6644.31,
+                "share_gaining": 0.1173,
+                "average_gain_pct_of_income": 1.7082
               }
             ],
             "all_households": {
               "group": "All",
               "households_m": 31.639,
-              "total_gain_bn": 7.007,
-              "average_gain_gbp": 221.47,
-              "average_gain_gbp_among_gainers": 4684.14,
-              "share_gaining": 0.0473,
-              "average_gain_pct_of_income": 0.3814
+              "total_gain_bn": 6.8292,
+              "average_gain_gbp": 215.85,
+              "average_gain_gbp_among_gainers": 4663.72,
+              "share_gaining": 0.0463,
+              "average_gain_pct_of_income": 0.3717
             },
             "families_with_under_5s": {
               "group": "Families with a child under 5",
               "households_m": 3.28,
-              "total_gain_bn": 6.2085,
-              "average_gain_gbp": 1892.79,
-              "average_gain_gbp_among_gainers": 5496.32,
-              "share_gaining": 0.3444,
-              "average_gain_pct_of_income": 2.4515
+              "total_gain_bn": 6.0307,
+              "average_gain_gbp": 1838.59,
+              "average_gain_gbp_among_gainers": 5492.43,
+              "share_gaining": 0.3347,
+              "average_gain_pct_of_income": 2.3813
             }
           }
         }
       },
       "labour_supply": {
         "central": {
-          "entrants": 12727.8737,
-          "leavers": 8126.6988,
-          "net_entrants": 4601.175,
-          "net_ftes": 2306.7224,
-          "earnings_gained_gbp": 213368161.9004,
-          "earnings_lost_gbp": 151896258.8894,
-          "net_earnings_gbp": 61471903.0111,
-          "revenue_from_entrants_gbp": 42713963.8206,
-          "revenue_lost_to_leavers_gbp": 21822543.4865,
-          "net_revenue_gbp": 20891420.3341,
+          "entrants": 13287.6508,
+          "leavers": 7669.2445,
+          "net_entrants": 5618.4063,
+          "net_ftes": 2816.6944,
+          "earnings_gained_gbp": 221238487.3047,
+          "earnings_lost_gbp": 142656623.6925,
+          "net_earnings_gbp": 78581863.6122,
+          "revenue_from_entrants_gbp": 43926912.1053,
+          "revenue_lost_to_leavers_gbp": 16095191.4145,
+          "net_revenue_gbp": 27831720.6908,
           "elasticity_scale": 1.0,
           "responding_adults_m": 3.2014,
-          "mean_gain_to_work_change_pct": 0.0628
+          "mean_gain_to_work_change_pct": 0.0696
         },
         "low": {
-          "entrants": 4242.6246,
-          "leavers": 2708.8996,
-          "net_entrants": 1533.725,
-          "net_ftes": 768.9075,
-          "earnings_gained_gbp": 71122720.6335,
-          "earnings_lost_gbp": 50632086.2965,
-          "net_earnings_gbp": 20490634.337,
-          "revenue_from_entrants_gbp": 14237987.9402,
-          "revenue_lost_to_leavers_gbp": 7274181.1622,
-          "net_revenue_gbp": 6963806.778,
+          "entrants": 4429.2169,
+          "leavers": 2556.4148,
+          "net_entrants": 1872.8021,
+          "net_ftes": 938.8981,
+          "earnings_gained_gbp": 73746162.4349,
+          "earnings_lost_gbp": 47552207.8975,
+          "net_earnings_gbp": 26193954.5374,
+          "revenue_from_entrants_gbp": 14642304.0351,
+          "revenue_lost_to_leavers_gbp": 5365063.8048,
+          "net_revenue_gbp": 9277240.2303,
           "elasticity_scale": 0.3333,
           "responding_adults_m": 3.2014,
-          "mean_gain_to_work_change_pct": 0.0628
+          "mean_gain_to_work_change_pct": 0.0696
         },
         "high": {
-          "entrants": 25395.9652,
-          "leavers": 16253.3976,
-          "net_entrants": 9142.5677,
-          "net_ftes": 4583.4739,
-          "earnings_gained_gbp": 425894834.0521,
-          "earnings_lost_gbp": 303792517.7787,
-          "net_earnings_gbp": 122102316.2734,
-          "revenue_from_entrants_gbp": 85130105.5738,
-          "revenue_lost_to_leavers_gbp": 43645086.973,
-          "net_revenue_gbp": 41485018.6009,
+          "entrants": 26513.233,
+          "leavers": 15338.489,
+          "net_entrants": 11174.744,
+          "net_ftes": 5602.2717,
+          "earnings_gained_gbp": 441603302.6055,
+          "earnings_lost_gbp": 285313247.385,
+          "net_earnings_gbp": 156290055.2205,
+          "revenue_from_entrants_gbp": 87542340.0765,
+          "revenue_lost_to_leavers_gbp": 32190382.829,
+          "net_revenue_gbp": 55351957.2475,
           "elasticity_scale": 2.0,
           "responding_adults_m": 3.2014,
-          "mean_gain_to_work_change_pct": 0.0628
+          "mean_gain_to_work_change_pct": 0.0696
         }
       },
       "price_elasticity_cross_check": {
         "central": {
           "price_elasticity": -0.15,
-          "net_childcare_price_change": -0.478,
+          "net_childcare_price_change": -0.4771,
           "additionality": 0.286,
-          "effective_price_change": -0.1367,
+          "effective_price_change": -0.1364,
           "employment_change_pct": 0.0205,
           "mothers_in_band_employed_m": 1.383,
           "mothers_in_band_not_working_m": 0.652,
-          "entrants": 28357,
-          "net_ftes": 14216
+          "entrants": 28303,
+          "net_ftes": 14189
         },
         "low": {
           "price_elasticity": -0.05,
-          "net_childcare_price_change": -0.478,
+          "net_childcare_price_change": -0.4771,
           "additionality": 0.286,
-          "effective_price_change": -0.1367,
+          "effective_price_change": -0.1364,
           "employment_change_pct": 0.0068,
           "mothers_in_band_employed_m": 1.383,
           "mothers_in_band_not_working_m": 0.652,
-          "entrants": 9452,
-          "net_ftes": 4739
+          "entrants": 9434,
+          "net_ftes": 4730
         },
         "high": {
           "price_elasticity": -0.3,
-          "net_childcare_price_change": -0.478,
+          "net_childcare_price_change": -0.4771,
           "additionality": 0.286,
-          "effective_price_change": -0.1367,
-          "employment_change_pct": 0.041,
+          "effective_price_change": -0.1364,
+          "employment_change_pct": 0.0409,
           "mothers_in_band_employed_m": 1.383,
           "mothers_in_band_not_working_m": 0.652,
-          "entrants": 56714,
-          "net_ftes": 28433
+          "entrants": 56605,
+          "net_ftes": 28378
         }
       },
       "fee_base_sensitivity": {
@@ -1625,33 +1625,33 @@
         "rebased_childcare_expenses_bn": 9.652,
         "ratio": 0.852,
         "subsidy_cost_bn": 4.223,
-        "combined_cost_bn": 6.295,
+        "combined_cost_bn": 6.116,
         "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
       },
       "dynamic_cost": {
         "central": {
-          "static_cost_bn": 7.007,
-          "labour_supply_offset_bn": 0.021,
-          "dynamic_cost_bn": 6.986,
-          "offset_share_of_static_cost": 0.003,
-          "net_entrants": 4601,
-          "net_ftes": 2307
+          "static_cost_bn": 6.829,
+          "labour_supply_offset_bn": 0.028,
+          "dynamic_cost_bn": 6.801,
+          "offset_share_of_static_cost": 0.0041,
+          "net_entrants": 5618,
+          "net_ftes": 2817
         },
         "low": {
-          "static_cost_bn": 7.007,
-          "labour_supply_offset_bn": 0.007,
-          "dynamic_cost_bn": 7.0,
-          "offset_share_of_static_cost": 0.001,
-          "net_entrants": 1534,
-          "net_ftes": 769
+          "static_cost_bn": 6.829,
+          "labour_supply_offset_bn": 0.009,
+          "dynamic_cost_bn": 6.82,
+          "offset_share_of_static_cost": 0.0014,
+          "net_entrants": 1873,
+          "net_ftes": 939
         },
         "high": {
-          "static_cost_bn": 7.007,
-          "labour_supply_offset_bn": 0.041,
-          "dynamic_cost_bn": 6.966,
-          "offset_share_of_static_cost": 0.0059,
-          "net_entrants": 9143,
-          "net_ftes": 4583
+          "static_cost_bn": 6.829,
+          "labour_supply_offset_bn": 0.055,
+          "dynamic_cost_bn": 6.774,
+          "offset_share_of_static_cost": 0.0081,
+          "net_entrants": 11175,
+          "net_ftes": 5602
         }
       },
       "model_parameters": {
@@ -1859,35 +1859,35 @@
         "free_hours": {
           "label": "15 free hours for all from 9 months",
           "spending": {
-            "universal_childcare_entitlement": 3.7717,
+            "universal_childcare_entitlement": 3.5835,
             "extended_childcare_entitlement": 5.5508,
             "targeted_childcare_entitlement": 0.4935,
             "tax_free_childcare": 0.6926,
-            "total_childcare_support_bn": 10.5086,
+            "total_childcare_support_bn": 10.3204,
             "uc_childcare_element_maximum_bn": 9.0576,
-            "gov_spending_bn": 595.292,
+            "gov_spending_bn": 595.104,
             "childcare_expenses_bn": 11.605
           },
-          "static_cost_bn": 2.25,
+          "static_cost_bn": 2.062,
           "household_effects": {
             "by_income_quintile": [
               {
                 "group": "Q1",
                 "households_m": 6.912,
-                "total_gain_bn": 0.8685,
-                "average_gain_gbp": 125.65,
-                "average_gain_gbp_among_gainers": 6872.65,
-                "share_gaining": 0.0183,
-                "average_gain_pct_of_income": 0.5175
+                "total_gain_bn": 0.7287,
+                "average_gain_gbp": 105.42,
+                "average_gain_gbp_among_gainers": 7023.49,
+                "share_gaining": 0.015,
+                "average_gain_pct_of_income": 0.4342
               },
               {
                 "group": "Q2",
                 "households_m": 6.514,
-                "total_gain_bn": 0.4747,
-                "average_gain_gbp": 72.88,
-                "average_gain_gbp_among_gainers": 6304.64,
-                "share_gaining": 0.0116,
-                "average_gain_pct_of_income": 0.1829
+                "total_gain_bn": 0.4263,
+                "average_gain_gbp": 65.45,
+                "average_gain_gbp_among_gainers": 6439.22,
+                "share_gaining": 0.0102,
+                "average_gain_pct_of_income": 0.1642
               },
               {
                 "group": "Q3",
@@ -1921,20 +1921,20 @@
               {
                 "group": "Q1",
                 "households_m": 0.752,
-                "total_gain_bn": 0.8685,
-                "average_gain_gbp": 1154.67,
-                "average_gain_gbp_among_gainers": 6872.65,
-                "share_gaining": 0.168,
-                "average_gain_pct_of_income": 2.8931
+                "total_gain_bn": 0.7287,
+                "average_gain_gbp": 968.76,
+                "average_gain_gbp_among_gainers": 7023.49,
+                "share_gaining": 0.1379,
+                "average_gain_pct_of_income": 2.4272
               },
               {
                 "group": "Q2",
                 "households_m": 0.735,
-                "total_gain_bn": 0.4747,
-                "average_gain_gbp": 645.78,
-                "average_gain_gbp_among_gainers": 6304.64,
-                "share_gaining": 0.1024,
-                "average_gain_pct_of_income": 1.1547
+                "total_gain_bn": 0.4263,
+                "average_gain_gbp": 579.98,
+                "average_gain_gbp_among_gainers": 6439.22,
+                "share_gaining": 0.0901,
+                "average_gain_pct_of_income": 1.037
               },
               {
                 "group": "Q3",
@@ -1968,39 +1968,39 @@
               {
                 "group": "Lone Parent",
                 "households_m": 0.797,
-                "total_gain_bn": 0.7161,
-                "average_gain_gbp": 898.35,
-                "average_gain_gbp_among_gainers": 7037.01,
-                "share_gaining": 0.1277,
-                "average_gain_pct_of_income": 1.946
+                "total_gain_bn": 0.5593,
+                "average_gain_gbp": 701.71,
+                "average_gain_gbp_among_gainers": 7363.62,
+                "share_gaining": 0.0953,
+                "average_gain_pct_of_income": 1.52
               },
               {
                 "group": "Couple With Children",
                 "households_m": 2.496,
-                "total_gain_bn": 1.5345,
-                "average_gain_gbp": 614.86,
-                "average_gain_gbp_among_gainers": 6329.07,
-                "share_gaining": 0.0971,
-                "average_gain_pct_of_income": 0.6945
+                "total_gain_bn": 1.5031,
+                "average_gain_gbp": 602.26,
+                "average_gain_gbp_among_gainers": 6354.18,
+                "share_gaining": 0.0948,
+                "average_gain_pct_of_income": 0.6803
               }
             ],
             "all_households": {
               "group": "All",
               "households_m": 31.778,
-              "total_gain_bn": 2.2506,
-              "average_gain_gbp": 70.82,
-              "average_gain_gbp_among_gainers": 6538.35,
-              "share_gaining": 0.0108,
-              "average_gain_pct_of_income": 0.12
+              "total_gain_bn": 2.0624,
+              "average_gain_gbp": 64.9,
+              "average_gain_gbp_among_gainers": 6599.53,
+              "share_gaining": 0.0098,
+              "average_gain_pct_of_income": 0.11
             },
             "families_with_under_5s": {
               "group": "Families with a child under 5",
               "households_m": 3.294,
-              "total_gain_bn": 2.2506,
-              "average_gain_gbp": 683.15,
-              "average_gain_gbp_among_gainers": 6538.35,
-              "share_gaining": 0.1045,
-              "average_gain_pct_of_income": 0.8726
+              "total_gain_bn": 2.0624,
+              "average_gain_gbp": 626.02,
+              "average_gain_gbp_among_gainers": 6599.53,
+              "share_gaining": 0.0949,
+              "average_gain_pct_of_income": 0.7996
             }
           }
         },
@@ -2155,35 +2155,35 @@
         "combined": {
           "label": "Both legs together",
           "spending": {
-            "universal_childcare_entitlement": 3.7717,
+            "universal_childcare_entitlement": 3.5835,
             "extended_childcare_entitlement": 5.5508,
             "targeted_childcare_entitlement": 0.4935,
             "tax_free_childcare": 5.6624,
-            "total_childcare_support_bn": 15.4784,
-            "uc_childcare_element_maximum_bn": 8.8936,
-            "gov_spending_bn": 600.233,
-            "childcare_expenses_bn": 11.3509
+            "total_childcare_support_bn": 15.2902,
+            "uc_childcare_element_maximum_bn": 8.8997,
+            "gov_spending_bn": 600.05,
+            "childcare_expenses_bn": 11.3609
           },
-          "static_cost_bn": 7.191,
+          "static_cost_bn": 7.008,
           "household_effects": {
             "by_income_quintile": [
               {
                 "group": "Q1",
                 "households_m": 6.912,
-                "total_gain_bn": 0.9882,
-                "average_gain_gbp": 142.97,
-                "average_gain_gbp_among_gainers": 4828.8,
-                "share_gaining": 0.0296,
-                "average_gain_pct_of_income": 0.5889
+                "total_gain_bn": 0.8545,
+                "average_gain_gbp": 123.62,
+                "average_gain_gbp_among_gainers": 4694.05,
+                "share_gaining": 0.0263,
+                "average_gain_pct_of_income": 0.5091
               },
               {
                 "group": "Q2",
                 "households_m": 6.514,
-                "total_gain_bn": 0.7532,
-                "average_gain_gbp": 115.64,
-                "average_gain_gbp_among_gainers": 4393.54,
-                "share_gaining": 0.0263,
-                "average_gain_pct_of_income": 0.2902
+                "total_gain_bn": 0.7049,
+                "average_gain_gbp": 108.21,
+                "average_gain_gbp_among_gainers": 4341.48,
+                "share_gaining": 0.0249,
+                "average_gain_pct_of_income": 0.2715
               },
               {
                 "group": "Q3",
@@ -2217,20 +2217,20 @@
               {
                 "group": "Q1",
                 "households_m": 0.752,
-                "total_gain_bn": 0.9428,
-                "average_gain_gbp": 1253.45,
-                "average_gain_gbp_among_gainers": 6061.48,
-                "share_gaining": 0.2068,
-                "average_gain_pct_of_income": 3.1405
+                "total_gain_bn": 0.809,
+                "average_gain_gbp": 1075.59,
+                "average_gain_gbp_among_gainers": 6086.77,
+                "share_gaining": 0.1767,
+                "average_gain_pct_of_income": 2.6949
               },
               {
                 "group": "Q2",
                 "households_m": 0.735,
-                "total_gain_bn": 0.7094,
-                "average_gain_gbp": 965.08,
-                "average_gain_gbp_among_gainers": 5504.58,
-                "share_gaining": 0.1753,
-                "average_gain_pct_of_income": 1.7256
+                "total_gain_bn": 0.661,
+                "average_gain_gbp": 899.28,
+                "average_gain_gbp_among_gainers": 5518.29,
+                "share_gaining": 0.163,
+                "average_gain_pct_of_income": 1.608
               },
               {
                 "group": "Q3",
@@ -2264,123 +2264,123 @@
               {
                 "group": "Couple With Children",
                 "households_m": 2.496,
-                "total_gain_bn": 5.5835,
-                "average_gain_gbp": 2237.18,
-                "average_gain_gbp_among_gainers": 5499.83,
-                "share_gaining": 0.4068,
-                "average_gain_pct_of_income": 2.5271
+                "total_gain_bn": 5.552,
+                "average_gain_gbp": 2224.57,
+                "average_gain_gbp_among_gainers": 5500.86,
+                "share_gaining": 0.4044,
+                "average_gain_pct_of_income": 2.5129
               },
               {
                 "group": "Lone Parent",
                 "households_m": 0.797,
-                "total_gain_bn": 0.7846,
-                "average_gain_gbp": 984.26,
-                "average_gain_gbp_among_gainers": 6574.85,
-                "share_gaining": 0.1497,
-                "average_gain_pct_of_income": 2.1321
+                "total_gain_bn": 0.6339,
+                "average_gain_gbp": 795.22,
+                "average_gain_gbp_among_gainers": 6777.47,
+                "share_gaining": 0.1173,
+                "average_gain_pct_of_income": 1.7226
               }
             ],
             "all_households": {
               "group": "All",
               "households_m": 31.778,
-              "total_gain_bn": 7.1907,
-              "average_gain_gbp": 226.28,
-              "average_gain_gbp_among_gainers": 4778.48,
-              "share_gaining": 0.0474,
-              "average_gain_pct_of_income": 0.3834
+              "total_gain_bn": 7.0085,
+              "average_gain_gbp": 220.55,
+              "average_gain_gbp_among_gainers": 4757.7,
+              "share_gaining": 0.0464,
+              "average_gain_pct_of_income": 0.3736
             },
             "families_with_under_5s": {
               "group": "Families with a child under 5",
               "households_m": 3.294,
-              "total_gain_bn": 6.368,
-              "average_gain_gbp": 1932.94,
-              "average_gain_gbp_among_gainers": 5612.9,
-              "share_gaining": 0.3444,
-              "average_gain_pct_of_income": 2.4689
+              "total_gain_bn": 6.1859,
+              "average_gain_gbp": 1877.65,
+              "average_gain_gbp_among_gainers": 5609.13,
+              "share_gaining": 0.3347,
+              "average_gain_pct_of_income": 2.3983
             }
           }
         }
       },
       "labour_supply": {
         "central": {
-          "entrants": 13382.0583,
-          "leavers": 8116.9319,
-          "net_entrants": 5265.1264,
-          "net_ftes": 2639.5834,
-          "earnings_gained_gbp": 232552748.5912,
-          "earnings_lost_gbp": 154989830.4216,
-          "net_earnings_gbp": 77562918.1696,
-          "revenue_from_entrants_gbp": 45117908.5884,
-          "revenue_lost_to_leavers_gbp": 21938087.1297,
-          "net_revenue_gbp": 23179821.4587,
+          "entrants": 13945.9899,
+          "leavers": 7654.6876,
+          "net_entrants": 6291.3023,
+          "net_ftes": 3154.0395,
+          "earnings_gained_gbp": 240726629.3414,
+          "earnings_lost_gbp": 145467595.4443,
+          "net_earnings_gbp": 95259033.8971,
+          "revenue_from_entrants_gbp": 46422746.6935,
+          "revenue_lost_to_leavers_gbp": 16019989.3033,
+          "net_revenue_gbp": 30402757.3901,
           "elasticity_scale": 1.0,
           "responding_adults_m": 3.2155,
-          "mean_gain_to_work_change_pct": 0.0644
+          "mean_gain_to_work_change_pct": 0.071
         },
         "low": {
-          "entrants": 4460.6861,
-          "leavers": 2705.644,
-          "net_entrants": 1755.0421,
-          "net_ftes": 879.8611,
-          "earnings_gained_gbp": 77517582.8637,
-          "earnings_lost_gbp": 51663276.8072,
-          "net_earnings_gbp": 25854306.0565,
-          "revenue_from_entrants_gbp": 15039302.8628,
-          "revenue_lost_to_leavers_gbp": 7312695.7099,
-          "net_revenue_gbp": 7726607.1529,
+          "entrants": 4648.6633,
+          "leavers": 2551.5625,
+          "net_entrants": 2097.1008,
+          "net_ftes": 1051.3465,
+          "earnings_gained_gbp": 80242209.7805,
+          "earnings_lost_gbp": 48489198.4814,
+          "net_earnings_gbp": 31753011.299,
+          "revenue_from_entrants_gbp": 15474248.8978,
+          "revenue_lost_to_leavers_gbp": 5339996.4344,
+          "net_revenue_gbp": 10134252.4634,
           "elasticity_scale": 0.3333,
           "responding_adults_m": 3.2155,
-          "mean_gain_to_work_change_pct": 0.0644
+          "mean_gain_to_work_change_pct": 0.071
         },
         "high": {
-          "entrants": 26704.7842,
-          "leavers": 16233.8638,
-          "net_entrants": 10470.9205,
-          "net_ftes": 5249.4215,
-          "earnings_gained_gbp": 464244446.2171,
-          "earnings_lost_gbp": 309979660.8432,
-          "net_earnings_gbp": 154264785.3738,
-          "revenue_from_entrants_gbp": 89926769.1304,
-          "revenue_lost_to_leavers_gbp": 43876174.2594,
-          "net_revenue_gbp": 46050594.871,
+          "entrants": 27830.3746,
+          "leavers": 15309.3752,
+          "net_entrants": 12520.9994,
+          "net_ftes": 6277.1944,
+          "earnings_gained_gbp": 480559223.9365,
+          "earnings_lost_gbp": 290935190.8885,
+          "net_earnings_gbp": 189624033.048,
+          "revenue_from_entrants_gbp": 92522302.1875,
+          "revenue_lost_to_leavers_gbp": 32039978.6067,
+          "net_revenue_gbp": 60482323.5808,
           "elasticity_scale": 2.0,
           "responding_adults_m": 3.2155,
-          "mean_gain_to_work_change_pct": 0.0644
+          "mean_gain_to_work_change_pct": 0.071
         }
       },
       "price_elasticity_cross_check": {
         "central": {
           "price_elasticity": -0.15,
-          "net_childcare_price_change": -0.4787,
+          "net_childcare_price_change": -0.4778,
           "additionality": 0.286,
-          "effective_price_change": -0.1369,
+          "effective_price_change": -0.1366,
           "employment_change_pct": 0.0205,
           "mothers_in_band_employed_m": 1.395,
           "mothers_in_band_not_working_m": 0.648,
-          "entrants": 28654,
-          "net_ftes": 14365
+          "entrants": 28599,
+          "net_ftes": 14338
         },
         "low": {
           "price_elasticity": -0.05,
-          "net_childcare_price_change": -0.4787,
+          "net_childcare_price_change": -0.4778,
           "additionality": 0.286,
-          "effective_price_change": -0.1369,
+          "effective_price_change": -0.1366,
           "employment_change_pct": 0.0068,
           "mothers_in_band_employed_m": 1.395,
           "mothers_in_band_not_working_m": 0.648,
-          "entrants": 9551,
-          "net_ftes": 4788
+          "entrants": 9533,
+          "net_ftes": 4779
         },
         "high": {
           "price_elasticity": -0.3,
-          "net_childcare_price_change": -0.4787,
+          "net_childcare_price_change": -0.4778,
           "additionality": 0.286,
-          "effective_price_change": -0.1369,
-          "employment_change_pct": 0.0411,
+          "effective_price_change": -0.1366,
+          "employment_change_pct": 0.041,
           "mothers_in_band_employed_m": 1.395,
           "mothers_in_band_not_working_m": 0.648,
-          "entrants": 57307,
-          "net_ftes": 28730
+          "entrants": 57198,
+          "net_ftes": 28675
         }
       },
       "fee_base_sensitivity": {
@@ -2392,33 +2392,33 @@
         "rebased_childcare_expenses_bn": 9.74,
         "ratio": 0.839,
         "subsidy_cost_bn": 4.27,
-        "combined_cost_bn": 6.397,
+        "combined_cost_bn": 6.213,
         "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
       },
       "dynamic_cost": {
         "central": {
-          "static_cost_bn": 7.191,
-          "labour_supply_offset_bn": 0.023,
-          "dynamic_cost_bn": 7.168,
-          "offset_share_of_static_cost": 0.0032,
-          "net_entrants": 5265,
-          "net_ftes": 2640
+          "static_cost_bn": 7.008,
+          "labour_supply_offset_bn": 0.03,
+          "dynamic_cost_bn": 6.978,
+          "offset_share_of_static_cost": 0.0043,
+          "net_entrants": 6291,
+          "net_ftes": 3154
         },
         "low": {
-          "static_cost_bn": 7.191,
-          "labour_supply_offset_bn": 0.008,
-          "dynamic_cost_bn": 7.183,
-          "offset_share_of_static_cost": 0.0011,
-          "net_entrants": 1755,
-          "net_ftes": 880
+          "static_cost_bn": 7.008,
+          "labour_supply_offset_bn": 0.01,
+          "dynamic_cost_bn": 6.998,
+          "offset_share_of_static_cost": 0.0014,
+          "net_entrants": 2097,
+          "net_ftes": 1051
         },
         "high": {
-          "static_cost_bn": 7.191,
-          "labour_supply_offset_bn": 0.046,
-          "dynamic_cost_bn": 7.145,
-          "offset_share_of_static_cost": 0.0064,
-          "net_entrants": 10471,
-          "net_ftes": 5249
+          "static_cost_bn": 7.008,
+          "labour_supply_offset_bn": 0.06,
+          "dynamic_cost_bn": 6.948,
+          "offset_share_of_static_cost": 0.0086,
+          "net_entrants": 12521,
+          "net_ftes": 6277
         }
       },
       "model_parameters": {

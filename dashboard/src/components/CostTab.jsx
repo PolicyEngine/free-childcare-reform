@@ -13,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { colors } from "../lib/colors";
-import { formatBn, formatCount } from "../lib/formatters";
+import { formatBn, formatCount, formatFiscalYear } from "../lib/formatters";
 import SectionHeading from "./SectionHeading";
 
 function Stat({ label, value, sub, tone = "default" }) {
@@ -31,16 +31,16 @@ function Stat({ label, value, sub, tone = "default" }) {
 const LEG_LABELS = {
   free_hours: "15 free hours for all, from 9 months",
   subsidy: "75% subsidy replacing Tax-Free Childcare",
-  combined: "Both legs together",
 };
 
 export default function CostTab({ data, year, onYearChange }) {
   const [bound, setBound] = useState("central");
   const result = data.by_year[String(year)];
   const legs = result.legs;
-  const dynamic = result.dynamic_cost[bound];
-  const response = result.labour_supply[bound];
-  const priceCheck = result.price_elasticity_cross_check?.[bound];
+  const isStatic = bound === "none";
+  const dynamic = isStatic ? null : result.dynamic_cost[bound];
+  const response = isStatic ? null : result.labour_supply[bound];
+  const priceCheck = isStatic ? null : result.price_elasticity_cross_check?.[bound];
   const src = data.sources || {};
   const A = (source, text) =>
     source ? (
@@ -51,26 +51,20 @@ export default function CostTab({ data, year, onYearChange }) {
       text
     );
 
-  // The two legs do not sum to the combined cost: free hours displace paid
-  // care, which shrinks the base the 75% subsidy applies to.
   const feeBase = result.fee_base_sensitivity;
   const cliff = data.income_cliff_context;
-  const legSum = legs.free_hours.static_cost_bn + legs.subsidy.static_cost_bn;
-  const interaction = legs.combined.static_cost_bn - legSum;
 
   const yearRows = data.years.map((y) => ({
-    year: String(y),
+    year: formatFiscalYear(y),
     free_hours: data.by_year[String(y)].legs.free_hours.static_cost_bn,
     subsidy: data.by_year[String(y)].legs.subsidy.static_cost_bn,
-    combined: data.by_year[String(y)].legs.combined.static_cost_bn,
-    dynamic: data.by_year[String(y)].dynamic_cost[bound].dynamic_cost_bn,
   }));
 
   return (
     <div className="space-y-10">
       <section>
         <SectionHeading
-          title="Budget impact, 2027 to 2029"
+          title={`Budget impact, ${formatFiscalYear(data.years[0])} to ${formatFiscalYear(data.years[data.years.length - 1])}`}
           description={
             <>
               Both legs of the reform, costed on the PolicyEngine UK Enhanced FRS. The{" "}
@@ -91,9 +85,7 @@ export default function CostTab({ data, year, onYearChange }) {
               className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
             >
               {data.years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
+                <option key={y} value={y}>{formatFiscalYear(y)}</option>
               ))}
             </select>
           </label>
@@ -106,6 +98,7 @@ export default function CostTab({ data, year, onYearChange }) {
               onChange={(event) => setBound(event.target.value)}
               className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
             >
+              <option value="none">None — static only</option>
               <option value="central">Central</option>
               <option value="low">Low response</option>
               <option value="high">High response</option>
@@ -115,22 +108,30 @@ export default function CostTab({ data, year, onYearChange }) {
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Stat
-            label={`Static cost, ${year}`}
-            value={`${formatBn(feeBase.combined_cost_bn)} to ${formatBn(legs.combined.static_cost_bn)}`}
-            sub={`Both legs, behaviour held fixed. The range is the childcare fee base: the model's England under-5 spend is ${feeBase.model_england_under_5_bn.toFixed(2)}bn against a ${feeBase.benchmark_england_under_5_bn.toFixed(2)}bn benchmark, and the subsidy is a share of that base. See Benchmarks.`}
+            label={`Free hours, ${formatFiscalYear(year)}`}
+            value={formatBn(legs.free_hours.static_cost_bn)}
+            sub="15 hours for every child from 9 months, plus 15 more where parents work and earn under £100,000."
           />
           <Stat
-            label={`Cost with labour supply response, ${year}`}
-            value={formatBn(dynamic.dynamic_cost_bn)}
-            sub={`Labour supply changes the cost by ${formatBn(-dynamic.labour_supply_offset_bn)}.`}
+            label={`75% subsidy, ${formatFiscalYear(year)}`}
+            value={formatBn(legs.subsidy.static_cost_bn)}
+            sub={`Replacing Tax-Free Childcare. On the published fee base this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`}
           />
-          <Stat
-            label="Net change in employment"
-            value={`${dynamic.net_entrants >= 0 ? "+" : "−"}${formatCount(
-              Math.abs(dynamic.net_entrants),
-            )}`}
-            sub={`${formatCount(Math.abs(dynamic.net_ftes))} full-time equivalents, among ${response.responding_adults_m.toFixed(1)}m parents whose youngest child is in the eligible band.`}
-          />
+          {isStatic ? (
+            <Stat
+              label="Behavioural response"
+              value="None"
+              sub="Static costing: nobody changes their hours or whether they work. Choose a response above to add an extensive-margin labour supply effect."
+            />
+          ) : (
+            <Stat
+              label="Net change in employment"
+              value={`${dynamic.net_entrants >= 0 ? "+" : "−"}${formatCount(
+                Math.abs(dynamic.net_entrants),
+              )}`}
+              sub={`${formatCount(Math.abs(dynamic.net_ftes))} full-time equivalents, among ${response.responding_adults_m.toFixed(1)}m parents whose youngest child is in the eligible band. It changes the cost of the reform as a whole by ${formatBn(-dynamic.labour_supply_offset_bn)}.`}
+            />
+          )}
         </div>
       </section>
 
@@ -179,10 +180,11 @@ export default function CostTab({ data, year, onYearChange }) {
           title="Cost by year and by leg"
           description={
             <>
-              The two legs do not sum to the combined cost. Free hours displace paid care —{" "}
+              Each leg on its own, against the current system. They are deliberately not
+              added together: free hours displace paid care —{" "}
               {A(src.ifs_free_childcare, "about 71% of a new free offer")} replaces care
-              families were already buying — which shrinks the base the 75% subsidy applies
-              to. That interaction is worth {formatBn(Math.abs(interaction))} in {year}.
+              families were already buying — so running both at once costs less than the
+              sum of the two, and adding these figures would overstate it.
             </>
           }
         />
@@ -206,12 +208,6 @@ export default function CostTab({ data, year, onYearChange }) {
                 fill={colors.primary[500]}
                 radius={[4, 4, 0, 0]}
               />
-              <Bar
-                dataKey="combined"
-                name={LEG_LABELS.combined}
-                fill={colors.primary[700]}
-                radius={[4, 4, 0, 0]}
-              />
             </BarChart>
           </ResponsiveContainer>
           <div className="mt-6 overflow-x-auto">
@@ -221,18 +217,14 @@ export default function CostTab({ data, year, onYearChange }) {
                   <th className="py-2 pr-4 font-medium">Year</th>
                   <th className="py-2 pr-4 font-medium">Free hours</th>
                   <th className="py-2 pr-4 font-medium">75% subsidy</th>
-                  <th className="py-2 pr-4 font-medium">Both, static</th>
-                  <th className="py-2 pr-4 font-medium">Both, with labour supply</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {yearRows.map((row) => (
-                  <tr key={row.year} className={String(year) === row.year ? "font-semibold" : ""}>
+                  <tr key={row.year} className={formatFiscalYear(year) === row.year ? "font-semibold" : ""}>
                     <td className="py-2 pr-4">{row.year}</td>
                     <td className="py-2 pr-4">{formatBn(row.free_hours)}</td>
                     <td className="py-2 pr-4">{formatBn(row.subsidy)}</td>
-                    <td className="py-2 pr-4">{formatBn(row.combined)}</td>
-                    <td className="py-2 pr-4">{formatBn(row.dynamic)}</td>
                   </tr>
                 ))}
               </tbody>

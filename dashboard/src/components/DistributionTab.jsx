@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { colors } from "../lib/colors";
-import { formatBn, formatCurrency, formatPct } from "../lib/formatters";
+import { formatBn, formatCurrency, formatPct , formatFiscalYear} from "../lib/formatters";
 import SectionHeading from "./SectionHeading";
 
 const MEASURES = [
@@ -134,9 +134,7 @@ export default function DistributionTab({ data, year, onYearChange }) {
                 className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
               >
                 {data.years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
+                  <option key={y} value={y}>{formatFiscalYear(y)}</option>
                 ))}
               </select>
             </label>
@@ -187,7 +185,7 @@ export default function DistributionTab({ data, year, onYearChange }) {
           </div>
           <h3 className="mb-4 text-sm font-semibold text-slate-700">
             {measure.label} by income quintile — {population.label.toLowerCase()} (
-            {measure.unit}, {year})
+            {measure.unit}, {formatFiscalYear(year)})
           </h3>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={rows} margin={{ left: 8, right: 16, top: 8, bottom: 16 }}>

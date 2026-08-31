@@ -12,11 +12,13 @@ Costing of a two-part universal childcare reform for the UK, 2027 to 2029, on th
 
 Static cost of both legs together, and the same with the central labour supply response:
 
-| Year | Free hours | 75% subsidy | Both, static | Both, with labour supply |
-| --- | --- | --- | --- | --- |
-| 2027 | £2.15bn | £4.84bn | £6.84bn | £6.82bn |
-| 2028 | £2.20bn | £4.96bn | £7.01bn | £6.99bn |
-| 2029 | £2.25bn | £5.09bn | £7.19bn | £7.17bn |
+| Year | Free hours | 75% subsidy |
+| --- | --- | --- |
+| 2027-28 | £1.97bn | £4.84bn |
+| 2028-29 | £2.01bn | £4.96bn |
+| 2029-30 | £2.06bn | £5.09bn |
+
+**The two legs are reported separately and should not be added.** Free hours displace paid care — about 71% of a new free offer replaces care families were already buying — so running both at once shrinks the base the 75% subsidy applies to. Summing the columns overstates the cost of doing both.
 
 **Read the combined figure as a range: £6.21bn to £6.84bn in 2027.** The subsidy leg is 75% of a childcare fee base the model puts at £6.36bn for England under-5s against a £5.1bn benchmark — **1.25×**. The cost scales almost linearly in that base, so rebasing the under-5 slice takes the subsidy leg from £4.84bn to £4.19bn and the combined cost to £6.21bn. With the Tax-Free Childcare baseline fixed, the fee base is the largest remaining uncertainty — about £0.6bn, roughly twice the TFC correction and two orders of magnitude more than the labour supply response. The point estimates above are the upper end of the range, not a central case.
 
