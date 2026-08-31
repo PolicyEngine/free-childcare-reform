@@ -55,6 +55,13 @@ from . import sources
 
 # Weekly hours assumed for someone entering work, matching the upstream OBR
 # implementation's default and its FTE conversion.
+#
+# ASSUMPTION, and a load-bearing one: it sets every entrant's imputed earnings
+# and so the revenue the exchequer recovers from them. It is policyengine-uk's
+# default rather than a figure this analysis derived or a published OBR
+# parameter traced to a document, and it is not varied in the low and high
+# bounds, which move the elasticities instead. A different entrant-hours
+# assumption would move the offset roughly proportionally.
 HOURS_FOR_NEW_ENTRANTS = 18.8
 FULL_TIME_HOURS = 37.5
 WEEKS_PER_YEAR = 52
@@ -416,7 +423,6 @@ def prepare(
         "employment_income": employment_income,
         "imputed_wages": imputed_wages,
         "reform_gain": reform_gain,
-        "gain_to_work_reform": gtw_reform,
         "weights": weights,
     }
 
@@ -474,12 +480,18 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     net_revenue = revenue_from_entrants - revenue_lost_to_leavers
 
     # The same response at person level, so it can be allocated to households.
-    # Entering work raises household net income by the gain to work; leaving
-    # loses it. Expected values, so a person contributes their probability
-    # times that gain rather than a drawn outcome.
-    expected_net_income_change = (entry_probability - exit_probability) * prepared[
-        "gain_to_work_reform"
-    ]
+    # Entering work raises household net income by `reform_gain`; leaving loses
+    # it. Expected values, so a person contributes their probability times that
+    # gain rather than a drawn outcome.
+    #
+    # `reform_gain` rather than the gain to work, deliberately. The two differ
+    # by childcare costs: the gain to work is net of them, because that is what
+    # drives whether work pays and so the response above. But the household
+    # tables report `household_net_income`, which does not net off childcare,
+    # and the exchequer offset below is measured against the same quantity.
+    # Allocating the childcare-net gain instead would put the distribution and
+    # the fiscal cost on two different definitions of one number.
+    expected_net_income_change = (entry_probability - exit_probability) * reform_gain
 
     return {
         "expected_net_income_change_per_person": expected_net_income_change,

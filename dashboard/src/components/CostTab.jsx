@@ -220,7 +220,7 @@ export default function CostTab({ data, year, bound }) {
               Each leg on its own, against the current system. They are deliberately not
               added together: free hours displace paid care, so running both at once costs
               less than the sum of the two. The assumption is that{" "}
-              {A(src.ifs_free_childcare, "71% of a new free offer")} replaces care a family
+              {A(src.ifs_free_childcare, "90% of a new free offer")} replaces care a family
               was already buying, but displacement is capped at what they actually spend,
               and that cap binds — most newly-eligible families are not working and buy
               little paid care, so modelled childcare spending falls by only about 12% of

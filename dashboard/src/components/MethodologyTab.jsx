@@ -71,12 +71,12 @@ export default function MethodologyTab({ data, year }) {
             <strong>The legs are not additive.</strong>{" "}
             <code className="rounded bg-slate-100 px-1">childcare_expenses</code> is spend
             net of free hours already received, so hours the reform newly makes free are
-            netted out before the subsidy applies. Only{" "}
-            <strong>{(assumptions.free_hours_displacement * 100).toFixed(0)}%</strong> of
-            new free hours displaces paid care —{" "}
-            {A(src.ifs_free_childcare, "the IFS evaluation")} finds that for every 570 free
-            hours offered, children spent only about 163 additional hours in subsidisable
-            care.
+            netted out before the subsidy applies. <strong>{(assumptions.free_hours_displacement * 100).toFixed(0)}%</strong> of new free
+            hours displaces care a family was already getting —{" "}
+            {A(src.ifs_free_childcare, "the IFS evaluation")} finds only about 54 additional
+            hours of care outside the family for every 570 offered. Displacement is also
+            capped at what a family actually spends, and that cap binds: realised
+            displacement is about 12% of the value of the new free hours.
           </li>
           <li>
             Free hours are valued at the DfE funding rate — what government pays a
@@ -159,6 +159,28 @@ export default function MethodologyTab({ data, year }) {
         />
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
           <ul className="list-inside list-disc space-y-2 text-sm leading-6 text-slate-600">
+            <li>
+              <strong>The 9-month tier is modelled as starting at age 1.</strong> Family
+              Resources Survey ages are whole years, so the reform&apos;s 0.75 age floor
+              evaluates as &ldquo;age 1 or over&rdquo;, and no child recorded as age 0
+              receives the entitlement — verified as exactly zero children. The
+              9-to-12-month cohort the reform covers is therefore not costed here. Taking
+              the age-1 cohort as the analogue — 158,982 children at £6,934 each — a
+              quarter of a birth year is roughly 40,000 children and about{" "}
+              <strong>£0.28bn, some 14% of the free-hours leg</strong>, which is missing
+              from the cost. Modelling it needs sub-year ages in the survey, not a
+              different threshold. The labour supply response omits the same cohort, so
+              both sides are consistent.
+            </li>
+            <li>
+              <strong>The participation elasticities are read at 2025.</strong> The
+              upstream OBR helper resolves its inputs at the model&apos;s default
+              calculation period rather than the costed year, so the elasticities applied
+              to 2027-28 to 2029-30 are 2025 elasticities. Because the dataset does not
+              age people across projection years, only uprated earnings differ between
+              them, so the effect today is negligible — but the figures are 2025
+              assumptions, not year-specific ones.
+            </li>
             <li>
               <strong>Take-up is held fixed at the baseline rates.</strong> The Enhanced
               FRS does apply a take-up haircut — about 88% for Tax-Free Childcare, 81% for

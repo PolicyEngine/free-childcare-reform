@@ -1,6 +1,7 @@
 """Unit tests for the reform arithmetic that does not need a simulation."""
 
 import numpy as np
+import pytest
 
 from free_childcare_reform import sources
 from free_childcare_reform.reforms import displaced_childcare_expenses
@@ -74,3 +75,95 @@ def test_the_widened_universal_entitlement_does_not_stack_on_the_targeted_offer(
     assert "~(targeted & in_targeted_age)" in source, (
         "the universal entitlement must step aside where the targeted offer applies"
     )
+
+
+# Behavioural tests of the reform variables. These build a household and read
+# what the model pays, rather than inspecting source text — the age-floor
+# limitation below was found by writing them.
+
+YEAR = 2027
+
+
+def _situation(child_age: float, employment_income: float = 0):
+    """One parent, one child, in England."""
+    return {
+        "people": {
+            "child": {"age": {YEAR: child_age}},
+            "parent": {"age": {YEAR: 32}, "employment_income": {YEAR: employment_income}},
+        },
+        "benunits": {"bu": {"members": ["child", "parent"]}},
+        "households": {
+            "hh": {"members": ["child", "parent"], "country": {YEAR: "ENGLAND"}}
+        },
+    }
+
+
+def _free_entitlement(child_age: float, employment_income: float = 0, reform: bool = False):
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.pipeline import PARAMETER_YEARS
+    from free_childcare_reform.reforms import free_hours_scenario
+
+    situation = _situation(child_age, employment_income)
+    sim = (
+        Simulation(situation=situation, scenario=free_hours_scenario(PARAMETER_YEARS))
+        if reform
+        else Simulation(situation=situation)
+    )
+    return {
+        variable: float(sim.calculate(variable, YEAR).sum())
+        for variable in (
+            "universal_childcare_entitlement",
+            "targeted_childcare_entitlement",
+        )
+    }
+
+
+def test_the_reform_pays_a_one_year_old_of_a_non_working_family():
+    """The core of leg 1: 15 free hours with no work test, from age 1."""
+    baseline = _free_entitlement(1)
+    reform = _free_entitlement(1, reform=True)
+    assert baseline["universal_childcare_entitlement"] == 0
+    assert reform["universal_childcare_entitlement"] > 6_000
+
+
+def test_the_reform_pays_nothing_to_a_child_recorded_as_age_zero():
+    """A known limitation, pinned so it cannot change unnoticed.
+
+    The reform covers children from 9 months, but FRS ages are whole years, so
+    the 0.75 age floor evaluates as `age >= 1` and the 9-to-12-month cohort
+    gets nothing — roughly £0.28bn missing from the free-hours leg. If a future
+    dataset carries sub-year ages this test fails, which is the signal to
+    re-cost the leg rather than a regression.
+    """
+    assert _free_entitlement(0, reform=True)["universal_childcare_entitlement"] == 0
+
+
+def test_a_two_year_old_on_qualifying_benefits_gets_fifteen_hours_not_thirty():
+    """The non-stacking fix, tested by what is paid rather than by source text.
+
+    Without it the widened universal entitlement stacks on the disadvantaged
+    two-year-old offer and the child draws 570 hours from each.
+    """
+    baseline = _free_entitlement(2)
+    reform = _free_entitlement(2, reform=True)
+    # A family with no earnings receives Universal Credit, so it qualifies for
+    # the disadvantaged offer.
+    assert baseline["targeted_childcare_entitlement"] > 0
+    assert reform["universal_childcare_entitlement"] == 0, (
+        "the universal entitlement must step aside where the targeted offer applies"
+    )
+    assert reform["targeted_childcare_entitlement"] == pytest.approx(
+        baseline["targeted_childcare_entitlement"]
+    )
+
+
+def test_three_and_four_year_olds_are_unchanged_by_the_reform():
+    """They already hold the universal entitlement, so the age floor is moot."""
+    for age in (3, 4):
+        baseline = _free_entitlement(age)
+        reform = _free_entitlement(age, reform=True)
+        assert baseline["universal_childcare_entitlement"] > 0
+        assert reform["universal_childcare_entitlement"] == pytest.approx(
+            baseline["universal_childcare_entitlement"]
+        ), age

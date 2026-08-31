@@ -24,28 +24,33 @@ class Source:
 # Behavioural assumptions
 # ---------------------------------------------------------------------------
 
-# Additionality of a free-hours expansion. For every 570 hours a year of free
-# care offered, children spent only about 163 additional hours a year in
-# subsidisable care — roughly 29% additionality, 71% displacement of care
-# families were already buying.
+# Additionality of a free-hours expansion: of the free hours a family is newly
+# offered, how much is care it was not already getting.
 #
-# The figure is from IFS Briefing Note BN189 (2016), not the later working
-# paper, and three qualifications go with it:
+# 54 additional hours per 570 offered — about 9.5% additionality, 90%
+# displacement. From IFS Briefing Note BN189 (2016): "when 3-year-olds become
+# entitled to 570 hours a year of free care, they only spend an additional 54
+# hours per year in childcare provided outside the immediate family". The
+# peer-reviewed successor (Brewer, Cattan, Crawford and Rabe, Labour Economics
+# 2022, and IFS WP20/09) corroborates it at about 57 hours per 570 on the
+# comparable basis, though not significantly.
 #
-#   - It is the estimate for the *part-time* 15-hour offer. BN189 says the
-#     additional hours from the full-time offer are smaller still, so applying
-#     29% to newly free hours is, if anything, generous on additionality.
-#   - "Subsidisable" care includes school. On *any* care the same note gives
-#     only 54 additional hours per 570 — 9.5% — with most of the 163 being
-#     substitution out of informal care rather than out of paid care.
-#   - So 71% is a lower bound on displacement of paid care; the true figure
-#     is plausibly nearer 90%.
+# An earlier version of this file used the same note's other figure — 163
+# hours per 570, 29% additionality — which is the estimate for *subsidisable*
+# care, a category that includes state-run infant and primary schools. On any
+# care outside the family the figure is 54, because most of the difference is
+# substitution out of informal care rather than out of paid care. The larger
+# number also describes the part-time offer, and the note says the full-time
+# offer's additional hours are smaller still.
 #
-# It matters less than it looks: displacement is separately capped at what a
-# family actually spends, and that cap binds for most newly-eligible families,
-# who are not working and buy little paid care. Realised displacement in the
-# 2027-28 run is about 12% of the value of the new free hours, not 71%.
-FREE_HOURS_ADDITIONALITY = 163 / 570  # ~0.286
+# There is no single well-supported number here: displacement is roughly
+# 70-90% measured on formal hours and 90-100% on total care hours. The choice
+# matters less than that range suggests, because displacement is separately
+# capped at what a family actually spends and that cap binds for most
+# newly-eligible families, who are not working and buy little paid care.
+# Running the whole analysis at 71% instead of 90% moves the combined cost by
+# £0.03bn, or 0.4%, and moves neither leg on its own.
+FREE_HOURS_ADDITIONALITY = 54 / 570  # ~0.095
 FREE_HOURS_DISPLACEMENT = 1 - FREE_HOURS_ADDITIONALITY  # ~0.714
 
 # Childcare price elasticity of maternal employment, extensive margin. Used for
@@ -78,6 +83,12 @@ ELASTICITY_SCALE_HIGH = PRICE_ELASTICITY_HIGH / PRICE_ELASTICITY_CENTRAL  # 2
 # Cap on the modelled proportional change in any one person's probability of
 # working. An elasticity applied to a large proportional change in a small
 # baseline gain to work can otherwise imply a probability change above one.
+#
+# ASSUMPTION, not a published figure. There is no literature value for a
+# numerical guard of this kind; 0.5 is chosen as a round bound that admits
+# large but not implausible responses. It binds for 0.11% of the eligible
+# population on the 2027-28 run, so the results are not sensitive to it — but
+# it is a choice, not a citation.
 PARTICIPATION_CHANGE_BOUND = 0.5
 
 # Brewer et al. find no participation effect for mothers who also have a
@@ -242,6 +253,11 @@ BENCHMARKS = [
             "Derived, not published: the CMA estimates England's early years "
             "sector income at about £14bn in 2025-26, of which £8.9bn is funded "
             "entitlements, leaving about £5.1bn that parents pay providers. "
+            "Both terms are the CMA's, deliberately: the entitlements row above "
+            "uses the IFS's £8.7bn for the same quantity, and mixing the two "
+            "sources inside one subtraction would make the residual an artefact "
+            "of the mismatch. On the IFS figure the residual would be £5.3bn "
+            "and the gap 1.20x rather than 1.25x. "
             "That gross figure is the comparator. An earlier version of this "
             "check used £3.75bn, netting TFC and the UC childcare element off "
             "the residual — but childcare_expenses is the total fee and both "
@@ -271,7 +287,7 @@ BENCHMARKS = [
             "school-age childcare spend is published by anyone, so that part is "
             "unchecked in either direction."
         ),
-        "url": "https://www.gov.uk/government/collections/childcare-and-early-years-statistics",
+        "url": "https://explore-education-statistics.service.gov.uk/find-statistics/education-provision-children-under-5",
     },
 ]
 
@@ -354,7 +370,8 @@ AKGUNDUZ_PLANTENGA = Source(
     "Akgunduz and Plantenga — Child care prices and maternal employment: a meta-analysis",
     "International meta-analysis, 43 estimates from 36 studies. Mean childcare "
     "price elasticity of maternal employment -0.277; Europe and Canada -0.19 against "
-    "the US -0.35, and smaller still in high part-time countries like the UK.",
+    "the US -0.35. Elasticities are smaller in high part-time countries like the UK, "
+    "though that result holds only when sample year is excluded from the regression.",
     "https://www.uu.nl/sites/default/files/rebo_use_dp_2015_15-14.pdf",
 )
 
