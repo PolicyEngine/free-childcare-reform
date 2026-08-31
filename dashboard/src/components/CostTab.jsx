@@ -13,7 +13,12 @@ import {
   YAxis,
 } from "recharts";
 import { colors } from "../lib/colors";
-import { formatBn, formatCount, formatFiscalYear } from "../lib/formatters";
+import {
+  formatBn,
+  formatCount,
+  formatFiscalYear,
+  formatSignedBn,
+} from "../lib/formatters";
 import SectionHeading from "./SectionHeading";
 
 function Stat({ label, value, sub, tone = "default" }) {
@@ -127,11 +132,15 @@ export default function CostTab({ data, year, onYearChange }) {
             />
           ) : (
             <Stat
-              label="Net change in employment"
-              value={`${dynamic.net_entrants >= 0 ? "+" : "−"}${formatCount(
+              label="Labour supply effect on cost"
+              value={formatSignedBn(-dynamic.labour_supply_offset_bn)}
+              sub={`${dynamic.net_entrants >= 0 ? "+" : "−"}${formatCount(
                 Math.abs(dynamic.net_entrants),
-              )}`}
-              sub={`${formatCount(Math.abs(dynamic.net_ftes))} full-time equivalents, among ${response.responding_adults_m.toFixed(1)}m parents whose youngest child is in the eligible band. It changes the cost of the reform as a whole by ${formatBn(-dynamic.labour_supply_offset_bn)}.`}
+              )} net entrants (${formatCount(
+                Math.abs(dynamic.net_ftes),
+              )} full-time equivalents), among ${response.responding_adults_m.toFixed(1)}m parents whose youngest child is eligible. This applies to the reform as a whole, not to either leg on its own — which is why the two costs above do not move when you change this assumption. At ${(
+                dynamic.offset_share_of_static_cost * 100
+              ).toFixed(1)}% of the static cost the effect is small on every assumption.`}
             />
           )}
         </div>
@@ -143,8 +152,8 @@ export default function CostTab({ data, year, onYearChange }) {
             What is being costed
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-            Two changes, priced separately and together. Support is shown as it lands on a
-            family, by where its income sits.
+            Two changes, priced separately and never added together. Support is shown as
+            it lands on a family, by where its income sits.
           </p>
           <dl className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl bg-slate-50 p-4">
@@ -152,12 +161,21 @@ export default function CostTab({ data, year, onYearChange }) {
                 Leg 1 — 15 free hours for everyone, plus 15 more for working parents
               </dt>
               <dd className="mt-2 text-sm leading-6 text-slate-600">
-                Today: 15 hours for 3-4 year olds, and 30 hours where parents work and earn
-                under £100,000. After: <strong>15 hours free for every child</strong> from 9
-                months to school age, with no work or income test, and{" "}
-                <strong>a further 15 hours</strong> where parents work and earn under
-                £100,000. A non-working family gains 15 hours it does not have today; a
-                working family under £100,000 keeps the 30 it already has.
+                <ul className="list-disc space-y-1 pl-5">
+                  <li>Today: 15 hours for 3-4 year olds; 30 where parents work and earn under £100,000.</li>
+                  <li>
+                    After: <strong>15 hours for every child</strong> from 9 months to school
+                    age, no work or income test.
+                  </li>
+                  <li>
+                    Plus <strong>a further 15 hours</strong> where parents work and earn
+                    under £100,000.
+                  </li>
+                  <li>
+                    So a non-working family gains 15 hours; a working family under £100,000
+                    keeps the 30 it has.
+                  </li>
+                </ul>
               </dd>
             </div>
             <div className="rounded-xl bg-slate-50 p-4">
@@ -165,12 +183,21 @@ export default function CostTab({ data, year, onYearChange }) {
                 Leg 2 — a 75% subsidy replacing Tax-Free Childcare
               </dt>
               <dd className="mt-2 text-sm leading-6 text-slate-600">
-                Today: Tax-Free Childcare tops up 25% of what a parent pays into an account,
-                capped at £2,000 a child, with a work test and a £100,000 cliff. After:{" "}
-                <strong>75% of childcare costs</strong>, uncapped, with no work test and no
-                cliff — so it reaches above £100,000 too. Families on Universal Credit keep
-                the <strong>85% childcare element</strong> instead, unchanged, rather than
-                stacking the two.
+                <ul className="list-disc space-y-1 pl-5">
+                  <li>
+                    Today: Tax-Free Childcare tops up 25% of what a parent pays into an
+                    account, capped at £2,000 a child, with a work test and a £100,000 cliff.
+                  </li>
+                  <li>
+                    After: <strong>75% of childcare costs</strong>, uncapped, no work test,
+                    no cliff — so it reaches above £100,000 too.
+                  </li>
+                  <li>
+                    Families on Universal Credit keep the{" "}
+                    <strong>85% childcare element</strong> instead, unchanged, rather than
+                    stacking the two.
+                  </li>
+                </ul>
               </dd>
             </div>
           </dl>

@@ -76,7 +76,7 @@ function Dashboard() {
     <div className="app-shell min-h-screen">
       <header className="title-row">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4 md:px-8">
-          <h1>Childcare reform costing</h1>
+          <h1>Costing a two-part childcare reform</h1>
         </div>
       </header>
 
@@ -87,23 +87,35 @@ function Dashboard() {
             PolicyEngine
           </a>{" "}
           UK&apos;s microsimulation to cost a two-part childcare reform for{" "}
-          <strong>2027, 2028 and 2029</strong>. The first part replaces today&apos;s split —
-          30 free hours for working parents earning under £100,000, 15 hours for 3-4 year
-          olds — with <strong>15 hours free for every child from 9 months to school age</strong>,
-          plus a further 15 hours where parents work and earn under £100,000. The second
-          replaces Tax-Free Childcare with a <strong>75% subsidy of childcare costs for
-          all</strong>, keeping the Universal Credit childcare element. The{" "}
-          <TabLink onSelect={() => handleTabChange("reform")}>The reform</TabLink> tab
-          reports what each leg costs — statically or with an extensive-margin labour supply
-          response — and who gains, by income quintile. The{" "}
-          <TabLink onSelect={() => handleTabChange("baseline")}>Baseline</TabLink> tab sets
-          the modelled baseline for each childcare programme against its published figure,
-          on spending and on children covered, and checks the rest against published
-          outturns and comparable costings. It is the place to start if you want to know how
-          much weight the headline numbers bear. The{" "}
-          <TabLink onSelect={() => handleTabChange("methodology")}>Methodology</TabLink> tab
-          explains how each result is computed, with a source for every assumption.
+          <strong>2027-28 to 2029-30</strong>:
         </p>
+        <ul className="mt-3 max-w-3xl list-disc space-y-2 pl-5 text-base leading-7 text-slate-600">
+          <li>
+            <strong>15 hours free for every child</strong> from 9 months to school age,
+            plus a further 15 hours where parents work and earn under £100,000 — replacing
+            today&apos;s split of 30 hours for working parents under £100,000 and 15 hours
+            for 3-4 year olds.
+          </li>
+          <li>
+            <strong>A 75% subsidy of childcare costs for all</strong>, replacing Tax-Free
+            Childcare, keeping the Universal Credit childcare element.
+          </li>
+        </ul>
+        <ul className="mt-4 max-w-3xl list-disc space-y-2 pl-5 text-base leading-7 text-slate-600">
+          <li>
+            <TabLink onSelect={() => handleTabChange("reform")}>The reform</TabLink> — what
+            each leg costs, statically or with a labour supply response, and who gains.
+          </li>
+          <li>
+            <TabLink onSelect={() => handleTabChange("baseline")}>Baseline</TabLink> — the
+            modelled baseline for each programme against its published figure. Start here
+            to judge how much weight the headline bears.
+          </li>
+          <li>
+            <TabLink onSelect={() => handleTabChange("methodology")}>Methodology</TabLink> —
+            how each result is computed, with a source for every assumption.
+          </li>
+        </ul>
 
         <div className="mb-8 mt-8 flex w-fit flex-wrap border-b-2 border-slate-200">
           {TAB_OPTIONS.map((tab) => (
