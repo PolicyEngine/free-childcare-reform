@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from microdf import MicroSeries
 from policyengine_uk.dynamics.participation import calculate_participation_elasticities
 
 from . import sources
@@ -91,14 +92,17 @@ def _hourly_wage(sim, year: int):
 
 
 def _weighted_median(values: np.ndarray, weights: np.ndarray) -> float:
+    """Median of a weighted sample, via microdf rather than by hand.
+
+    microdf is what policyengine-uk returns from ``calculate``; using it here
+    keeps every weighted statistic in this file on the same implementation
+    rather than a local reimplementation that could drift from it.
+    """
     if not len(values):
         return 0.0
-    order = np.argsort(values)
-    values, weights = values[order], weights[order]
-    cumulative = np.cumsum(weights)
-    if cumulative[-1] <= 0:
+    if float(np.sum(weights)) <= 0:
         return 0.0
-    return float(values[np.searchsorted(cumulative, cumulative[-1] / 2)])
+    return float(MicroSeries(values, weights=weights).median())
 
 
 def impute_entrant_earnings(
@@ -445,21 +449,21 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     # negative change leaves with its magnitude.
     entry_probability = np.where(currently_not_working, np.maximum(participation_change, 0), 0)
     exit_probability = np.where(currently_working, np.maximum(-participation_change, 0), 0)
-    entrants = float((entry_probability * weights).sum())
-    leavers = float((exit_probability * weights).sum())
+    entrants = float(MicroSeries(entry_probability, weights=weights).sum())
+    leavers = float(MicroSeries(exit_probability, weights=weights).sum())
     net_entrants = entrants - leavers
 
-    earnings_gained = float((entry_probability * imputed_wages * weights).sum())
-    earnings_lost = float((exit_probability * employment_income * weights).sum())
+    earnings_gained = float(MicroSeries(entry_probability * imputed_wages, weights=weights).sum())
+    earnings_lost = float(MicroSeries(exit_probability * employment_income, weights=weights).sum())
     net_earnings = earnings_gained - earnings_lost
 
     ftes = net_entrants * (HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS)
 
     revenue_from_entrants = float(
-        (entry_probability * (imputed_wages - reform_gain) * weights).sum()
+        MicroSeries(entry_probability * (imputed_wages - reform_gain), weights=weights).sum()
     )
     revenue_lost_to_leavers = float(
-        (exit_probability * (employment_income - reform_gain) * weights).sum()
+        MicroSeries(exit_probability * (employment_income - reform_gain), weights=weights).sum()
     )
     net_revenue = revenue_from_entrants - revenue_lost_to_leavers
 
@@ -467,9 +471,9 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     # Entering work raises household net income by the gain to work; leaving
     # loses it. Expected values, so a person contributes their probability
     # times that gain rather than a drawn outcome.
-    expected_net_income_change = (
-        entry_probability - exit_probability
-    ) * prepared["gain_to_work_reform"]
+    expected_net_income_change = (entry_probability - exit_probability) * prepared[
+        "gain_to_work_reform"
+    ]
 
     return {
         "expected_net_income_change_per_person": expected_net_income_change,
@@ -484,11 +488,11 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
         "revenue_lost_to_leavers_gbp": revenue_lost_to_leavers,
         "net_revenue_gbp": net_revenue,
         "elasticity_scale": elasticity_scale,
-        "responding_adults_m": float(weights[eligible].sum()) / 1e6,
+        "responding_adults_m": float(MicroSeries(eligible, weights=weights).sum()) / 1e6,
         "mean_gain_to_work_change_pct": float(
-            np.average(gtw_pct_change[eligible], weights=weights[eligible])
+            MicroSeries(gtw_pct_change[eligible], weights=weights[eligible]).mean()
         )
-        if weights[eligible].sum()
+        if float(np.sum(weights[eligible]))
         else 0.0,
     }
 
@@ -543,11 +547,11 @@ def price_elasticity_response(
 
     # Elasticity is negative and the price change is negative, so employment rises.
     employment_change_pct = price_elasticity * effective_price_change
-    affected = float((not_working_mothers * weights).sum())
+    affected = float(MicroSeries(not_working_mothers, weights=weights).sum())
 
     # The elasticity is defined on the employment *rate* of the affected group,
     # so it applies to mothers in the band who are currently employed.
-    employed_in_band = float(((mothers & (employment_income > 0)) * weights).sum())
+    employed_in_band = float(MicroSeries(mothers & (employment_income > 0), weights=weights).sum())
     entrants = employed_in_band * employment_change_pct
 
     return {
@@ -631,8 +635,8 @@ def childcare_cost_when_working(
         if not donors.any() or not entrants.any():
             continue
         donor_weight = weights[donors]
-        mean_cost = float(np.average(actual_cost[donors], weights=donor_weight))
-        mean_hours = float(np.average(hours[donors], weights=donor_weight)) / 52
+        mean_cost = float(MicroSeries(actual_cost[donors], weights=donor_weight).mean())
+        mean_hours = float(MicroSeries(hours[donors], weights=donor_weight).mean()) / 52
         if mean_hours <= 0:
             continue
         imputed[entrants] = mean_cost * (HOURS_FOR_NEW_ENTRANTS / mean_hours)

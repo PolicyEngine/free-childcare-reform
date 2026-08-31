@@ -164,15 +164,13 @@ function Dashboard() {
                     >
                       <option value="none">None — static only</option>
                       <option value="central">
-                        Central — elasticity {(data.assumptions || {}).price_elasticity_central}
+                        Central (elasticity = {(data.assumptions || {}).price_elasticity_central})
                       </option>
                       <option value="low">
-                        Low — {(data.assumptions || {}).price_elasticity_low} (OBR ×
-                        {(data.assumptions || {}).elasticity_scale_low?.toFixed(2)})
+                        Low (elasticity = {(data.assumptions || {}).price_elasticity_low})
                       </option>
                       <option value="high">
-                        High — {(data.assumptions || {}).price_elasticity_high} (OBR ×
-                        {(data.assumptions || {}).elasticity_scale_high?.toFixed(2)})
+                        High (elasticity = {(data.assumptions || {}).price_elasticity_high})
                       </option>
                     </select>
                   </label>

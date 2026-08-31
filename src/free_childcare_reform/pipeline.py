@@ -350,6 +350,7 @@ def _baseline_programmes(sim, year: int) -> list[dict]:
                 "period": programme["period"],
                 "geography": programme["geography"],
                 "url": programme["url"],
+                "spending_url": programme.get("spending_url"),
                 "note": programme["note"],
             }
         )
@@ -584,9 +585,7 @@ def run_year(dataset, year: int) -> dict:
         return {
             bound: {
                 key: (round(value, 4) if isinstance(value, float) else value)
-                for key, value in participation_response(
-                    prepared, elasticity_scale=scale
-                ).items()
+                for key, value in participation_response(prepared, elasticity_scale=scale).items()
             }
             for bound, scale in [
                 ("central", sources.ELASTICITY_SCALE_CENTRAL),

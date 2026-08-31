@@ -209,10 +209,16 @@ def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
     """
     rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
     assert set(rows) == {"universal", "extended", "targeted", "tfc"}
-    # DfE publishes one England total for the three entitlements rather than a
-    # line each, so these two rows have no official spending figure to carry.
-    assert rows["universal"]["official_spending_bn"] is None
-    assert rows["extended"]["official_spending_bn"] is None
+    # Every programme now carries an official spending figure. The two
+    # entitlements come from DfE's early years national funding formula
+    # technical note, which does publish the universal/additional split — an
+    # earlier version of this analysis wrongly concluded it did not.
+    for programme in rows:
+        assert rows[programme]["official_spending_bn"] > 0, programme
+    # The working-parent figure is a lower bound: DfE's two-year-old line mixes
+    # the working-parent and disadvantaged offers and is not split.
+    assert rows["extended"]["official_spending_bn"] == pytest.approx(3.4)
+    assert "lower bound" in rows["extended"]["official_spending_label"]
     for programme, row in rows.items():
         assert row["comparison_year"] < row["costed_year"], programme
         # The costed-year figures are reported for context and must never be

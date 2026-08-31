@@ -20,10 +20,11 @@ function formatCosting(value) {
   return `£${number}bn${qualifier}`;
 }
 
+// Children are shown in millions so the two columns compare at a glance
+// rather than by counting digits.
 function count(value) {
-  return value === null || value === undefined
-    ? "—"
-    : Number(value).toLocaleString("en-GB");
+  if (value === null || value === undefined) return "—";
+  return `${(Number(value) / 1e6).toFixed(2)}m`;
 }
 
 export default function BaselineTab({ data, year }) {
@@ -59,8 +60,8 @@ export default function BaselineTab({ data, year }) {
                 <th className="px-6 py-3 font-semibold">Programme</th>
                 <th className="px-4 py-3 text-right font-semibold">Spending, modelled</th>
                 <th className="px-4 py-3 text-right font-semibold">Spending, official</th>
-                <th className="px-4 py-3 text-right font-semibold">Children, modelled</th>
-                <th className="px-6 py-3 text-right font-semibold">Children, official</th>
+                <th className="px-4 py-3 text-right font-semibold">Children, modelled (m)</th>
+                <th className="px-6 py-3 text-right font-semibold">Children, official (m)</th>
               </tr>
             </thead>
             <tbody>
@@ -125,14 +126,26 @@ export default function BaselineTab({ data, year }) {
                                 . That is the baseline the reform is measured against.
                               </div>
                             ) : null}
-                            <a
-                              href={row.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="mt-2 inline-block text-[color:var(--pe-color-primary-600)] underline"
-                            >
-                              source
-                            </a>
+                            <div className="mt-2 flex gap-4">
+                              <a
+                                href={row.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[color:var(--pe-color-primary-600)] underline"
+                              >
+                                caseload source
+                              </a>
+                              {row.spending_url ? (
+                                <a
+                                  href={row.spending_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[color:var(--pe-color-primary-600)] underline"
+                                >
+                                  spending source
+                                </a>
+                              ) : null}
+                            </div>
                           </div>
                         </td>
                       </tr>

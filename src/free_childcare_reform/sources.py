@@ -355,86 +355,76 @@ INCOME_CLIFF_CONTEXT = {
 
 IFS_FREE_CHILDCARE = Source(
     "Brewer, Cattan, Crawford and Rabe — Does more free childcare help parents work more?",
-    "Regression-discontinuity evaluation of England's free entitlements, 2005-2013. "
-    "The 15-hour part-time offer only marginally affected maternal labour force "
-    "participation. Moving to 30-35 hours raised participation by 5.7pp and "
-    "employment by 3.5pp, about 12,000 more mothers in work a year, concentrated "
-    "in mothers whose youngest child was eligible and with no effect on fathers. "
-    "For every 570 free hours offered, children spent only about 163 additional "
-    "hours in subsidisable care.",
+    "England, 2005-2013. Regression discontinuity. Moving from 15 to 30-35 hours "
+    "raised maternal participation 5.7pp and employment 3.5pp — about 12,000 more "
+    "mothers a year — only where the youngest child was eligible. For every 570 free "
+    "hours offered, only about 163 extra hours of subsidisable care were used.",
     "https://ifs.org.uk/sites/default/files/output_url_files/WP202009-Does-more-free-childcare-help-parents-work-more.pdf",
 )
 
 AKGUNDUZ_PLANTENGA = Source(
     "Akgunduz and Plantenga — Child care prices and maternal employment: a meta-analysis",
-    "43 estimates from 36 studies. Mean childcare price elasticity of maternal "
-    "employment -0.277, with a European and Canadian mean of -0.19 against a US "
-    "mean of -0.35. Finds publication bias and significantly smaller elasticities "
-    "in high part-time, mid-to-high participation countries.",
+    "International meta-analysis, 43 estimates from 36 studies. Mean childcare "
+    "price elasticity of maternal employment -0.277; Europe and Canada -0.19 against "
+    "the US -0.35, and smaller still in high part-time countries like the UK.",
     "https://www.uu.nl/sites/default/files/rebo_use_dp_2015_15-14.pdf",
 )
 
 BAKER_GRUBER_MILLIGAN = Source(
     "Baker, Gruber and Milligan — Universal child care, maternal labor supply and family well-being",
-    "Quebec's $5-a-day childcare raised married maternal participation by 7.7pp, "
-    "an implied childcare-cost elasticity of 0.236 that the authors call low-end. "
-    "About a third of the rise in reported childcare use was women already working "
-    "shifting from informal to formal care. Quebec offered up to 10 hours a day; "
-    "England's entitlements are school-day and term-time, which is the main reason "
-    "cited for the weaker UK results.",
+    "Quebec, Canada. $5-a-day childcare raised married maternal participation "
+    "7.7pp, an implied cost elasticity of 0.236 the authors call low-end. Quebec "
+    "offered up to 10 hours a day; England's entitlements are term-time and "
+    "school-day, the main reason cited for weaker UK results.",
     "https://www.nber.org/system/files/working_papers/w11832/w11832.pdf",
 )
 
 DFE_30_HOURS_EVALUATION = Source(
     "DfE — Evaluation of the national rollout of 30 hours free childcare",
-    "Survey evidence, self-reported rather than causal. Since starting the extended "
-    "hours 2% of mothers entered work and 26% increased their hours, against under "
-    "1% and 7% for fathers. Reported positive work impact was much higher for lower "
-    "income (56%) than higher income (29%) mothers.",
+    "England. Self-reported survey, not causal. Since starting the extended hours, "
+    "2% of mothers entered work and 26% raised their hours, against under 1% and 7% "
+    "of fathers; reported impact was far higher for lower-income mothers (56% "
+    "against 29%).",
     "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/740168/Evaluation_of_national_rollout_of_30_hours_free-childcare.pdf",
 )
 
 DFE_CHILDCARE_EXPERIENCES = Source(
     "DfE — Expansion to early childcare entitlements: childcare experiences survey",
-    "The 2024-25 expansion to under-3s has no causal evaluation yet. In the pilot "
-    "wave 13% of respondents increased hours and 7% decreased, with 78% unchanged. "
-    "Self-reported, unweighted, 17% response rate.",
+    "England. The 2024-25 under-3s expansion has no causal evaluation yet. In the "
+    "pilot wave 13% increased hours and 7% decreased, 78% unchanged. Self-reported, "
+    "unweighted, 17% response rate.",
     "https://explore-education-statistics.service.gov.uk/find-statistics/expansion-to-early-childcare-entitlements-childcare-experiences-survey/2024-25-autumn-term",
 )
 
 DE_HENAU = Source(
     "De Henau — Simulating employment and fiscal effects of universal childcare in the UK",
-    "UKMOD microsimulation with input-output multipliers. Gross cost £26.6bn to "
-    "£49.4bn a year, with 61-72% recouped. Used here only as a stated ceiling: the "
-    "employment response is assumed rather than estimated, part-time mothers are "
-    "forced to full-time, labour demand is assumed to accommodate supply in full, "
-    "and childcare-sector employment multipliers are counted alongside maternal "
-    "labour supply.",
+    "UK. UKMOD microsimulation with input-output multipliers: gross cost £26.6bn to "
+    "£49.4bn a year, 61-72% recouped. Used here only as a ceiling — the employment "
+    "response is assumed rather than estimated, part-time mothers are forced to "
+    "full-time, and labour demand is assumed to absorb the supply in full.",
     "https://pmc.ncbi.nlm.nih.gov/articles/PMC8853244/",
 )
 
 OBR_LABOUR_SUPPLY = Source(
     "OBR — The impact of a NICs cut on labour supply",
-    "The participation elasticities used here, by gender, partner employment "
-    "status, age of youngest child and earnings quintile, and the Appendix E "
-    "conversion of an elasticity with respect to in-work income into one with "
-    "respect to the gain to work. Shipped in policyengine-uk as "
+    "UK. The participation elasticities used here, by gender, partner employment, "
+    "age of youngest child and earnings quintile, and the Appendix E conversion to "
+    "an elasticity with respect to the gain to work. Shipped in policyengine-uk as "
     "policyengine_uk.dynamics.participation.",
     "https://obr.uk/docs/dlm_uploads/NICS-Cut-Impact-on-Labour-Supply-Note.pdf",
 )
 
 BETTENDORF_JONGEN_MULLER = Source(
     "Bettendorf, Jongen and Muller — Childcare subsidies and labour supply",
-    "A Dutch reform roughly halving out-of-pocket childcare costs raised maternal "
-    "hours by 6.2% against employment by 3.0%, so the intensive margin moved about "
-    "twice as much as the extensive margin. Cited here as the reason the "
-    "participation-only estimate is a floor on the total labour supply response.",
+    "Netherlands. Roughly halving out-of-pocket childcare costs raised maternal "
+    "hours 6.2% against employment 3.0% — the intensive margin moved about twice as "
+    "much. Why the participation-only estimate here is a floor.",
     "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf",
 )
 
 POLICYENGINE_UK = Source(
     "PolicyEngine UK",
-    "The open-source microsimulation model and the Enhanced FRS dataset used for "
+    "UK. The open-source microsimulation model and the Enhanced FRS dataset behind "
     "every baseline and reform quantity in this analysis.",
     "https://github.com/PolicyEngine/policyengine-uk",
 )
@@ -504,16 +494,19 @@ BASELINE_PROGRAMMES = [
         "label": "Universal entitlement (15 hours, 3-4 year olds)",
         "spending_variable": "universal_childcare_entitlement",
         "caseload_variable": "is_child_receiving_universal_childcare",
-        "official_spending_bn": None,
-        "official_spending_label": "Not published separately; DfE reports one £8.7bn England total for all three entitlements (IFS, 2025-26 prices)",
-        "shares_official_spending_with": ["extended", "targeted"],
+        "official_spending_bn": 2.7,
+        "official_spending_label": "DfE £2.7bn universal-hours funding, England, 2025-26 — an illustrative allocation for rate-setting (762,852.50 universal-hours PTEs), not an outturn",
         "official_caseload": 416_537,
         "official_caseload_label": "DfE, January 2024: 778,327 registered excluding reception, less 361,790 on the working-parent entitlement",
         "period": "January 2024",
         "comparison_year": 2024,
         "geography": "England",
+        "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2025-to-2026/2025-to-2026-early-years-national-funding-formulae-technical-note",
         "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2026",
         "note": (
+            "Spending is an illustrative DfE allocation for 2025-26 against a "
+            "model read at 2024, so it indicates scale rather than measuring a "
+            "gap. The caseload comparison is like-for-like. "
             "The comparator nets off the working-parent entitlement because "
             "policyengine-uk models the two as mutually exclusive: "
             "universal_childcare_entitlement_eligible ends with "
@@ -526,16 +519,18 @@ BASELINE_PROGRAMMES = [
         "label": "Working-parent entitlement (30 hours, under £100k)",
         "spending_variable": "extended_childcare_entitlement",
         "caseload_variable": "is_child_receiving_extended_childcare",
-        "official_spending_bn": None,
-        "official_spending_label": "Not published separately; DfE reports one £8.7bn England total for all three entitlements (IFS, 2025-26 prices)",
-        "shares_official_spending_with": ["universal", "targeted"],
+        "official_spending_bn": 3.4,
+        "official_spending_label": "DfE, England, 2025-26: £1.1bn additional hours for 3-4 year olds plus £2.3bn for under-2s. A lower bound — DfE's £2.1bn two-year-old line mixes the working-parent and disadvantaged offers and is not split. Illustrative allocations, not outturn",
         "official_caseload": 621_500,
         "official_caseload_label": "DfE, January 2025: 379,000 three- and four-year-olds plus 242,500 two-year-olds",
         "period": "January 2025",
         "comparison_year": 2024,
         "geography": "England",
+        "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2025-to-2026/2025-to-2026-early-years-national-funding-formulae-technical-note",
         "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2025",
         "note": (
+            "Spending is an illustrative DfE allocation for 2025-26 and a lower "
+            "bound, so it indicates scale rather than measuring a gap. "
             "The census is January 2025 but the model is read at 2024, which is "
             "the basis policyengine-uk-data calibrates on. January 2024 cannot "
             "serve this scheme — the two-year-old offer only began in April "

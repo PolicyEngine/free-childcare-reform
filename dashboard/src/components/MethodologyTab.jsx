@@ -187,24 +187,22 @@ export default function MethodologyTab({ data, year }) {
 
       <section>
         <SectionHeading title="Sources" description="Every external number used, with its origin." />
-        <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
-          {Object.values(src).map((source) => (
-            <div key={source.url} className="p-6">
-              <ul className="list-disc pl-5">
-                <li className="text-sm leading-6 text-slate-600">
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-semibold text-slate-900 underline"
-                  >
-                    {source.label}
-                  </a>
-                  <span className="mt-1 block">{source.description}</span>
-                </li>
-              </ul>
-            </div>
-          ))}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6">
+          <ul className="list-disc space-y-3 pl-5">
+            {Object.values(src).map((source) => (
+              <li key={source.url} className="text-sm leading-6 text-slate-600">
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-slate-900 underline"
+                >
+                  {source.label}
+                </a>{" "}
+                — {source.description}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     </div>

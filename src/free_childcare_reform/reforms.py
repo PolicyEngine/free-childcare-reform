@@ -111,9 +111,7 @@ def _universal_excludes_targeted():
             # The added term. The targeted offer is benefit-unit eligibility on
             # a 2-year-old, so it only displaces the universal entitlement for
             # a child of that age.
-            targeted = person.benunit(
-                "targeted_childcare_entitlement_eligible", period
-            )
+            targeted = person.benunit("targeted_childcare_entitlement_eligible", period)
             targeted_p = parameters(period).gov.dfe.targeted_childcare_entitlement
             in_targeted_age = targeted_p.age_eligibility.calc(age) > 0
             return (
