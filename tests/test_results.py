@@ -274,21 +274,28 @@ def test_household_effects_respond_to_the_labour_supply_assumption(results):
     dashboard claimed it could not, and showed static figures under every
     assumption.
     """
-    for leg in ("free_hours", "subsidy"):
+    breakdowns = (
+        "by_income_quintile_families_with_under_5s",
+        "by_income_quintile",
+        "by_family_type_families_with_under_5s",
+        "by_family_type",
+    )
+    # Combined is included because it is the default view: leaving it out made
+    # the household figures fall back to static on the selection most readers
+    # see first, while still offering the assumption control.
+    for leg in ("free_hours", "subsidy", "combined"):
         by_bound = results["by_year"]["2027"]["legs"][leg]["household_effects_by_bound"]
         assert set(by_bound) == {"low", "central", "high"}
-        gains = {
-            bound: [
+        for breakdown in breakdowns:
+            gains = {
+                bound: [row["average_gain_gbp"] for row in effects[breakdown]]
+                for bound, effects in by_bound.items()
+            }
+            assert gains["low"] != gains["central"] != gains["high"], (leg, breakdown)
+            static = [
                 row["average_gain_gbp"]
-                for row in effects["by_income_quintile_families_with_under_5s"]
+                for row in results["by_year"]["2027"]["legs"][leg]["household_effects"][
+                    breakdown
+                ]
             ]
-            for bound, effects in by_bound.items()
-        }
-        assert gains["low"] != gains["central"] != gains["high"], leg
-        static = [
-            row["average_gain_gbp"]
-            for row in results["by_year"]["2027"]["legs"][leg]["household_effects"][
-                "by_income_quintile_families_with_under_5s"
-            ]
-        ]
-        assert gains["central"] != static, leg
+            assert gains["central"] != static, (leg, breakdown)

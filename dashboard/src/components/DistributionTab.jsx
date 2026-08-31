@@ -54,6 +54,7 @@ const POPULATIONS = [
     label: "Family type — families with a child under 5",
     grouping: "family type",
   },
+  { id: "by_family_type", label: "Family type — all households", grouping: "family type" },
 ];
 
 const LEGS = [
@@ -207,7 +208,7 @@ export default function DistributionTab({ data, year, bound }) {
           <p className="mt-4 text-sm leading-6 text-slate-500">
             {population?.grouping === "quintile"
             ? "Q1 is the lowest-income fifth of households. Lower quintiles gain less in cash because families on Universal Credit already receive 85% of childcare costs through the UC childcare element, which this reform keeps unchanged, and because low-income families use fewer paid childcare hours to begin with. As a share of net income the picture is different — switch the measure above."
-            : "Couples with children hold most of the gain because there are more of them and they use more paid childcare; lone parents are more likely to be on Universal Credit, whose childcare element this reform leaves unchanged."}
+: null}
           </p>
         </div>
       </section>

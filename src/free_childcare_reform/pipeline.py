@@ -258,10 +258,20 @@ def _household_effects(
         key=lambda row: row["average_gain_gbp"],
         reverse=True,
     )
+    by_family_type_all = sorted(
+        (
+            {"group": name, **summarise(group)}
+            for name, group in frame.groupby("family_type")
+            if summarise(group)["total_gain_bn"] > 0
+        ),
+        key=lambda row: row["average_gain_gbp"],
+        reverse=True,
+    )
     return {
         "by_income_quintile": by_quintile,
         "by_income_quintile_families_with_under_5s": by_quintile_with_children,
         "by_family_type_families_with_under_5s": by_family_type,
+        "by_family_type": by_family_type_all,
         "all_households": {"group": "All", **summarise(frame)},
         "families_with_under_5s": {"group": "Families with a child under 5", **summarise(families)},
     }
@@ -602,8 +612,15 @@ def run_year(dataset, year: int) -> dict:
         }
         for bound, response in responses_full.items()
     }
-    for name, sim in (("free_hours", free_hours), ("subsidy", subsidy)):
-        leg_responses = _responses_against(sim)
+    # Combined is included: it is the default view, so leaving it out meant the
+    # household figures silently fell back to static on the selection most
+    # readers see first.
+    for name, sim in (
+        ("free_hours", free_hours),
+        ("subsidy", subsidy),
+        ("combined", combined),
+    ):
+        leg_responses = responses_full if name == "combined" else _responses_against(sim)
         legs[name]["labour_supply"] = {
             bound: {
                 key: value
