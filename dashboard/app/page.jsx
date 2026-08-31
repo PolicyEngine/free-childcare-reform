@@ -18,6 +18,9 @@ function getInitialTab(tabParam) {
   return TAB_OPTIONS.some((tab) => tab.id === tabParam) ? tabParam : "reform";
 }
 
+const SELECT_CLASS =
+  "h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]";
+
 function TabLink({ onSelect, children }) {
   return (
     <button
@@ -133,43 +136,48 @@ function Dashboard() {
           <>
             {activeTab === "reform" && (
               <div>
-          <div className="mb-5 grid gap-3 sm:grid-cols-2">
-            <label className="min-w-0">
-              <span className="mb-1 block text-xs font-medium text-slate-500">Year</span>
-              <select
-                value={year}
-                onChange={(event) => setYear(Number(event.target.value))}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
-              >
-                {data.years.map((y) => (
-                  <option key={y} value={y}>{formatFiscalYear(y)}</option>
-                ))}
-              </select>
-            </label>
-            <label className="min-w-0">
-              <span className="mb-1 block text-xs font-medium text-slate-500">
-                Labour supply assumption
-              </span>
-              <select
-                value={bound}
-                onChange={(event) => setBound(event.target.value)}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
-              >
-                <option value="none">None — static only</option>
-                <option value="central">
-                  Central — price elasticity {(data.assumptions || {}).price_elasticity_central}
-                </option>
-                <option value="low">
-                  Low — {(data.assumptions || {}).price_elasticity_low} (OBR ×
-                  {(data.assumptions || {}).elasticity_scale_low?.toFixed(2)})
-                </option>
-                <option value="high">
-                  High — {(data.assumptions || {}).price_elasticity_high} (OBR ×
-                  {(data.assumptions || {}).elasticity_scale_high?.toFixed(2)})
-                </option>
-              </select>
-            </label>
-          </div>
+                <div className="mb-5 flex flex-wrap gap-3">
+                  <label className="w-36 shrink-0">
+                    <span className="mb-1 block text-xs font-medium text-slate-500">
+                      Year
+                    </span>
+                    <select
+                      value={year}
+                      onChange={(event) => setYear(Number(event.target.value))}
+                      className={SELECT_CLASS}
+                    >
+                      {data.years.map((y) => (
+                        <option key={y} value={y}>
+                          {formatFiscalYear(y)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="w-64 shrink-0">
+                    <span className="mb-1 block text-xs font-medium text-slate-500">
+                      Labour supply assumption
+                    </span>
+                    <select
+                      value={bound}
+                      onChange={(event) => setBound(event.target.value)}
+                      className={SELECT_CLASS}
+                    >
+                      <option value="none">None — static only</option>
+                      <option value="central">
+                        Central — elasticity {(data.assumptions || {}).price_elasticity_central}
+                      </option>
+                      <option value="low">
+                        Low — {(data.assumptions || {}).price_elasticity_low} (OBR ×
+                        {(data.assumptions || {}).elasticity_scale_low?.toFixed(2)})
+                      </option>
+                      <option value="high">
+                        High — {(data.assumptions || {}).price_elasticity_high} (OBR ×
+                        {(data.assumptions || {}).elasticity_scale_high?.toFixed(2)})
+                      </option>
+                    </select>
+                  </label>
+                </div>
+
                 <div className="mb-8 flex w-fit gap-1 rounded-xl bg-slate-100 p-1">
                   {[
                     { id: "budget", label: "Budget impact" },
