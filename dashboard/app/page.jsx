@@ -9,7 +9,7 @@ import DistributionTab from "../src/components/DistributionTab";
 import MethodologyTab from "../src/components/MethodologyTab";
 
 const TAB_OPTIONS = [
-  { id: "reform", label: "The reform" },
+  { id: "reform", label: "Reform" },
   { id: "baseline", label: "Baseline" },
   { id: "methodology", label: "Methodology" },
 ];
@@ -100,7 +100,7 @@ function Dashboard() {
           The second replaces Tax-Free Childcare with a{" "}
           <strong>75% subsidy of childcare costs for all</strong>, keeping the Universal
           Credit childcare element. The{" "}
-          <TabLink onSelect={() => handleTabChange("reform")}>reform</TabLink> tab reports
+          <TabLink onSelect={() => handleTabChange("reform")}>Reform</TabLink> tab reports
           what each leg costs and who gains;{" "}
           <TabLink onSelect={() => handleTabChange("baseline")}>Baseline</TabLink> sets the
           modelled baseline against published figures, and is the place to judge how much
@@ -174,27 +174,32 @@ function Dashboard() {
                       </option>
                     </select>
                   </label>
+                  <div className="min-w-0">
+                    <span className="mb-1 block text-xs font-medium text-slate-500">
+                      View
+                    </span>
+                    <div className="flex h-10 w-fit gap-1 rounded-lg bg-slate-100 p-1">
+                      {[
+                        { id: "budget", label: "Budget impact" },
+                        { id: "households", label: "Household effects" },
+                      ].map((view) => (
+                        <button
+                          key={view.id}
+                          type="button"
+                          onClick={() => setReformView(view.id)}
+                          className={`rounded-md px-3 text-sm font-semibold transition-colors ${
+                            reformView === view.id
+                              ? "bg-white text-slate-900 shadow-sm"
+                              : "text-slate-500 hover:text-slate-700"
+                          }`}
+                        >
+                          {view.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mb-8 flex w-fit gap-1 rounded-xl bg-slate-100 p-1">
-                  {[
-                    { id: "budget", label: "Budget impact" },
-                    { id: "households", label: "Household effects" },
-                  ].map((view) => (
-                    <button
-                      key={view.id}
-                      type="button"
-                      onClick={() => setReformView(view.id)}
-                      className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                        reformView === view.id
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
-                      }`}
-                    >
-                      {view.label}
-                    </button>
-                  ))}
-                </div>
                 {reformView === "budget" ? (
                   <CostTab data={data} year={year} bound={bound} />
                 ) : (

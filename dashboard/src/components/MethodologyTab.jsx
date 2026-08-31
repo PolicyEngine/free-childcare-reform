@@ -124,7 +124,12 @@ export default function MethodologyTab({ data, year }) {
             smaller elasticities in high part-time, high participation countries.
           </li>
           <li>
-            The response is confined to parents whose <em>youngest</em> child is eligible —{" "}
+            The response is a floor in three ways. Whole-year ages cannot separate the
+            9-to-12-month cohort from younger babies, so that cohort is excluded with
+            them — including the whole age-0 group would add roughly 14% to the central
+            response, while sweeping in families whose youngest child is too young to
+            qualify. The response is also confined to parents whose <em>youngest</em>{" "}
+            child is eligible —{" "}
             {A(src.ifs_free_childcare, "the IFS")} finds no effect where a younger,
             non-eligible child still needs care. Only the extensive margin is modelled, and{" "}
             {A(src.bettendorf_jongen_muller, "Dutch evidence")} suggests hours respond about

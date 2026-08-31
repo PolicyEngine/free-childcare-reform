@@ -245,119 +245,129 @@ export default function CostTab({ data, year, bound }) {
 
       {isStatic ? null : (
         <section>
-          <SectionHeading
-            title="Why the labour supply response is small, and which way it points"
-            description={
-              <>
-                Two forces pull in opposite directions, and the model reports the net of
-                them.
-              </>
-            }
-          />
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h3 className="text-sm font-semibold text-slate-900">
-                Downward: the reform removes work conditions
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Today a parent of a child under 3 gets nothing unless they work. Under the
-                reform they get 15 hours whether they work or not, so the gain to work falls
-                for exactly the families the policy targets. Working parents earning under
-                £100,000 already get 30 hours, so their position is unchanged. This is a real
-                effect, not a modelling artefact, and the gain-to-work model below captures
-                it.
-              </p>
-              <dl className="mt-4 space-y-1 text-sm text-slate-600">
-                <div className="flex justify-between">
-                  <dt>Modelled entrants</dt>
-                  <dd className="font-semibold">{formatCount(response.entrants)}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt>Modelled leavers</dt>
-                  <dd className="font-semibold">{formatCount(response.leavers)}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt>Net revenue effect</dt>
-                  <dd className="font-semibold">
-                    {formatBn(response.net_revenue_gbp / 1e9)}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h3 className="text-sm font-semibold text-slate-900">
-                Upward: the price of childcare falls
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                The 75% subsidy cuts the price of the care that working requires. Applying{" "}
-                {A(src.akgunduz_plantenga, "a childcare price elasticity of maternal employment")}{" "}
-                to that price fall, scaled by{" "}
-                {A(src.ifs_free_childcare, "29% additionality")}, gives an upper bound on the
-                positive channel on its own. It cannot be negative by construction, so it
-                brackets the answer from the other side rather than confirming it.
-              </p>
-              {priceCheck ? (
-                <dl className="mt-4 space-y-1 text-sm text-slate-600">
-                  <div className="flex justify-between">
-                    <dt>Price elasticity used</dt>
-                    <dd className="font-semibold">{priceCheck.price_elasticity}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt>Effective price change</dt>
-                    <dd className="font-semibold">
-                      {(priceCheck.effective_price_change * 100).toFixed(1)}%
-                    </dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt>Implied entrants</dt>
-                    <dd className="font-semibold">{formatCount(priceCheck.entrants)}</dd>
-                  </div>
-                </dl>
-              ) : null}
-            </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+              What moves employment, and in which direction
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              Two forces pull against each other. The reported response is the net of
+              them, which is why it is small.
+            </p>
+            <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl bg-slate-50 p-4">
+                <dt className="text-sm font-semibold text-slate-900">
+                  Downward — the reform removes work conditions
+                </dt>
+                <dd className="mt-2 text-sm leading-6 text-slate-600">
+                  <ul className="list-disc space-y-1 pl-5">
+                    <li>
+                      Today a parent of a child under 3 gets nothing unless they work.
+                    </li>
+                    <li>
+                      Under the reform they get 15 hours either way, so the gain to work
+                      falls for exactly the families the policy targets.
+                    </li>
+                    <li>
+                      Working parents under £100,000 already get 30 hours, so their
+                      position is unchanged.
+                    </li>
+                    <li>
+                      Modelled: <strong>{formatCount(response.entrants)}</strong> entrants
+                      against <strong>{formatCount(response.leavers)}</strong> leavers, a
+                      net revenue effect of{" "}
+                      <strong>{formatBn(response.net_revenue_gbp / 1e9)}</strong>.
+                    </li>
+                  </ul>
+                </dd>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-4">
+                <dt className="text-sm font-semibold text-slate-900">
+                  Upward — the price of childcare falls
+                </dt>
+                <dd className="mt-2 text-sm leading-6 text-slate-600">
+                  <ul className="list-disc space-y-1 pl-5">
+                    <li>
+                      The 75% subsidy cuts the price of the care that working requires.
+                    </li>
+                    <li>
+                      Applying{" "}
+                      {A(
+                        src.akgunduz_plantenga,
+                        "a childcare price elasticity of maternal employment",
+                      )}{" "}
+                      to that price fall, scaled by{" "}
+                      {A(src.ifs_free_childcare, "29% additionality")}, brackets the
+                      positive channel on its own — it cannot be negative by construction.
+                    </li>
+                    {priceCheck ? (
+                      <li>
+                        Elasticity <strong>{priceCheck.price_elasticity}</strong>, effective
+                        price change{" "}
+                        <strong>
+                          {(priceCheck.effective_price_change * 100).toFixed(1)}%
+                        </strong>
+                        , implying <strong>{formatCount(priceCheck.entrants)}</strong>{" "}
+                        entrants.
+                      </li>
+                    ) : null}
+                  </ul>
+                </dd>
+              </div>
+            </dl>
           </div>
-          <p className="mt-4 text-sm leading-6 text-slate-600">
-            For scale: {A(src.ifs_free_childcare, "the IFS")} found the move from 15 to 30
-            hours put about 12,000 more mothers into work a year, and the government&apos;s own
-            costing of the 2023 expansion assumed about 60,000 entrants by 2027-28 on a
-            plausible range of 55,000 to 240,000. Both are policies that{" "}
-            <em>added</em> work-conditional hours. This reform does the opposite: it makes
-            existing hours unconditional.
-          </p>
         </section>
       )}
+
       {cliff ? (
         <section>
-          <SectionHeading
-            title="The £100,000 cliff the reform half-removes"
-            description="The reform makes the first 15 hours unconditional but keeps the work and income test on the second 15, so the cliff shrinks rather than disappears."
-          />
           <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <dl className="grid gap-4 sm:grid-cols-3">
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+              The £100,000 cliff, half-removed
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              The first 15 hours become unconditional, but the work and income test stays
+              on the second 15. So the cliff gets smaller — it does not go away.
+            </p>
+            <dl className="mt-5 grid gap-6 sm:grid-cols-3">
               <div>
-                <dt className="text-sm text-slate-500">Threshold, frozen since {cliff.frozen_since}</dt>
-                <dd className="mt-1 text-2xl font-semibold text-slate-900">
+                <dt className="text-sm text-slate-500">
+                  Threshold, frozen since {cliff.frozen_since}
+                </dt>
+                <dd className="mt-1 text-3xl font-semibold text-slate-900">
                   £{cliff.threshold_gbp.toLocaleString("en-GB")}
                 </dd>
                 <dd className="mt-1 text-sm text-slate-500">
-                  £{cliff.inflation_indexed_equivalent_gbp.toLocaleString("en-GB")} if it had
+                  £{cliff.inflation_indexed_equivalent_gbp.toLocaleString("en-GB")} had it
                   been indexed.
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-slate-500">Children above it</dt>
-                <dd className="mt-1 text-2xl font-semibold text-slate-900">
+                <dt className="text-sm text-slate-500">Children in families above it</dt>
+                <dd className="mt-1 text-3xl font-semibold text-slate-900">
                   {cliff.children_affected}
+                </dd>
+                <dd className="mt-1 text-sm text-slate-500">
+                  England, 2025-26, from DfE estimates released under FOI.
                 </dd>
               </div>
               <div>
-                <dt className="text-sm text-slate-500">Support forgone</dt>
-                <dd className="mt-1 text-2xl font-semibold text-slate-900">
+                <dt className="text-sm text-slate-500">Support they cannot claim</dt>
+                <dd className="mt-1 text-3xl font-semibold text-slate-900">
                   {formatBn(cliff.support_forgone_bn)}
+                </dd>
+                <dd className="mt-1 text-sm text-slate-500">
+                  A two-child family loses nearly £30,000 of support on crossing the
+                  threshold.
                 </dd>
               </div>
             </dl>
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">{cliff.note}</p>
+            <p className="mt-5 max-w-3xl text-sm leading-6 text-slate-600">
+              Because the loss is a cliff rather than a taper, a two-child family earning
+              £99,000 needs about <strong>£156,000</strong> of gross income to get back to
+              the same disposable income once it crosses. This reform removes the test from
+              the first 15 hours, which cuts the size of the step; keeping it on the second
+              15 means a step remains.
+            </p>
           </div>
         </section>
       ) : null}

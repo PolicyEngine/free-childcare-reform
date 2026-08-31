@@ -268,6 +268,14 @@ def responds_to_childcare(sim, year: int) -> np.ndarray:
     The reform's band runs from 9 months to school age. ``youngest_child_age``
     is whole years, so a benefit unit whose youngest child is under 1 is
     treated as having a child below the band and is excluded.
+
+    That is conservative rather than exact. The 9-to-12-month cohort *is*
+    eligible under the reform and is excluded here with the under-9-months,
+    because whole-year ages cannot separate them. Including the whole age-0
+    group instead would add about 780 net entrants to the central 2027-28
+    response — roughly 14% of it — while also sweeping in families whose
+    youngest child is too young to qualify. The response is therefore a floor
+    on this margin as well as on the intensive one.
     """
     if not sources.RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE:
         return np.ones(len(np.asarray(sim.calculate("age", year))), bool)

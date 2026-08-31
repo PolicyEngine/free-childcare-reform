@@ -299,14 +299,10 @@ COMPARABLE_COSTINGS = [
         "geography": "England",
         "note": (
             "Costed with about 60,000 entrants to employment by 2027-28, on a "
-            "central estimate. (The OBR's 55,000 to 240,000 band is the "
-            "uncertainty around the labour supply effect of all Spring Budget "
-            "2023 measures, central 110,000 — not around this 60,000.) Useful "
-            "both as a cost anchor "
-            "and as the government's own labour supply assumption. Outturn ran "
-            "above forecast: take-up reported in March 2025 ran 26% above the "
-            "December 2023 estimate, and 2024-25 spending about 28% above "
-            "budget."
+            "central estimate — the government's own labour supply assumption, "
+            "and a cost anchor. Outturn ran above it: take-up 26% above the "
+            "December 2023 estimate by March 2025, spending about 28% above "
+            "budget in 2024-25."
         ),
         "url": "https://www.gov.uk/government/publications/spring-budget-2023",
     },
@@ -317,13 +313,9 @@ COMPARABLE_COSTINGS = [
         "cost_bn": "38-57 gross, 1.7-6.1 net",
         "geography": "UK",
         "note": (
-            "A far larger offer than this reform — 40 hours a week, 48 weeks a "
-            "year, from 6 months. Cited only as an upper bound. WBG puts "
-            "tax and benefit recoupment at 89-95% of the gross cost, which is "
-            "what makes the net range so much smaller. An earlier version of "
-            "this file gave the net range as £9-16bn and the gross as £38-55bn; "
-            "the first has no published source and the second mixed the 2017 "
-            "base with the 2020 update."
+            "A far larger offer — 40 hours a week, 48 weeks a year, from 6 "
+            "months — cited only as an upper bound. The net range is small "
+            "because WBG puts tax and benefit recoupment at 89-95% of gross."
         ),
         "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/",
     },
@@ -422,12 +414,6 @@ BETTENDORF_JONGEN_MULLER = Source(
     "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf",
 )
 
-POLICYENGINE_UK = Source(
-    "PolicyEngine UK",
-    "UK. The open-source microsimulation model and the Enhanced FRS dataset behind "
-    "every baseline and reform quantity in this analysis.",
-    "https://github.com/PolicyEngine/policyengine-uk",
-)
 
 
 def as_json(model_parameters: dict[str, Any]) -> dict:
@@ -466,7 +452,6 @@ def as_json(model_parameters: dict[str, Any]) -> dict:
             "de_henau": asdict(DE_HENAU),
             "obr_labour_supply": asdict(OBR_LABOUR_SUPPLY),
             "bettendorf_jongen_muller": asdict(BETTENDORF_JONGEN_MULLER),
-            "policyengine_uk": asdict(POLICYENGINE_UK),
         },
     }
 

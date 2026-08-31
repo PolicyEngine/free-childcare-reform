@@ -68,7 +68,7 @@
       "date": "March 2023",
       "cost_bn": "4.1 by 2027-28",
       "geography": "England",
-      "note": "Costed with about 60,000 entrants to employment by 2027-28, on a central estimate. (The OBR's 55,000 to 240,000 band is the uncertainty around the labour supply effect of all Spring Budget 2023 measures, central 110,000 \u2014 not around this 60,000.) Useful both as a cost anchor and as the government's own labour supply assumption. Outturn ran above forecast: take-up reported in March 2025 ran 26% above the December 2023 estimate, and 2024-25 spending about 28% above budget.",
+      "note": "Costed with about 60,000 entrants to employment by 2027-28, on a central estimate \u2014 the government's own labour supply assumption, and a cost anchor. Outturn ran above it: take-up 26% above the December 2023 estimate by March 2025, spending about 28% above budget in 2024-25.",
       "url": "https://www.gov.uk/government/publications/spring-budget-2023"
     },
     {
@@ -77,7 +77,7 @@
       "date": "2020",
       "cost_bn": "38-57 gross, 1.7-6.1 net",
       "geography": "UK",
-      "note": "A far larger offer than this reform \u2014 40 hours a week, 48 weeks a year, from 6 months. Cited only as an upper bound. WBG puts tax and benefit recoupment at 89-95% of the gross cost, which is what makes the net range so much smaller. An earlier version of this file gave the net range as \u00a39-16bn and the gross as \u00a338-55bn; the first has no published source and the second mixed the 2017 base with the 2020 update.",
+      "note": "A far larger offer \u2014 40 hours a week, 48 weeks a year, from 6 months \u2014 cited only as an upper bound. The net range is small because WBG puts tax and benefit recoupment at 89-95% of gross.",
       "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/"
     }
   ],
@@ -93,48 +93,43 @@
   "sources": {
     "ifs_free_childcare": {
       "label": "Brewer, Cattan, Crawford and Rabe \u2014 Does more free childcare help parents work more?",
-      "description": "Regression-discontinuity evaluation of England's free entitlements, 2005-2013. The 15-hour part-time offer only marginally affected maternal labour force participation. Moving to 30-35 hours raised participation by 5.7pp and employment by 3.5pp, about 12,000 more mothers in work a year, concentrated in mothers whose youngest child was eligible and with no effect on fathers. For every 570 free hours offered, children spent only about 163 additional hours in subsidisable care.",
+      "description": "England, 2005-2013. Regression discontinuity. Moving from 15 to 30-35 hours raised maternal participation 5.7pp and employment 3.5pp \u2014 about 12,000 more mothers a year \u2014 only where the youngest child was eligible. For every 570 free hours offered, only about 163 extra hours of subsidisable care were used.",
       "url": "https://ifs.org.uk/sites/default/files/output_url_files/WP202009-Does-more-free-childcare-help-parents-work-more.pdf"
     },
     "akgunduz_plantenga": {
       "label": "Akgunduz and Plantenga \u2014 Child care prices and maternal employment: a meta-analysis",
-      "description": "43 estimates from 36 studies. Mean childcare price elasticity of maternal employment -0.277, with a European and Canadian mean of -0.19 against a US mean of -0.35. Finds publication bias and significantly smaller elasticities in high part-time, mid-to-high participation countries.",
+      "description": "International meta-analysis, 43 estimates from 36 studies. Mean childcare price elasticity of maternal employment -0.277; Europe and Canada -0.19 against the US -0.35, and smaller still in high part-time countries like the UK.",
       "url": "https://www.uu.nl/sites/default/files/rebo_use_dp_2015_15-14.pdf"
     },
     "baker_gruber_milligan": {
       "label": "Baker, Gruber and Milligan \u2014 Universal child care, maternal labor supply and family well-being",
-      "description": "Quebec's $5-a-day childcare raised married maternal participation by 7.7pp, an implied childcare-cost elasticity of 0.236 that the authors call low-end. About a third of the rise in reported childcare use was women already working shifting from informal to formal care. Quebec offered up to 10 hours a day; England's entitlements are school-day and term-time, which is the main reason cited for the weaker UK results.",
+      "description": "Quebec, Canada. $5-a-day childcare raised married maternal participation 7.7pp, an implied cost elasticity of 0.236 the authors call low-end. Quebec offered up to 10 hours a day; England's entitlements are term-time and school-day, the main reason cited for weaker UK results.",
       "url": "https://www.nber.org/system/files/working_papers/w11832/w11832.pdf"
     },
     "dfe_30_hours_evaluation": {
       "label": "DfE \u2014 Evaluation of the national rollout of 30 hours free childcare",
-      "description": "Survey evidence, self-reported rather than causal. Since starting the extended hours 2% of mothers entered work and 26% increased their hours, against under 1% and 7% for fathers. Reported positive work impact was much higher for lower income (56%) than higher income (29%) mothers.",
+      "description": "England. Self-reported survey, not causal. Since starting the extended hours, 2% of mothers entered work and 26% raised their hours, against under 1% and 7% of fathers; reported impact was far higher for lower-income mothers (56% against 29%).",
       "url": "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/740168/Evaluation_of_national_rollout_of_30_hours_free-childcare.pdf"
     },
     "dfe_childcare_experiences": {
       "label": "DfE \u2014 Expansion to early childcare entitlements: childcare experiences survey",
-      "description": "The 2024-25 expansion to under-3s has no causal evaluation yet. In the pilot wave 13% of respondents increased hours and 7% decreased, with 78% unchanged. Self-reported, unweighted, 17% response rate.",
+      "description": "England. The 2024-25 under-3s expansion has no causal evaluation yet. In the pilot wave 13% increased hours and 7% decreased, 78% unchanged. Self-reported, unweighted, 17% response rate.",
       "url": "https://explore-education-statistics.service.gov.uk/find-statistics/expansion-to-early-childcare-entitlements-childcare-experiences-survey/2024-25-autumn-term"
     },
     "de_henau": {
       "label": "De Henau \u2014 Simulating employment and fiscal effects of universal childcare in the UK",
-      "description": "UKMOD microsimulation with input-output multipliers. Gross cost \u00a326.6bn to \u00a349.4bn a year, with 61-72% recouped. Used here only as a stated ceiling: the employment response is assumed rather than estimated, part-time mothers are forced to full-time, labour demand is assumed to accommodate supply in full, and childcare-sector employment multipliers are counted alongside maternal labour supply.",
+      "description": "UK. UKMOD microsimulation with input-output multipliers: gross cost \u00a326.6bn to \u00a349.4bn a year, 61-72% recouped. Used here only as a ceiling \u2014 the employment response is assumed rather than estimated, part-time mothers are forced to full-time, and labour demand is assumed to absorb the supply in full.",
       "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8853244/"
     },
     "obr_labour_supply": {
       "label": "OBR \u2014 The impact of a NICs cut on labour supply",
-      "description": "The participation elasticities used here, by gender, partner employment status, age of youngest child and earnings quintile, and the Appendix E conversion of an elasticity with respect to in-work income into one with respect to the gain to work. Shipped in policyengine-uk as policyengine_uk.dynamics.participation.",
+      "description": "UK. The participation elasticities used here, by gender, partner employment, age of youngest child and earnings quintile, and the Appendix E conversion to an elasticity with respect to the gain to work. Shipped in policyengine-uk as policyengine_uk.dynamics.participation.",
       "url": "https://obr.uk/docs/dlm_uploads/NICS-Cut-Impact-on-Labour-Supply-Note.pdf"
     },
     "bettendorf_jongen_muller": {
       "label": "Bettendorf, Jongen and Muller \u2014 Childcare subsidies and labour supply",
-      "description": "A Dutch reform roughly halving out-of-pocket childcare costs raised maternal hours by 6.2% against employment by 3.0%, so the intensive margin moved about twice as much as the extensive margin. Cited here as the reason the participation-only estimate is a floor on the total labour supply response.",
+      "description": "Netherlands. Roughly halving out-of-pocket childcare costs raised maternal hours 6.2% against employment 3.0% \u2014 the intensive margin moved about twice as much. Why the participation-only estimate here is a floor.",
       "url": "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf"
-    },
-    "policyengine_uk": {
-      "label": "PolicyEngine UK",
-      "description": "The open-source microsimulation model and the Enhanced FRS dataset used for every baseline and reform quantity in this analysis.",
-      "url": "https://github.com/PolicyEngine/policyengine-uk"
     }
   },
   "by_year": {

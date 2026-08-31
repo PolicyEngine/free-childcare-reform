@@ -156,65 +156,22 @@ export default function BaselineTab({ data, year }) {
             </tbody>
           </table>
         </div>
+        {sensitivity ? (
+          <p className="mt-4 text-sm leading-6 text-slate-600">
+            <strong>
+              The childcare fee base is the largest uncertainty in the costing.
+            </strong>{" "}
+            The 75% subsidy pays a share of what families spend, and for England&apos;s
+            under-5s the model has {formatBn(sensitivity.model_england_under_5_bn)} of
+            childcare fees against a published estimate of{" "}
+            {formatBn(sensitivity.benchmark_england_under_5_bn)} — about{" "}
+            {feeBaseRatio.toFixed(2)}× as much. Scaling the model&apos;s under-5 fees to
+            that estimate would take the subsidy leg from{" "}
+            {formatBn(result.legs.subsidy.static_cost_bn)} to{" "}
+            {formatBn(sensitivity.subsidy_cost_bn)}. Free hours are unaffected.
+          </p>
+        ) : null}
       </section>
-
-      {sensitivity ? (
-        <section>
-          <SectionHeading
-            title="How much the childcare fee base moves the answer"
-            description={
-              <>
-                The 75% subsidy pays a share of what families spend on childcare, so its
-                cost depends on how much the model thinks they spend. For England&apos;s
-                under-5s the model has{" "}
-                <strong>{formatBn(sensitivity.model_england_under_5_bn)}</strong> of
-                childcare fees against a published estimate of{" "}
-                <strong>{formatBn(sensitivity.benchmark_england_under_5_bn)}</strong> — about{" "}
-                {(
-                  sensitivity.model_england_under_5_bn /
-                  sensitivity.benchmark_england_under_5_bn
-                ).toFixed(2)}
-                × as much. If the published figure is the better one, the subsidy is
-                being priced on a fee base that is too big, and the cost below falls.
-                Scaling the model&apos;s under-5 fees down to that estimate — and leaving
-                school-age childcare alone, because nothing is published to scale it
-                against — gives the second figure. This is the largest single uncertainty
-                in the costing, worth about{" "}
-                {formatBn(
-                  result.legs.combined.static_cost_bn - sensitivity.combined_cost_bn,
-                )}
-                .
-              </>
-            }
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm text-slate-500">
-                Both legs, on the model&apos;s own fee base
-              </div>
-              <div className="mt-1 text-3xl font-semibold text-slate-900">
-                {formatBn(result.legs.combined.static_cost_bn)}
-              </div>
-              <div className="mt-2 text-sm text-slate-500">
-                Of which {formatBn(result.legs.subsidy.static_cost_bn)} is the subsidy.
-                This is the headline figure, and the top of the range.
-              </div>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm text-slate-500">
-                Both legs, on the published fee base
-              </div>
-              <div className="mt-1 text-3xl font-semibold text-slate-900">
-                {formatBn(sensitivity.combined_cost_bn)}
-              </div>
-              <div className="mt-2 text-sm text-slate-500">
-                Of which {formatBn(sensitivity.subsidy_cost_bn)} is the subsidy. The bottom
-                of the range: free hours are unaffected, so they set a floor.
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : null}
 
       <section>
         <SectionHeading
