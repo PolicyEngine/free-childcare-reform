@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import BaselineTab from "../src/components/BaselineTab";
 import BenchmarkTab from "../src/components/BenchmarkTab";
 import CostTab from "../src/components/CostTab";
 import DistributionTab from "../src/components/DistributionTab";
@@ -9,6 +10,7 @@ import MethodologyTab from "../src/components/MethodologyTab";
 
 const TAB_OPTIONS = [
   { id: "cost", label: "Budget impact" },
+  { id: "baseline", label: "Baseline" },
   { id: "distribution", label: "Household effects" },
   { id: "benchmarks", label: "Benchmarks" },
   { id: "methodology", label: "Methodology" },
@@ -97,6 +99,9 @@ function Dashboard() {
           response. The{" "}
           <TabLink onSelect={() => handleTabChange("distribution")}>Household effects</TabLink>{" "}
           tab shows who gains, by income quintile. The{" "}
+          <TabLink onSelect={() => handleTabChange("baseline")}>Baseline</TabLink> tab sets
+          the modelled baseline for each childcare programme against its published figure,
+          on spending and on children covered. The{" "}
           <TabLink onSelect={() => handleTabChange("benchmarks")}>Benchmarks</TabLink> tab
           checks every baseline against published outturns and comparable costings, and is
           the place to start if you want to know how much weight the headline numbers bear.
@@ -136,6 +141,7 @@ function Dashboard() {
             {activeTab === "distribution" && (
               <DistributionTab data={data} year={year} onYearChange={setYear} />
             )}
+            {activeTab === "baseline" && <BaselineTab data={data} year={year} />}
             {activeTab === "benchmarks" && <BenchmarkTab data={data} year={year} />}
             {activeTab === "methodology" && <MethodologyTab data={data} year={year} />}
           </>

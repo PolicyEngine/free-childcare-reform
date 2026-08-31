@@ -136,12 +136,8 @@ def impute_entrant_earnings(
     is floored at the model's own minimum wage.
     """
     employment_income, wage, working = _hourly_wage(sim, year)
-    weights = np.asarray(
-        sim.calculate("household_weight", year, map_to="person").values, float
-    )
-    youngest = np.asarray(
-        sim.calculate("youngest_child_age", year, map_to="person").values, float
-    )
+    weights = np.asarray(sim.calculate("household_weight", year, map_to="person").values, float)
+    youngest = np.asarray(sim.calculate("youngest_child_age", year, map_to="person").values, float)
     adult = np.asarray(sim.calculate("adult_index", year), float) > 0
     minimum_wage = np.asarray(sim.calculate("minimum_wage", year).values, float)
 
@@ -153,9 +149,7 @@ def impute_entrant_earnings(
     for age in np.unique(youngest[entrants & np.isfinite(youngest)]):
         band = youngest == age
         donors = band & donors_overall
-        median_wage = (
-            _weighted_median(wage[donors], weights[donors]) if donors.any() else fallback
-        )
+        median_wage = _weighted_median(wage[donors], weights[donors]) if donors.any() else fallback
         target = band & entrants
         imputed[target] = np.maximum(median_wage, minimum_wage[target])
     remaining = entrants & (imputed == 0)
@@ -180,9 +174,7 @@ def potential_earnings_quintile(sim, year: int, entrant_earnings: np.ndarray) ->
     """
     employment_income = np.asarray(sim.calculate("employment_income", year), float)
     adult = np.asarray(sim.calculate("adult_index", year), float) > 0
-    weights = np.asarray(
-        sim.calculate("household_weight", year, map_to="person").values, float
-    )
+    weights = np.asarray(sim.calculate("household_weight", year, map_to="person").values, float)
     potential = np.where(employment_income > 0, employment_income, entrant_earnings)
 
     quintile = np.ones(len(potential), dtype=int)
@@ -275,9 +267,7 @@ def responds_to_childcare(sim, year: int) -> np.ndarray:
     """
     if not sources.RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE:
         return np.ones(len(np.asarray(sim.calculate("age", year))), bool)
-    youngest = np.asarray(
-        sim.calculate("youngest_child_age", year, map_to="person").values, float
-    )
+    youngest = np.asarray(sim.calculate("youngest_child_age", year, map_to="person").values, float)
     return (youngest >= 1) & (youngest <= 4)
 
 
@@ -314,15 +304,12 @@ def _net_gain_to_work(
     """
     frame = _gain_to_work(sim, year, entrant_earnings, count_adults)
     frame["childcare_cost_when_working"] = childcare_cost_when_working
-    frame["in_work_income_net_of_childcare"] = (
-        frame["in_work_income"] - childcare_cost_when_working
-    )
+    frame["in_work_income_net_of_childcare"] = frame["in_work_income"] - childcare_cost_when_working
     frame["out_of_work_income_net_of_childcare"] = (
         frame["out_of_work_income"] - cost_contingent_support
     )
     frame["gain_to_work"] = (
-        frame["in_work_income_net_of_childcare"]
-        - frame["out_of_work_income_net_of_childcare"]
+        frame["in_work_income_net_of_childcare"] - frame["out_of_work_income_net_of_childcare"]
     )
     return frame
 
@@ -374,9 +361,9 @@ def prepare(
     # not pay in the baseline there is no proportional change to scale.
     gtw_pct_change = np.zeros_like(gtw_baseline)
     positive = gtw_baseline > 0
-    gtw_pct_change[positive] = (
-        gtw_reform[positive] - gtw_baseline[positive]
-    ) / gtw_baseline[positive]
+    gtw_pct_change[positive] = (gtw_reform[positive] - gtw_baseline[positive]) / gtw_baseline[
+        positive
+    ]
 
     elasticity_wrt_income = calculate_participation_elasticities(
         baseline_sim, potential_earnings_quintile(baseline_sim, year, entrant_earnings)
@@ -389,9 +376,7 @@ def prepare(
     out_of_work = baseline["out_of_work_income"].to_numpy()
     replacement_rate = np.zeros_like(in_work)
     working_positive = in_work > 0
-    replacement_rate[working_positive] = (
-        out_of_work[working_positive] / in_work[working_positive]
-    )
+    replacement_rate[working_positive] = out_of_work[working_positive] / in_work[working_positive]
     replacement_rate = np.clip(replacement_rate, 0, 1)
     elasticity_wrt_gain_to_work = elasticity_wrt_income * (1 - replacement_rate)
 
@@ -410,9 +395,7 @@ def prepare(
     # Insurance paid, plus benefits withdrawn. Measured on the reform's
     # tax-benefit system, so a mover's newly-won childcare entitlements are
     # netted off the gain rather than double-counted.
-    reform_gain = (
-        reform["in_work_income"].to_numpy() - reform["out_of_work_income"].to_numpy()
-    )
+    reform_gain = reform["in_work_income"].to_numpy() - reform["out_of_work_income"].to_numpy()
 
     return {
         "gtw_pct_change": gtw_pct_change,
@@ -626,12 +609,8 @@ def childcare_cost_when_working(
     """
     employment_income = np.asarray(sim.calculate("employment_income", year), float)
     hours = np.asarray(sim.calculate("hours_worked", year).values, float)
-    youngest = np.asarray(
-        sim.calculate("youngest_child_age", year, map_to="person").values, float
-    )
-    weights = np.asarray(
-        sim.calculate("household_weight", year, map_to="person").values, float
-    )
+    youngest = np.asarray(sim.calculate("youngest_child_age", year, map_to="person").values, float)
+    weights = np.asarray(sim.calculate("household_weight", year, map_to="person").values, float)
     working = employment_income > 0
 
     imputed = np.zeros_like(actual_cost)

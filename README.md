@@ -45,6 +45,23 @@ For scale, the IFS found the move from 15 to 30 hours put about 12,000 more moth
 
 **Distributionally, the cash gain broadly rises with income, but not monotonically.** Among households with a child under 5 in 2027 the average annual gain runs Q1 £1,164, Q2 £966, Q3 £2,174, Q4 £2,411, Q5 £3,067 — so the bottom two quintiles are close together and Q2 is the *lowest* of the five, with the gradient only establishing itself from Q3 up. Low-income families gain less in cash because Universal Credit already covers 85% of their childcare costs — which this reform keeps — and because they use fewer paid hours. As a share of net income the ordering changes again: Q1 gains most, at 2.98% against Q5's 2.24%.
 
+## The modelled baseline against published figures
+
+Each programme's baseline, compared at the year its published figure covers rather than at the costed year:
+
+| Programme | Spending | Official | | Children | Official | |
+| --- | --- | --- | --- | --- | --- | --- |
+| Universal entitlement, 3-4 | £1.30bn | not published separately | | 386,917 | 416,537 | 0.93× |
+| Working-parent entitlement | £4.57bn | not published separately | | 719,707 | 621,500 | 1.16× |
+| Disadvantaged two-year-olds | £0.43bn | £0.57bn | 0.75× | 90,587 | 115,852 | 0.78× |
+| Tax-Free Childcare | £0.63bn | £0.63bn | 0.99× | 1,099,437 | 1,085,020 | 1.01× |
+
+These are the same four ratios `policyengine-uk-data` checks its own release against, on the same published figures, so this table and the data build agree by construction. DfE reports the universal and working-parent entitlements as one £8.7bn England total rather than separately, which is why two spending cells are empty.
+
+**The ratios are taken at each figure's own year, not at 2027.** Dividing a 2027 model figure by a January 2025 census measures the gap between the two dates as much as it measures the model: on the working-parent entitlement that reads 1.61×, and almost all of it is the September 2025 expansion to 30 hours for under-threes, which the census predates. The costed-year baseline is still reported in the dashboard's Baseline tab, labelled as such and deliberately not divided by an older statistic.
+
+Two rows are worth knowing about. The **working-parent entitlement at 1.16×** compares an annual model period against a January stock, on a scheme that was mid-rollout — a known mixed basis rather than a solved problem, and the subject of an open review point upstream. The **disadvantaged two-year-old offer at 0.78×** is the weakest fit here; registrations have been falling year on year as the working-parent entitlement absorbs families who would previously have taken that offer, and DfE separately warns that some two-year-olds eligible for both were recorded under working-parent contrary to guidance, which moves children between those two rows.
+
 ## How it is modelled
 
 Leg 1 turns out to be a **single parameter change**. policyengine-uk models the three DfE schemes as mutually exclusive rather than stacking: the universal entitlement already carries no work or income test, is limited to 3-4 year olds, and is switched off for families who qualify for the extended working-parent scheme, which pays the full 30 hours. So the reform's second tier is already what the extended scheme delivers, and the first tier is delivered by widening the universal scheme's age floor from 3 to 0.75. No formula is altered.

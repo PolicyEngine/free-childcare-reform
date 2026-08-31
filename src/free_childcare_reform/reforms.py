@@ -88,9 +88,7 @@ def _subsidy_variables(rate: float, include_uc_families: bool):
 
         def formula(benunit, period, parameters):
             has_qualifying_child = np.asarray(
-                benunit.any(
-                    benunit.members("tax_free_childcare_qualifying_child", period)
-                )
+                benunit.any(benunit.members("tax_free_childcare_qualifying_child", period))
             ).astype(bool)
             if include_uc_families:
                 return has_qualifying_child

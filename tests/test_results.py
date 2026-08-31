@@ -195,3 +195,41 @@ def test_the_exchequer_recovers_something_from_entrants(results):
         # Tax plus benefit withdrawal on a part-time wage: a positive share, well under all of it.
         share = response["revenue_from_entrants_gbp"] / response["earnings_gained_gbp"]
         assert 0.02 < share < 0.9
+
+
+def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
+    """Each programme's ratio must be taken at the year its source covers.
+
+    Dividing a 2027 model figure by a January 2025 census measures the gap
+    between the two dates as much as the model: on the working-parent
+    entitlement that reads 1.61x, almost all of it the September 2025
+    expansion to 30 hours for under-threes, which the census predates.
+    """
+    rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
+    assert set(rows) == {"universal", "extended", "targeted", "tfc"}
+    for programme, row in rows.items():
+        assert row["comparison_year"] < row["costed_year"], programme
+        # The costed-year figures are reported for context and must never be
+        # the numerator of a ratio against an older published figure.
+        assert row["costed_year_spending_bn"] >= row["model_spending_bn"], programme
+        if row["official_caseload"]:
+            expected = round(row["model_caseload"] / row["official_caseload"], 3)
+            assert row["caseload_ratio"] == pytest.approx(expected), programme
+        if row["official_spending_bn"]:
+            expected = round(row["model_spending_bn"] / row["official_spending_bn"], 3)
+            assert row["spending_ratio"] == pytest.approx(expected), programme
+
+
+def test_the_baseline_agrees_with_the_data_builds_own_release_check(results):
+    """The four ratios must match what policyengine-uk-data checks its release on.
+
+    Same published figures, same model years. If these drift apart, one of the
+    two is comparing against something the other is not, which is the failure
+    this whole analysis has hit twice.
+    """
+    rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
+    # Release 1.57.2, from the push.yaml calibration log.
+    expected_caseload = {"universal": 0.93, "extended": 1.16, "targeted": 0.78, "tfc": 1.01}
+    for programme, ratio in expected_caseload.items():
+        assert rows[programme]["caseload_ratio"] == pytest.approx(ratio, abs=0.02), programme
+    assert rows["tfc"]["spending_ratio"] == pytest.approx(0.99, abs=0.02)

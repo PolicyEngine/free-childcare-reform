@@ -446,3 +446,113 @@ def as_json(model_parameters: dict[str, Any]) -> dict:
             "policyengine_uk": asdict(POLICYENGINE_UK),
         },
     }
+
+
+# Per-programme baseline check: what the model pays and how many children it
+# covers, against the published figure for each scheme.
+#
+# The caseload targets are the ones policyengine-uk-data calibrates the
+# Enhanced FRS against, corrected in its #472 and #474 and shipping in release
+# 1.57.2. Citing them here keeps this analysis and the data build on the same
+# published figures rather than two sets that can drift apart.
+#
+# Every official figure predates the costed years, so each row carries the
+# model year it should be compared at and the ratio is taken there, not at
+# 2027. That matters most for the working-parent entitlement: comparing the
+# 2027 model against the January 2025 census gives 1.61x, but the scheme
+# expanded to 30 hours for under-threes in September 2025, so most of that is
+# the rollout rather than an error. At 2025 the same comparison is far closer.
+# The model's 2027 value is still reported, because that is the baseline the
+# reform is costed against — but it is labelled as such and not divided by an
+# older published figure.
+BASELINE_PROGRAMMES = [
+    {
+        "programme": "universal",
+        "label": "Universal entitlement (15 hours, 3-4 year olds)",
+        "spending_variable": "universal_childcare_entitlement",
+        "caseload_variable": "is_child_receiving_universal_childcare",
+        "official_spending_bn": None,
+        "official_spending_label": "No separate published figure; see the £8.7bn total",
+        "official_caseload": 416_537,
+        "official_caseload_label": "DfE, January 2024: 778,327 registered excluding reception, less 361,790 on the working-parent entitlement",
+        "period": "January 2024",
+        "comparison_year": 2024,
+        "geography": "England",
+        "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2026",
+        "note": (
+            "The comparator nets off the working-parent entitlement because "
+            "policyengine-uk models the two as mutually exclusive: "
+            "universal_childcare_entitlement_eligible ends with "
+            "& ~has_extended_childcare. The headline 1.13 million is not the "
+            "right figure to compare against."
+        ),
+    },
+    {
+        "programme": "extended",
+        "label": "Working-parent entitlement (30 hours, under £100k)",
+        "spending_variable": "extended_childcare_entitlement",
+        "caseload_variable": "is_child_receiving_extended_childcare",
+        "official_spending_bn": None,
+        "official_spending_label": "No separate published figure; see the £8.7bn total",
+        "official_caseload": 621_500,
+        "official_caseload_label": "DfE, January 2025: 379,000 three- and four-year-olds plus 242,500 two-year-olds",
+        "period": "January 2025",
+        "comparison_year": 2024,
+        "geography": "England",
+        "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2025",
+        "note": (
+            "The census is January 2025 but the model is read at 2024, which is "
+            "the basis policyengine-uk-data calibrates on. January 2024 cannot "
+            "serve this scheme — the two-year-old offer only began in April "
+            "2024, so that census misses half of it — while the model's own "
+            "2025 already contains the September 2025 expansion to 30 hours for "
+            "under-threes, which the January 2025 census predates. Reading the "
+            "model at 2025 against this figure gives 1.61x, almost all of it "
+            "that expansion. The mixed basis is a known limitation rather than "
+            "a solved problem. DfE also warns that some two-year-olds eligible "
+            "for both this and the disadvantaged offer were recorded here "
+            "contrary to guidance, which moves children between this row and "
+            "the next."
+        ),
+    },
+    {
+        "programme": "targeted",
+        "label": "Disadvantaged two-year-old offer",
+        "spending_variable": "targeted_childcare_entitlement",
+        "caseload_variable": "is_child_receiving_targeted_childcare",
+        "official_spending_bn": 0.57,
+        "official_spending_label": "IFS £570m, England, 2025-26",
+        "official_caseload": 115_852,
+        "official_caseload_label": "DfE, January 2024: 115,852 registered",
+        "period": "January 2024 (caseload), 2025-26 (spending)",
+        "comparison_year": 2024,
+        "geography": "England",
+        "url": "https://ifs.org.uk/publications/annual-report-education-spending-england-2025-26",
+        "note": (
+            "Registrations have been falling year on year as the working-parent "
+            "entitlement absorbs families who would previously have taken this "
+            "offer, so the direction of travel is downward."
+        ),
+    },
+    {
+        "programme": "tfc",
+        "label": "Tax-Free Childcare",
+        "spending_variable": "tax_free_childcare",
+        "caseload_variable": "is_child_receiving_tax_free_childcare",
+        "official_spending_bn": 0.6322,
+        "official_spending_label": "HMRC £632.2m top-up, 2024-25",
+        "official_caseload": 1_085_020,
+        "official_caseload_label": "HMRC, 2024-25: 1,085,020 children with used accounts",
+        "period": "2024-25",
+        "comparison_year": 2024,
+        "geography": "UK",
+        "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-june-2025",
+        "note": (
+            "Both sides annual. HMRC also publishes a point-in-time monthly "
+            "count; comparing an annual model aggregate against that stock "
+            "manufactures a gap that is not there. This is the only programme "
+            "here whose spending the Enhanced FRS is directly calibrated on, at "
+            "0.99x its target on release 1.57.2."
+        ),
+    },
+]

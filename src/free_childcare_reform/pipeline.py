@@ -79,9 +79,7 @@ def _model_parameters(sim, year: int) -> dict:
     return {
         "childcare_funding_rate_gbp_per_hour": {
             f"age_{int(threshold)}_plus": round(float(amount), 3)
-            for threshold, amount in zip(
-                funding_rate.thresholds, funding_rate.amounts, strict=True
-            )
+            for threshold, amount in zip(funding_rate.thresholds, funding_rate.amounts, strict=True)
         },
         "weeks_per_year": float(p.dfe.weeks_per_year),
         "baseline_universal_entitlement_hours_per_year": float(
@@ -132,9 +130,7 @@ def _childcare_cost_per_person(sim, year: int) -> np.ndarray:
 
 
 def _quintile(sim, year: int, entity: str = "household") -> np.ndarray:
-    decile = np.asarray(
-        sim.calculate("household_income_decile", year, map_to=entity).values, float
-    )
+    decile = np.asarray(sim.calculate("household_income_decile", year, map_to=entity).values, float)
     # Quintiles fold PolicyEngine's published household income deciles. Deciles
     # below 1 are the model's marker for households it does not rank.
     return np.where(decile >= 1, np.clip(((decile - 1) // 2 + 1).astype(int), 1, 5), 0)
@@ -142,9 +138,7 @@ def _quintile(sim, year: int, entity: str = "household") -> np.ndarray:
 
 def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
     """Change in household net income, by income quintile and by family type."""
-    baseline_income = np.asarray(
-        baseline_sim.calculate("household_net_income", year).values, float
-    )
+    baseline_income = np.asarray(baseline_sim.calculate("household_net_income", year).values, float)
     reform_income = np.asarray(reform_sim.calculate("household_net_income", year).values, float)
     weights = np.asarray(baseline_sim.calculate("household_weight", year).values, float)
     quintile = _quintile(baseline_sim, year)
@@ -169,10 +163,14 @@ def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
             ),
         }
     )
-    collapsed = person_frame.groupby("household_id").agg(
-        family_type=("family_type", "first"),
-        youngest_child_age=("youngest_child_age", "min"),
-    ).reindex(household_ids)
+    collapsed = (
+        person_frame.groupby("household_id")
+        .agg(
+            family_type=("family_type", "first"),
+            youngest_child_age=("youngest_child_age", "min"),
+        )
+        .reindex(household_ids)
+    )
     family_type = collapsed["family_type"].to_numpy().astype(str)
     has_young_child = collapsed["youngest_child_age"].to_numpy() <= 4
 
@@ -197,20 +195,17 @@ def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
                 float((group["gain"] * group["weight"]).sum() / weight) if weight else 0.0, 2
             ),
             "average_gain_gbp_among_gainers": round(
-                float(
-                    (gaining["gain"] * gaining["weight"]).sum() / gaining["weight"].sum()
-                )
+                float((gaining["gain"] * gaining["weight"]).sum() / gaining["weight"].sum())
                 if gaining["weight"].sum()
                 else 0.0,
                 2,
             ),
-            "share_gaining": round(
-                float(gaining["weight"].sum() / weight) if weight else 0.0, 4
-            ),
+            "share_gaining": round(float(gaining["weight"].sum() / weight) if weight else 0.0, 4),
             "average_gain_pct_of_income": round(
                 float(
                     (group["gain"] * group["weight"]).sum()
-                    / (group["baseline_income"] * group["weight"]).sum() * 100
+                    / (group["baseline_income"] * group["weight"]).sum()
+                    * 100
                 )
                 if (group["baseline_income"] * group["weight"]).sum()
                 else 0.0,
@@ -220,8 +215,7 @@ def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
 
     ranked = frame[frame["quintile"] > 0]
     by_quintile = [
-        {"group": f"Q{q}", **summarise(group)}
-        for q, group in ranked.groupby("quintile")
+        {"group": f"Q{q}", **summarise(group)} for q, group in ranked.groupby("quintile")
     ]
     families = frame[frame["has_young_child"]]
     by_quintile_with_children = [
@@ -229,10 +223,7 @@ def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
         for q, group in families[families["quintile"] > 0].groupby("quintile")
     ]
     by_family_type = sorted(
-        (
-            {"group": name, **summarise(group)}
-            for name, group in families.groupby("family_type")
-        ),
+        ({"group": name, **summarise(group)} for name, group in families.groupby("family_type")),
         key=lambda row: row["average_gain_gbp"],
         reverse=True,
     )
@@ -258,8 +249,7 @@ def _spending(sim, year: int) -> dict:
         "tax_free_childcare",
     ]
     out = {
-        program: round(float(sim.calculate(program, year).sum()) / 1e9, 4)
-        for program in programs
+        program: round(float(sim.calculate(program, year).sum()) / 1e9, 4) for program in programs
     }
     out["total_childcare_support_bn"] = round(sum(out.values()), 4)
     out["uc_childcare_element_maximum_bn"] = round(
@@ -270,6 +260,68 @@ def _spending(sim, year: int) -> dict:
         float(sim.calculate("childcare_expenses", year).sum()) / 1e9, 4
     )
     return out
+
+
+def _baseline_programmes(sim, year: int) -> list[dict]:
+    """Each childcare programme's modelled baseline against its published figure.
+
+    Spending and caseload side by side, because the two answer different
+    questions: whether the model pays the right amount, and whether it covers
+    the right children. Tax-Free Childcare showed why that matters — it was
+    close on caseload while paying nearly double, so a caseload-only check
+    would have passed it.
+
+    Every official figure predates the costed years, and the periods differ by
+    programme. The ratios are indicative rather than a calibration check, and
+    each row carries the period it is drawn from.
+    """
+    rows = []
+    for programme in sources.BASELINE_PROGRAMMES:
+        compare_year = programme["comparison_year"]
+        # Costed-year values, for context: this is the baseline the reform is
+        # measured against.
+        costed_spending = round(
+            float(sim.calculate(programme["spending_variable"], year).sum()) / 1e9, 4
+        )
+        costed_caseload = round(float(sim.calculate(programme["caseload_variable"], year).sum()))
+        # Comparison-year values, evaluated at the year the published figure
+        # covers. Ratios are taken here and nowhere else.
+        model_spending = round(
+            float(sim.calculate(programme["spending_variable"], compare_year).sum()) / 1e9,
+            4,
+        )
+        model_caseload = round(
+            float(sim.calculate(programme["caseload_variable"], compare_year).sum())
+        )
+        official_spending = programme["official_spending_bn"]
+        official_caseload = programme["official_caseload"]
+        rows.append(
+            {
+                "programme": programme["programme"],
+                "label": programme["label"],
+                "costed_year": year,
+                "costed_year_spending_bn": costed_spending,
+                "costed_year_caseload": costed_caseload,
+                "comparison_year": compare_year,
+                "model_spending_bn": model_spending,
+                "official_spending_bn": official_spending,
+                "official_spending_label": programme["official_spending_label"],
+                "spending_ratio": (
+                    round(model_spending / official_spending, 3) if official_spending else None
+                ),
+                "model_caseload": model_caseload,
+                "official_caseload": official_caseload,
+                "official_caseload_label": programme["official_caseload_label"],
+                "caseload_ratio": (
+                    round(model_caseload / official_caseload, 3) if official_caseload else None
+                ),
+                "period": programme["period"],
+                "geography": programme["geography"],
+                "url": programme["url"],
+                "note": programme["note"],
+            }
+        )
+    return rows
 
 
 def _benchmark_comparison(sim, year: int) -> list[dict]:
@@ -499,6 +551,7 @@ def run_year(dataset, year: int) -> dict:
     return {
         "year": year,
         "baseline_spending": baseline_spending,
+        "baseline_programmes": _baseline_programmes(baseline, year),
         "benchmarks": _benchmark_comparison(baseline, year),
         "legs": legs,
         "labour_supply": responses,
