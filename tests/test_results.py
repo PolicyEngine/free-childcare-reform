@@ -299,3 +299,41 @@ def test_household_effects_respond_to_the_labour_supply_assumption(results):
                 ]
             ]
             assert gains["central"] != static, (leg, breakdown)
+
+
+def test_the_subsidy_is_not_credited_twice_in_the_gain_to_work(results):
+    """`household_net_income` excludes Tax-Free Childcare and its replacement.
+
+    So netting the subsidy off the childcare a worker pays already credits it.
+    Subtracting cost-contingent support from out-of-work income as well counted
+    the same subsidy twice for every potential entrant, and inflated the
+    subsidy leg's response to roughly double what it should be — enough to
+    flip the sign of the combined response.
+
+    Pinned by the consequence: the subsidy leg's entrants must not exceed the
+    range the price-elasticity literature supports for a reform of this size.
+    """
+    for year in YEARS:
+        subsidy = results["by_year"][year]["legs"]["subsidy"]["labour_supply"]["central"]
+        assert 0 < subsidy["net_entrants"] < 12_000, year
+
+
+def test_leavers_are_converted_to_ftes_at_their_own_hours(results):
+    """Leavers give up observed hours, which are longer than an entrant's.
+
+    Using the entrant assumption for both overstated the net full-time
+    equivalent. The free-hours leg produces only leavers, so its FTE loss must
+    exceed what the entrant-hours conversion would give.
+    """
+    from free_childcare_reform.labour_supply import FULL_TIME_HOURS, HOURS_FOR_NEW_ENTRANTS
+
+    entrant_rate = HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS
+    for year in YEARS:
+        leg = results["by_year"][year]["legs"]["free_hours"]["labour_supply"]["central"]
+        # Effectively zero: the free-hours leg cannot raise the gain to work,
+        # so it produces leavers only.
+        assert leg["entrants"] < 1, year
+        naive = -leg["leavers"] * entrant_rate
+        assert leg["net_ftes"] < naive, (
+            f"{year}: leaver FTEs should exceed the entrant-hours conversion"
+        )

@@ -134,7 +134,7 @@ export default function CostTab({ data, year, bound }) {
               value={formatSignedBn(-dynamic.labour_supply_offset_bn)}
               sub={`${dynamic.net_entrants >= 0 ? "+" : "−"}${formatCount(
                 Math.abs(dynamic.net_entrants),
-              )} net entrants among ${response.responding_adults_m.toFixed(1)}m eligible parents. The legs pull against each other, so this is not their sum. At ${(
+              )} net entrants among ${response.responding_adults_m.toFixed(1)}m eligible parents. The legs pull against each other — free hours remove a work condition, the subsidy cuts the price of working — so this is not their sum, and the net sign depends on which dominates. At ${(
                 dynamic.offset_share_of_static_cost * 100
               ).toFixed(1)}% of the static cost, small on every assumption.`}
               footnote={

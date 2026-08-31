@@ -322,9 +322,14 @@ def _net_gain_to_work(
     frame = _gain_to_work(sim, year, entrant_earnings, count_adults)
     frame["childcare_cost_when_working"] = childcare_cost_when_working
     frame["in_work_income_net_of_childcare"] = frame["in_work_income"] - childcare_cost_when_working
-    frame["out_of_work_income_net_of_childcare"] = (
-        frame["out_of_work_income"] - cost_contingent_support
-    )
+    # Out-of-work income is left as it is. `household_net_income` does not
+    # include Tax-Free Childcare or the subsidy that replaces it, so the
+    # in-work side already credits the subsidy by netting it off the childcare
+    # a worker pays. Subtracting cost-contingent support here as well would
+    # count the same subsidy twice — once as a lower cost of working, once as
+    # a lower income out of work — and overstate the gain to work by its full
+    # value for every potential entrant.
+    frame["out_of_work_income_net_of_childcare"] = frame["out_of_work_income"]
     frame["gain_to_work"] = (
         frame["in_work_income_net_of_childcare"] - frame["out_of_work_income_net_of_childcare"]
     )
@@ -398,6 +403,11 @@ def prepare(
     elasticity_wrt_gain_to_work = elasticity_wrt_income * (1 - replacement_rate)
 
     employment_income = np.asarray(baseline_sim.calculate("employment_income", year), float)
+    # Observed weekly hours, for converting leavers to full-time equivalents at
+    # their own hours rather than an entrant's.
+    weekly_hours_worked = (
+        np.asarray(baseline_sim.calculate("hours_worked", year).values, float) / WEEKS_PER_YEAR
+    )
     excluded = _excluded(baseline_sim, year, count_adults)
     eligible = ~excluded & responds_to_childcare(baseline_sim, year)
     currently_working = eligible & (employment_income > 0)
@@ -423,6 +433,7 @@ def prepare(
         "employment_income": employment_income,
         "imputed_wages": imputed_wages,
         "reform_gain": reform_gain,
+        "weekly_hours_worked": weekly_hours_worked,
         "weights": weights,
     }
 
@@ -469,7 +480,18 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     earnings_lost = float(MicroSeries(exit_probability * employment_income, weights=weights).sum())
     net_earnings = earnings_gained - earnings_lost
 
-    ftes = net_entrants * (HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS)
+    # Entrants and leavers are converted at their own hours. Entrants are
+    # assumed to work HOURS_FOR_NEW_ENTRANTS; leavers give up the hours they
+    # are observed working, which are longer, so using the entrant figure for
+    # both overstated the net full-time equivalent.
+    entrant_ftes = entrants * (HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS)
+    leaver_hours = prepared["weekly_hours_worked"]
+    leaver_ftes = float(
+        MicroSeries(
+            exit_probability * (leaver_hours / FULL_TIME_HOURS), weights=weights
+        ).sum()
+    )
+    ftes = entrant_ftes - leaver_ftes
 
     revenue_from_entrants = float(
         MicroSeries(entry_probability * (imputed_wages - reform_gain), weights=weights).sum()
@@ -530,8 +552,12 @@ def _effective_subsidy_rate(sim, year: int, working: np.ndarray) -> float:
     person_benunit_ids = np.asarray(sim.calculate("benunit_id", year, map_to="person").values)
     working_benunits = pd.Series(working, index=person_benunit_ids).groupby(level=0).max()
     mask = working_benunits.reindex(benunit_ids).fillna(False).to_numpy().astype(bool)
-    total = expenses[mask].sum()
-    return float(support[mask].sum() / total) if total else 0.0
+    weights = np.asarray(
+        sim.calculate("household_weight", year, map_to="benunit").values, float
+    )
+    total = float(MicroSeries(expenses[mask], weights=weights[mask]).sum())
+    supported = float(MicroSeries(support[mask], weights=weights[mask]).sum())
+    return supported / total if total else 0.0
 
 
 def childcare_cost_when_working(
