@@ -54,6 +54,7 @@ export default function CostTab({ data, year, onYearChange }) {
   // The two legs do not sum to the combined cost: free hours displace paid
   // care, which shrinks the base the 75% subsidy applies to.
   const feeBase = result.fee_base_sensitivity;
+  const cliff = data.income_cliff_context;
   const legSum = legs.free_hours.static_cost_bn + legs.subsidy.static_cost_bn;
   const interaction = legs.combined.static_cost_bn - legSum;
 
@@ -281,6 +282,41 @@ export default function CostTab({ data, year, onYearChange }) {
           existing hours unconditional.
         </p>
       </section>
+      {cliff ? (
+        <section>
+          <SectionHeading
+            title="The £100,000 cliff the reform half-removes"
+            description="The reform makes the first 15 hours unconditional but keeps the work and income test on the second 15, so the cliff shrinks rather than disappears."
+          />
+          <div className="rounded-2xl border border-slate-200 bg-white p-6">
+            <dl className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <dt className="text-sm text-slate-500">Threshold, frozen since {cliff.frozen_since}</dt>
+                <dd className="mt-1 text-2xl font-semibold text-slate-900">
+                  £{cliff.threshold_gbp.toLocaleString("en-GB")}
+                </dd>
+                <dd className="mt-1 text-sm text-slate-500">
+                  £{cliff.inflation_indexed_equivalent_gbp.toLocaleString("en-GB")} if it had
+                  been indexed.
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm text-slate-500">Children above it</dt>
+                <dd className="mt-1 text-2xl font-semibold text-slate-900">
+                  {cliff.children_affected}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm text-slate-500">Support forgone</dt>
+                <dd className="mt-1 text-2xl font-semibold text-slate-900">
+                  {formatBn(cliff.support_forgone_bn)}
+                </dd>
+              </div>
+            </dl>
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">{cliff.note}</p>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

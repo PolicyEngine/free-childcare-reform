@@ -5,35 +5,53 @@ import { Fragment, useState } from "react";
 import { formatBn } from "../lib/formatters";
 import SectionHeading from "./SectionHeading";
 
-function count(value) {
-  if (value === null || value === undefined) return "—";
-  return Number(value).toLocaleString("en-GB");
-}
+// Programmes are compared at the year their published figure covers. These two
+// are not programmes and have no such year, so they carry their own basis and
+// sit below the scheme rows.
+const EXTRA_MEASURES = [
+  "Universal Credit childcare element",
+  "Parent-paid childcare fees, England, under-5s",
+];
+
+const BADGE = {
+  "Not comparable": "bg-slate-100 text-slate-600 border-slate-200",
+  "Fee base check": "bg-amber-50 text-amber-700 border-amber-200",
+};
 
 function money(value) {
-  if (value === null || value === undefined) return "—";
-  return formatBn(value);
+  return value === null || value === undefined ? "—" : formatBn(value);
+}
+
+function count(value) {
+  return value === null || value === undefined
+    ? "—"
+    : Number(value).toLocaleString("en-GB");
 }
 
 export default function BaselineTab({ data, year }) {
-  const rows = data.by_year[String(year)].baseline_programmes;
-  const [openProgramme, setOpenProgramme] = useState(null);
+  const result = data.by_year[String(year)];
+  const programmes = result.baseline_programmes;
+  const sensitivity = result.fee_base_sensitivity;
+  const costings = data.comparable_costings || [];
+  const extras = (result.benchmarks || []).filter((row) =>
+    EXTRA_MEASURES.includes(row.measure),
+  );
+  const [open, setOpen] = useState(null);
 
   return (
     <div className="space-y-10">
       <section>
         <SectionHeading
-          title="The modelled baseline, programme by programme"
+          title="The modelled baseline against published figures"
           description={
             <>
-              What the model pays under current law, and how many children it covers,
-              against the published figure for each scheme. Spending and children are shown
-              side by side because they answer different questions — whether the model pays
-              the right amount, and whether it reaches the right number of families.
-              Tax-Free Childcare is why that distinction is here: before the correction
-              described below it was close on children while paying nearly double,
-              so a headcount-only check would have passed it. Select any row for the source
-              and the reason the comparison is drawn where it is.
+              What the model pays under current law and how many children it reaches, per
+              scheme. Nothing here is an input to the costing — the reform is measured as a
+              difference from this baseline, not as a level — but it is what tells you how
+              much weight the headline bears. Each comparison is drawn at the year its
+              published figure covers, not at {year}: setting a {year} figure against a
+              January 2025 census would measure the gap between two dates as much as the
+              model. Select a row for the source and the reasoning.
             </>
           }
         />
@@ -43,21 +61,21 @@ export default function BaselineTab({ data, year }) {
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-6 py-3 font-semibold">Programme</th>
-                <th className="px-4 py-3 text-right font-semibold">Modelled spending</th>
-                <th className="px-4 py-3 text-right font-semibold">Official spending</th>
+                <th className="px-4 py-3 text-right font-semibold">Spending, modelled</th>
+                <th className="px-4 py-3 text-right font-semibold">Spending, official</th>
                 <th className="px-4 py-3 text-right font-semibold">Children, modelled</th>
                 <th className="px-6 py-3 text-right font-semibold">Children, official</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => {
-                const open = openProgramme === row.programme;
+              {programmes.map((row) => {
+                const isOpen = open === row.programme;
                 return (
                   <Fragment key={row.programme}>
                     <tr
-                      onClick={() => setOpenProgramme(open ? null : row.programme)}
+                      onClick={() => setOpen(isOpen ? null : row.programme)}
                       className={`cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 ${
-                        open ? "bg-slate-50" : ""
+                        isOpen ? "bg-slate-50" : ""
                       }`}
                     >
                       <td className="px-6 py-4 align-top">
@@ -66,7 +84,7 @@ export default function BaselineTab({ data, year }) {
                             aria-hidden
                             className="mr-2 inline-block text-slate-400"
                             style={{
-                              transform: open ? "rotate(90deg)" : "none",
+                              transform: isOpen ? "rotate(90deg)" : "none",
                               transition: "transform 120ms",
                             }}
                           >
@@ -91,24 +109,24 @@ export default function BaselineTab({ data, year }) {
                         {count(row.official_caseload)}
                       </td>
                     </tr>
-                    {open ? (
+                    {isOpen ? (
                       <tr className="border-b border-slate-100 bg-slate-50">
-                        <td colSpan={5} className="px-6 pb-6 pt-0">
-                          <div className="text-sm leading-6 text-slate-600">{row.note}</div>
+                        <td
+                          colSpan={5}
+                          className="px-6 pb-6 pt-0 text-sm leading-6 text-slate-600"
+                        >
+                          <div>{row.note}</div>
                           <div className="mt-3 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500">
                             <div>{row.official_caseload_label}</div>
                             <div className="mt-1">{row.official_spending_label}</div>
-                            {row.costed_year_spending_bn !== null &&
-                            row.costed_year_spending_bn !== undefined ? (
+                            {row.costed_year_spending_bn ? (
                               <div className="mt-2">
-                                At the costed year {row.costed_year} the model pays{" "}
+                                At {row.costed_year} the model pays{" "}
                                 {money(row.costed_year_spending_bn)}
                                 {row.costed_year_caseload
                                   ? ` to ${count(row.costed_year_caseload)} children`
                                   : ""}
-                                . That is the baseline the reform is measured against, and it
-                                is deliberately not set against the older published figure
-                                above.
+                                . That is the baseline the reform is measured against.
                               </div>
                             ) : null}
                             <a
@@ -126,20 +144,118 @@ export default function BaselineTab({ data, year }) {
                   </Fragment>
                 );
               })}
+
+              {extras.map((row) => (
+                <tr
+                  key={row.measure}
+                  className="border-b border-slate-100 align-top last:border-0"
+                >
+                  <td className="px-6 py-4">
+                    <div className="font-semibold text-slate-900">{row.measure}</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      <span
+                        className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 font-medium ${
+                          BADGE[row.kind] || BADGE["Not comparable"]
+                        }`}
+                      >
+                        {row.kind}
+                      </span>
+                      <span>
+                        {row.geography}, {row.period}
+                      </span>
+                      <a
+                        href={row.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[color:var(--pe-color-primary-600)] underline"
+                      >
+                        source
+                      </a>
+                    </div>
+                    <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-500">
+                      {row.note}
+                    </p>
+                  </td>
+                  <td className="px-4 py-4 text-right tabular-nums text-slate-700">
+                    {money(row.model_bn)}
+                  </td>
+                  <td className="px-4 py-4 text-right tabular-nums text-slate-700">
+                    {money(row.official_bn)}
+                  </td>
+                  <td className="px-4 py-4 text-right text-slate-400">—</td>
+                  <td className="px-6 py-4 text-right text-slate-400">—</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
+      </section>
 
-        <p className="mt-4 text-sm leading-6 text-slate-600">
-          Each comparison is drawn at the year its published figure covers, not at the
-          costed year. Setting a 2027 model figure against a January 2025 census would
-          measure the gap between two dates as much as the model: on the working-parent
-          entitlement that reads 1.61×, and almost all of it is the September 2025 expansion
-          to 30 hours for under-threes, which the census predates. On this basis the four
-          programme rows reproduce the same comparison{" "}
-          <code>policyengine-uk-data</code> checks its own release against, on the same
-          published figures.
-        </p>
+      {sensitivity ? (
+        <section>
+          <SectionHeading
+            title="What the fee base does to the subsidy leg"
+            description={`The 75% subsidy is a share of childcare spending, so it scales almost linearly in a fee base the model puts ${(
+              sensitivity.model_england_under_5_bn /
+              sensitivity.benchmark_england_under_5_bn
+            ).toFixed(2)}× the benchmark for England under-5s. This is the largest remaining uncertainty in the costing.`}
+          />
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <div className="text-sm text-slate-500">Subsidy leg, as modelled</div>
+              <div className="mt-1 text-3xl font-semibold text-slate-900">
+                {formatBn(result.legs.subsidy.static_cost_bn)}
+              </div>
+              <div className="mt-2 text-sm text-slate-500">Upper end of the range.</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <div className="text-sm text-slate-500">On the benchmark fee base</div>
+              <div className="mt-1 text-3xl font-semibold text-slate-900">
+                {formatBn(sensitivity.subsidy_cost_bn)}
+              </div>
+              <div className="mt-2 text-sm text-slate-500">
+                Rebasing the under-5 slice by {sensitivity.under_5_slice_ratio}×.
+              </div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <div className="text-sm text-slate-500">Both legs, rebased</div>
+              <div className="mt-1 text-3xl font-semibold text-slate-900">
+                {formatBn(sensitivity.combined_cost_bn)}
+              </div>
+              <div className="mt-2 text-sm text-slate-500">
+                Against {formatBn(result.legs.combined.static_cost_bn)} as modelled.
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <section>
+        <SectionHeading
+          title="Comparable published costings"
+          description="What other people have put on similar proposals, and how comparable each one is."
+        />
+        <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
+          {costings.map((costing) => (
+            <div key={costing.proposal} className="p-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="text-base font-semibold text-slate-900">
+                  {costing.proposal}
+                </h3>
+                <span className="text-lg font-semibold text-[color:var(--pe-color-primary-600)]">
+                  £{costing.cost_bn}bn
+                </span>
+              </div>
+              <div className="mt-1 text-sm text-slate-500">
+                <a href={costing.url} target="_blank" rel="noreferrer" className="underline">
+                  {costing.source}
+                </a>
+                , {costing.date} · {costing.geography}
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{costing.note}</p>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );

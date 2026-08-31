@@ -3,15 +3,14 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import BaselineTab from "../src/components/BaselineTab";
-import BenchmarkTab from "../src/components/BenchmarkTab";
 import CostTab from "../src/components/CostTab";
 import DistributionTab from "../src/components/DistributionTab";
 import MethodologyTab from "../src/components/MethodologyTab";
 
 const TAB_OPTIONS = [
   { id: "cost", label: "Budget impact" },
-  { id: "baseline", label: "Baseline" },
   { id: "distribution", label: "Household effects" },
+  { id: "baseline", label: "Baseline" },
   { id: "methodology", label: "Methodology" },
 ];
 
@@ -140,12 +139,7 @@ function Dashboard() {
             {activeTab === "distribution" && (
               <DistributionTab data={data} year={year} onYearChange={setYear} />
             )}
-            {activeTab === "baseline" && (
-              <div className="space-y-10">
-                <BaselineTab data={data} year={year} />
-                <BenchmarkTab data={data} year={year} />
-              </div>
-            )}
+            {activeTab === "baseline" && <BaselineTab data={data} year={year} />}
             {activeTab === "methodology" && <MethodologyTab data={data} year={year} />}
           </>
         )}
