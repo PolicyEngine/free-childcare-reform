@@ -17,7 +17,7 @@ def test_every_requested_year_is_present(results):
 
 
 def test_the_registry_is_emitted(results):
-    for key in ["assumptions", "sources", "comparable_costings", "income_cliff_context"]:
+    for key in ["assumptions", "sources", "comparable_costings"]:
         assert results[key], f"{key} missing from the results JSON"
 
 
@@ -58,16 +58,6 @@ def test_elasticity_bounds_order_the_response(results):
         central = abs(responses["central"]["net_entrants"])
         high = abs(responses["high"]["net_entrants"])
         assert low <= central <= high
-
-
-def test_the_price_elasticity_cross_check_can_only_be_positive(results):
-    # It sees the price fall and nothing else, so it brackets the gain-to-work
-    # model from above rather than confirming it.
-    for year in YEARS:
-        for bound in ["low", "central", "high"]:
-            check = results["by_year"][year]["price_elasticity_cross_check"][bound]
-            assert check["entrants"] >= 0
-            assert check["effective_price_change"] < 0
 
 
 def test_quintiles_are_complete_and_gains_are_non_negative(results):
@@ -123,8 +113,10 @@ def test_the_known_gaps_are_flagged_rather_than_hidden(results):
         for benchmark in results["by_year"]["2027"]["benchmarks"]
     }
     assert kinds["Tax-Free Childcare"] == "Award gap"
-    assert kinds["Universal Credit childcare element"] == "Not comparable"
-    assert kinds["Out-of-pocket childcare fees, England, under-5s"] == "Fee base check"
+    # It became comparable once measured as a counterfactual rather than by
+    # summing a maximum-amount component; what remains is a caseload gap.
+    assert kinds["Universal Credit childcare element"] == "Caseload gap"
+    assert kinds["Parent-paid childcare fees, England, under-5s"] == "Fee base check"
     assert kinds["Childcare spending, all children, UK"] == "Unbenchmarked"
 
 
@@ -133,12 +125,34 @@ def test_the_fee_base_is_compared_like_for_like(results):
     # against that slice of the model, not the UK all-ages aggregate. Comparing
     # the two would roughly double the apparent gap.
     rows = {row["measure"]: row for row in results["by_year"]["2027"]["benchmarks"]}
-    comparable = rows["Out-of-pocket childcare fees, England, under-5s"]
+    comparable = rows["Parent-paid childcare fees, England, under-5s"]
     full_base = rows["Childcare spending, all children, UK"]
     assert comparable["model_bn"] < full_base["model_bn"]
     assert comparable["ratio_model_to_official"] < 2.5
     # The unbenchmarked row must not claim a ratio it cannot have.
     assert full_base["ratio_model_to_official"] is None
+
+
+def test_the_fee_base_benchmark_is_gross_of_the_support_derived_from_it(results):
+    """The benchmark must not net off TFC or the UC childcare element.
+
+    `childcare_expenses` is the total fee, and `tax_free_childcare` and
+    `uc_childcare_element` are both computed from it. Subtracting them from the
+    CMA residual and then comparing against the variable they derive from
+    double-counts the support: it is what produced an apparent 1.70x gap where
+    the like-for-like figure is 1.25x. The comparator is the CMA residual
+    itself — England early years sector income less funded entitlements,
+    about £14bn - £8.9bn.
+    """
+    rows = {row["measure"]: row for row in results["by_year"]["2027"]["benchmarks"]}
+    benchmark = rows["Parent-paid childcare fees, England, under-5s"]["official_bn"]
+    assert benchmark == pytest.approx(5.10), (
+        "the fee-base benchmark must be the gross CMA residual, not a figure "
+        "net of the support computed from childcare_expenses"
+    )
+    for year in YEARS:
+        sensitivity = results["by_year"][year]["fee_base_sensitivity"]
+        assert sensitivity["benchmark_england_under_5_bn"] == pytest.approx(5.10)
 
 
 def test_the_fee_base_sensitivity_lowers_the_subsidy_leg(results):
@@ -173,3 +187,115 @@ def test_the_exchequer_recovers_something_from_entrants(results):
         # Tax plus benefit withdrawal on a part-time wage: a positive share, well under all of it.
         share = response["revenue_from_entrants_gbp"] / response["earnings_gained_gbp"]
         assert 0.02 < share < 0.9
+
+
+def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
+    """Each programme's ratio must be taken at the year its source covers.
+
+    Dividing a 2027 model figure by a January 2025 census measures the gap
+    between the two dates as much as the model: on the working-parent
+    entitlement that reads 1.61x, almost all of it the September 2025
+    expansion to 30 hours for under-threes, which the census predates.
+    """
+    rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
+    assert set(rows) == {"universal", "extended", "targeted", "tfc"}
+    # Every programme now carries an official spending figure. The two
+    # entitlements come from DfE's early years national funding formula
+    # technical note, which does publish the universal/additional split — an
+    # earlier version of this analysis wrongly concluded it did not.
+    for programme in rows:
+        assert rows[programme]["official_spending_bn"] > 0, programme
+    # The entitlement figures are the DSG early years block allocations for
+    # 2024-25, which is the year the model is read at.
+    assert rows["universal"]["official_spending_bn"] == pytest.approx(1.7)
+    assert rows["extended"]["official_spending_bn"] == pytest.approx(2.5)
+    for programme, row in rows.items():
+        assert row["comparison_year"] < row["costed_year"], programme
+        # The costed-year figures are reported for context and must never be
+        # the numerator of a ratio against an older published figure.
+        assert row["costed_year_spending_bn"] >= row["model_spending_bn"], programme
+        if row["official_caseload"]:
+            expected = round(row["model_caseload"] / row["official_caseload"], 3)
+            assert row["caseload_ratio"] == pytest.approx(expected), programme
+        if row["official_spending_bn"]:
+            expected = round(row["model_spending_bn"] / row["official_spending_bn"], 3)
+            assert row["spending_ratio"] == pytest.approx(expected), programme
+
+
+def test_the_baseline_agrees_with_the_data_builds_own_release_check(results):
+    """The four ratios must match what policyengine-uk-data checks its release on.
+
+    Same published figures, same model years. If these drift apart, one of the
+    two is comparing against something the other is not, which is the failure
+    this whole analysis has hit twice.
+    """
+    rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
+    # Release 1.57.2, from the push.yaml calibration log. The entitlements
+    # total row has no caseload: a child can hold more than one entitlement.
+    expected_caseload = {"universal": 0.93, "extended": 1.16, "targeted": 0.78, "tfc": 1.01}
+    for programme, ratio in expected_caseload.items():
+        assert rows[programme]["caseload_ratio"] == pytest.approx(ratio, abs=0.02), programme
+    assert rows["tfc"]["spending_ratio"] == pytest.approx(0.99, abs=0.02)
+
+
+def test_the_uc_childcare_element_is_measured_by_abolishing_it(results):
+    """Summing the variable gives an entitlement component, not spending.
+
+    `uc_childcare_element` is part of the UC maximum amount, before the
+    earnings taper. Its sum is £8.69bn against DWP's £611m outturn — a 14x
+    gap that is an artefact of the comparison. The comparable figure is what
+    abolishing it costs.
+    """
+    for year in YEARS:
+        measured = results["by_year"][year]["uc_childcare_fiscal_cost"]
+        assert measured["fiscal_cost_bn"] < measured["maximum_amount_component_bn"] / 3, (
+            "most of the maximum-amount component is withdrawn by the taper and "
+            "never reaches a household"
+        )
+        assert measured["benefit_units_receiving"] > 0
+
+    row = next(
+        row
+        for row in results["by_year"]["2027"]["benchmarks"]
+        if row["measure"] == "Universal Credit childcare element"
+    )
+    fiscal = results["by_year"]["2027"]["uc_childcare_fiscal_cost"]["fiscal_cost_bn"]
+    assert row["model_bn"] == pytest.approx(fiscal, abs=0.01), (
+        "the benchmark row must show the counterfactual, not the variable's sum"
+    )
+
+
+def test_household_effects_respond_to_the_labour_supply_assumption(results):
+    """The distribution must move with the assumption, not just the cost.
+
+    The participation response is an expected value per person — a probability
+    of entering or leaving work times the gain to work — so it allocates to
+    households and can be read by quintile. An earlier version of this
+    dashboard claimed it could not, and showed static figures under every
+    assumption.
+    """
+    breakdowns = (
+        "by_income_quintile_families_with_under_5s",
+        "by_income_quintile",
+        "by_family_type_families_with_under_5s",
+        "by_family_type",
+    )
+    # Combined is included because it is the default view: leaving it out made
+    # the household figures fall back to static on the selection most readers
+    # see first, while still offering the assumption control.
+    for leg in ("free_hours", "subsidy", "combined"):
+        by_bound = results["by_year"]["2027"]["legs"][leg]["household_effects_by_bound"]
+        assert set(by_bound) == {"low", "central", "high"}
+        for breakdown in breakdowns:
+            gains = {
+                bound: [row["average_gain_gbp"] for row in effects[breakdown]]
+                for bound, effects in by_bound.items()
+            }
+            assert gains["low"] != gains["central"] != gains["high"], (leg, breakdown)
+            static = [
+                row["average_gain_gbp"]
+                for row in results["by_year"]["2027"]["legs"][leg]["household_effects"][
+                    breakdown
+                ]
+            ]
+            assert gains["central"] != static, (leg, breakdown)

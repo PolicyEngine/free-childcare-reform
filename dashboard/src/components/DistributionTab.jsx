@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { colors } from "../lib/colors";
-import { formatBn, formatCurrency, formatPct } from "../lib/formatters";
+import { formatBn, formatCurrency, formatPct , formatFiscalYear} from "../lib/formatters";
 import SectionHeading from "./SectionHeading";
 
 const MEASURES = [
@@ -45,9 +45,16 @@ const MEASURES = [
 const POPULATIONS = [
   {
     id: "by_income_quintile_families_with_under_5s",
-    label: "Households with a child under 5",
+    label: "Income quintile — families with a child under 5",
+    grouping: "quintile",
   },
-  { id: "by_income_quintile", label: "All households" },
+  { id: "by_income_quintile", label: "Income quintile — all households", grouping: "quintile" },
+  {
+    id: "by_family_type_families_with_under_5s",
+    label: "Family type — families with a child under 5",
+    grouping: "family type",
+  },
+  { id: "by_family_type", label: "Family type — all households", grouping: "family type" },
 ];
 
 const LEGS = [
@@ -56,7 +63,7 @@ const LEGS = [
   { id: "subsidy", label: "75% subsidy replacing Tax-Free Childcare" },
 ];
 
-export default function DistributionTab({ data, year, onYearChange }) {
+export default function DistributionTab({ data, year, bound }) {
   const [measureId, setMeasureId] = useState("average_gain_gbp");
   const [populationId, setPopulationId] = useState(
     "by_income_quintile_families_with_under_5s",
@@ -64,11 +71,18 @@ export default function DistributionTab({ data, year, onYearChange }) {
   const [legId, setLegId] = useState("combined");
 
   const result = data.by_year[String(year)];
-  const effects = result.legs[legId].household_effects;
+  // The distribution on the same behavioural assumption as the cost. The
+  // participation response is an expected value per person — a probability of
+  // entering or leaving work times the gain to work — so it allocates to
+  // households and can be read by quintile like any other income change.
+  const leg = result.legs[legId];
+  const effects =
+    bound && bound !== "none" && leg.household_effects_by_bound?.[bound]
+      ? leg.household_effects_by_bound[bound]
+      : leg.household_effects;
   const measure = MEASURES.find((m) => m.id === measureId);
   const population = POPULATIONS.find((p) => p.id === populationId);
   const rows = effects[populationId] || [];
-  const familyRows = effects.by_family_type_families_with_under_5s || [];
   const headline = effects.families_with_under_5s;
   const all = effects.all_households;
 
@@ -84,7 +98,10 @@ export default function DistributionTab({ data, year, onYearChange }) {
               households in the UK — not only those with young children. Free childcare
               hours are counted at the DfE funding rate the model applies, which is what
               the government pays a provider, not what a family would have paid on the open
-              market.
+              market.{" "}
+              {bound && bound !== "none"
+                ? "These figures include the labour supply response at the assumption chosen above: each person's expected change in net income from entering or leaving work is added to their household's gain. It falls mostly on the bottom quintile, where the entrants are."
+                : "These figures are static. Choosing a labour supply assumption above adds each person's expected gain from entering or leaving work."}
             </>
           }
         />
@@ -125,21 +142,7 @@ export default function DistributionTab({ data, year, onYearChange }) {
 
       <section>
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <label className="min-w-0">
-              <span className="mb-1 block text-xs font-medium text-slate-500">Year</span>
-              <select
-                value={year}
-                onChange={(event) => onYearChange(Number(event.target.value))}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]"
-              >
-                {data.years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="mb-5 grid gap-3 sm:grid-cols-3">
             <label className="min-w-0">
               <span className="mb-1 block text-xs font-medium text-slate-500">Reform</span>
               <select
@@ -156,7 +159,7 @@ export default function DistributionTab({ data, year, onYearChange }) {
             </label>
             <label className="min-w-0">
               <span className="mb-1 block text-xs font-medium text-slate-500">
-                Population
+                Breakdown
               </span>
               <select
                 value={populationId}
@@ -186,8 +189,8 @@ export default function DistributionTab({ data, year, onYearChange }) {
             </label>
           </div>
           <h3 className="mb-4 text-sm font-semibold text-slate-700">
-            {measure.label} by income quintile — {population.label.toLowerCase()} (
-            {measure.unit}, {year})
+            {measure.label} by {population.grouping} — {population.label.toLowerCase()} (
+            {measure.unit}, {formatFiscalYear(year)})
           </h3>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={rows} margin={{ left: 8, right: 16, top: 8, bottom: 16 }}>
@@ -203,55 +206,13 @@ export default function DistributionTab({ data, year, onYearChange }) {
             </BarChart>
           </ResponsiveContainer>
           <p className="mt-4 text-sm leading-6 text-slate-500">
-            Q1 is the lowest-income fifth of households. Lower quintiles gain less in cash
-            because families on Universal Credit already receive 85% of childcare costs
-            through the UC childcare element, which this reform keeps unchanged, and
-            because low-income families use fewer paid childcare hours to begin with. As a
-            share of net income the picture is different — switch the measure above.
+            {population?.grouping === "quintile"
+            ? "Q1 is the lowest-income fifth of households. Lower quintiles gain less in cash because families on Universal Credit already receive 85% of childcare costs through the UC childcare element, which this reform keeps unchanged, and because low-income families use fewer paid childcare hours to begin with. As a share of net income the picture is different — switch the measure above."
+: null}
           </p>
         </div>
       </section>
 
-      <section>
-        <SectionHeading
-          title="By family type"
-          description="Households with a child under 5, ranked by average gain."
-        />
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-500">
-                  <th className="px-6 py-3 font-medium">Family type</th>
-                  <th className="px-6 py-3 font-medium">Households</th>
-                  <th className="px-6 py-3 font-medium">Average gain</th>
-                  <th className="px-6 py-3 font-medium">Share gaining</th>
-                  <th className="px-6 py-3 font-medium">Total gain</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {familyRows.map((row) => (
-                  <tr key={row.group}>
-                    <td className="px-6 py-3 text-slate-900">{row.group}</td>
-                    <td className="px-6 py-3 text-slate-600">
-                      {row.households_m.toFixed(2)}m
-                    </td>
-                    <td className="px-6 py-3 text-slate-600">
-                      {formatCurrency(row.average_gain_gbp)}
-                    </td>
-                    <td className="px-6 py-3 text-slate-600">
-                      {formatPct(row.share_gaining * 100, 0)}
-                    </td>
-                    <td className="px-6 py-3 text-slate-600">
-                      {formatBn(row.total_gain_bn)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

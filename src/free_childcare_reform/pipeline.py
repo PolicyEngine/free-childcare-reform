@@ -26,13 +26,13 @@ import numpy as np
 import pandas as pd
 from policyengine_uk import Microsimulation
 from policyengine_uk.data import UKSingleYearDataset
+from policyengine_uk.utils.scenario import Scenario
 
 from . import sources
 from .labour_supply import (
     childcare_cost_when_working,
     participation_response,
     prepare,
-    price_elasticity_response,
     responds_to_childcare,
 )
 from .reforms import (
@@ -48,7 +48,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # pinned revision for reproducibility.
 DATASET = "enhanced_frs_2024_25.h5"
 PRIVATE_REPO = "policyengine/policyengine-uk-data-private"
-DATASET_REVISION = "2966541fca275ab5ccb6cfb659b010b1db37ad49"
+DATASET_REVISION = "7b0a06f0f08bec4bdb81c5d0fdb4057fe4e7fd1a"
 YEARS = [2027, 2028, 2029]
 # The parameter changes need to be in force from before the first costed year.
 PARAMETER_YEARS = [2026, 2027, 2028, 2029, 2030]
@@ -79,9 +79,7 @@ def _model_parameters(sim, year: int) -> dict:
     return {
         "childcare_funding_rate_gbp_per_hour": {
             f"age_{int(threshold)}_plus": round(float(amount), 3)
-            for threshold, amount in zip(
-                funding_rate.thresholds, funding_rate.amounts, strict=True
-            )
+            for threshold, amount in zip(funding_rate.thresholds, funding_rate.amounts, strict=True)
         },
         "weeks_per_year": float(p.dfe.weeks_per_year),
         "baseline_universal_entitlement_hours_per_year": float(
@@ -132,20 +130,38 @@ def _childcare_cost_per_person(sim, year: int) -> np.ndarray:
 
 
 def _quintile(sim, year: int, entity: str = "household") -> np.ndarray:
-    decile = np.asarray(
-        sim.calculate("household_income_decile", year, map_to=entity).values, float
-    )
+    decile = np.asarray(sim.calculate("household_income_decile", year, map_to=entity).values, float)
     # Quintiles fold PolicyEngine's published household income deciles. Deciles
     # below 1 are the model's marker for households it does not rank.
     return np.where(decile >= 1, np.clip(((decile - 1) // 2 + 1).astype(int), 1, 5), 0)
 
 
-def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
-    """Change in household net income, by income quintile and by family type."""
-    baseline_income = np.asarray(
-        baseline_sim.calculate("household_net_income", year).values, float
-    )
+def _household_effects(
+    baseline_sim, reform_sim, year: int, extra_person_income: np.ndarray | None = None
+) -> dict:
+    """Change in household net income, by income quintile and by family type.
+
+    ``extra_person_income`` is the expected net-income effect of the labour
+    supply response, per person. It is added to the household's static gain so
+    the distribution can be read on the same behavioural assumption as the
+    cost, rather than only statically.
+    """
+    baseline_income = np.asarray(baseline_sim.calculate("household_net_income", year).values, float)
     reform_income = np.asarray(reform_sim.calculate("household_net_income", year).values, float)
+    if extra_person_income is not None:
+        person_household = np.asarray(
+            baseline_sim.calculate("household_id", year, map_to="person").values
+        )
+        household_order = np.asarray(baseline_sim.calculate("household_id", year).values)
+        by_household = (
+            pd.DataFrame({"household_id": person_household, "gain": extra_person_income})
+            .groupby("household_id")["gain"]
+            .sum()
+            .reindex(household_order)
+            .fillna(0.0)
+            .to_numpy()
+        )
+        reform_income = reform_income + by_household
     weights = np.asarray(baseline_sim.calculate("household_weight", year).values, float)
     quintile = _quintile(baseline_sim, year)
     # family_type is a benefit-unit enum and youngest_child_age a benefit-unit
@@ -169,10 +185,14 @@ def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
             ),
         }
     )
-    collapsed = person_frame.groupby("household_id").agg(
-        family_type=("family_type", "first"),
-        youngest_child_age=("youngest_child_age", "min"),
-    ).reindex(household_ids)
+    collapsed = (
+        person_frame.groupby("household_id")
+        .agg(
+            family_type=("family_type", "first"),
+            youngest_child_age=("youngest_child_age", "min"),
+        )
+        .reindex(household_ids)
+    )
     family_type = collapsed["family_type"].to_numpy().astype(str)
     has_young_child = collapsed["youngest_child_age"].to_numpy() <= 4
 
@@ -197,20 +217,17 @@ def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
                 float((group["gain"] * group["weight"]).sum() / weight) if weight else 0.0, 2
             ),
             "average_gain_gbp_among_gainers": round(
-                float(
-                    (gaining["gain"] * gaining["weight"]).sum() / gaining["weight"].sum()
-                )
+                float((gaining["gain"] * gaining["weight"]).sum() / gaining["weight"].sum())
                 if gaining["weight"].sum()
                 else 0.0,
                 2,
             ),
-            "share_gaining": round(
-                float(gaining["weight"].sum() / weight) if weight else 0.0, 4
-            ),
+            "share_gaining": round(float(gaining["weight"].sum() / weight) if weight else 0.0, 4),
             "average_gain_pct_of_income": round(
                 float(
                     (group["gain"] * group["weight"]).sum()
-                    / (group["baseline_income"] * group["weight"]).sum() * 100
+                    / (group["baseline_income"] * group["weight"]).sum()
+                    * 100
                 )
                 if (group["baseline_income"] * group["weight"]).sum()
                 else 0.0,
@@ -220,18 +237,32 @@ def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
 
     ranked = frame[frame["quintile"] > 0]
     by_quintile = [
-        {"group": f"Q{q}", **summarise(group)}
-        for q, group in ranked.groupby("quintile")
+        {"group": f"Q{q}", **summarise(group)} for q, group in ranked.groupby("quintile")
     ]
     families = frame[frame["has_young_child"]]
     by_quintile_with_children = [
         {"group": f"Q{q}", **summarise(group)}
         for q, group in families[families["quintile"] > 0].groupby("quintile")
     ]
+    # "Couple no children" survives the has_young_child filter for a handful of
+    # weighted households — an artefact of family type and child presence being
+    # recorded on different entities — and contributes 0.002m households and
+    # nothing to the gain. Reporting a row of zeroes invites the reader to
+    # wonder what it means, so it is dropped rather than shown.
     by_family_type = sorted(
         (
             {"group": name, **summarise(group)}
             for name, group in families.groupby("family_type")
+            if summarise(group)["total_gain_bn"] > 0
+        ),
+        key=lambda row: row["average_gain_gbp"],
+        reverse=True,
+    )
+    by_family_type_all = sorted(
+        (
+            {"group": name, **summarise(group)}
+            for name, group in frame.groupby("family_type")
+            if summarise(group)["total_gain_bn"] > 0
         ),
         key=lambda row: row["average_gain_gbp"],
         reverse=True,
@@ -240,6 +271,7 @@ def _household_effects(baseline_sim, reform_sim, year: int) -> dict:
         "by_income_quintile": by_quintile,
         "by_income_quintile_families_with_under_5s": by_quintile_with_children,
         "by_family_type_families_with_under_5s": by_family_type,
+        "by_family_type": by_family_type_all,
         "all_households": {"group": "All", **summarise(frame)},
         "families_with_under_5s": {"group": "Families with a child under 5", **summarise(families)},
     }
@@ -258,8 +290,7 @@ def _spending(sim, year: int) -> dict:
         "tax_free_childcare",
     ]
     out = {
-        program: round(float(sim.calculate(program, year).sum()) / 1e9, 4)
-        for program in programs
+        program: round(float(sim.calculate(program, year).sum()) / 1e9, 4) for program in programs
     }
     out["total_childcare_support_bn"] = round(sum(out.values()), 4)
     out["uc_childcare_element_maximum_bn"] = round(
@@ -272,7 +303,136 @@ def _spending(sim, year: int) -> dict:
     return out
 
 
-def _benchmark_comparison(sim, year: int) -> list[dict]:
+def _baseline_programmes(sim, year: int) -> list[dict]:
+    """Each childcare programme's modelled baseline against its published figure.
+
+    Spending and caseload side by side, because the two answer different
+    questions: whether the model pays the right amount, and whether it covers
+    the right children. Tax-Free Childcare showed why that matters — it was
+    close on caseload while paying nearly double, so a caseload-only check
+    would have passed it.
+
+    Every official figure predates the costed years, and the periods differ by
+    programme. The ratios are indicative rather than a calibration check, and
+    each row carries the period it is drawn from.
+    """
+    rows = []
+    for programme in sources.BASELINE_PROGRAMMES:
+        compare_year = programme["comparison_year"]
+        # Costed-year values, for context: this is the baseline the reform is
+        # measured against.
+        costed_spending = round(
+            float(sim.calculate(programme["spending_variable"], year).sum()) / 1e9, 4
+        )
+        costed_caseload = round(float(sim.calculate(programme["caseload_variable"], year).sum()))
+        # Comparison-year values, evaluated at the year the published figure
+        # covers. Ratios are taken here and nowhere else.
+        model_spending = round(
+            float(sim.calculate(programme["spending_variable"], compare_year).sum()) / 1e9,
+            4,
+        )
+        model_caseload = round(
+            float(sim.calculate(programme["caseload_variable"], compare_year).sum())
+        )
+        official_spending = programme["official_spending_bn"]
+        official_caseload = programme["official_caseload"]
+        rows.append(
+            {
+                "programme": programme["programme"],
+                "label": programme["label"],
+                "costed_year": year,
+                "costed_year_spending_bn": costed_spending,
+                "costed_year_caseload": costed_caseload,
+                "comparison_year": compare_year,
+                "model_spending_bn": model_spending,
+                "official_spending_bn": official_spending,
+                "official_spending_label": programme["official_spending_label"],
+                "spending_ratio": (
+                    round(model_spending / official_spending, 3) if official_spending else None
+                ),
+                "model_caseload": model_caseload,
+                "official_caseload": official_caseload,
+                "official_caseload_label": programme["official_caseload_label"],
+                "caseload_ratio": (
+                    round(model_caseload / official_caseload, 3) if official_caseload else None
+                ),
+                "period": programme["period"],
+                "geography": programme["geography"],
+                "url": programme["url"],
+                "spending_url": programme.get("spending_url"),
+                "note": programme["note"],
+            }
+        )
+    return rows
+
+
+UC_CHILDCARE_COMPARISON_YEAR = 2024
+# The abolition counterfactual needs the parameter changed from before the
+# year it is measured at, so this runs wider than PARAMETER_YEARS.
+UC_COUNTERFACTUAL_YEARS = [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030]
+
+
+def _uc_childcare_fiscal_cost(dataset, baseline, year: int) -> dict:
+    """What the UC childcare element actually costs, by abolishing it.
+
+    `uc_childcare_element` is a component of the UC *maximum amount*, before
+    the earnings taper. Reporting its sum as spending gives £8.69bn against
+    DWP's £611m outturn — a 14x gap that is an artefact of comparing an
+    entitlement component with an outturn, not a model error.
+
+    The comparable quantity is the counterfactual: set the coverage rate to
+    zero and measure the change in government spending. Most of the face
+    value never reaches a household, because the taper would have withdrawn
+    it anyway.
+    """
+    abolished = _build(
+        dataset,
+        scenario=Scenario(
+            parameter_changes={
+                "gov.dwp.universal_credit.elements.childcare.coverage_rate": {
+                    parameter_year: 0 for parameter_year in UC_COUNTERFACTUAL_YEARS
+                }
+            }
+        ),
+    )
+    # Measured at the year DWP's outturn covers, not the costed year. A 2027
+    # figure against a 2024-25 outturn would measure three years of caseload
+    # growth as much as it measures the model.
+    compare = UC_CHILDCARE_COMPARISON_YEAR
+    uc_baseline = baseline.calculate("universal_credit", compare)
+    lost = uc_baseline - abolished.calculate("universal_credit", compare)
+    losing = lost > 1
+    receiving = round(float(losing.sum()))
+    return {
+        "comparison_year": compare,
+        "fiscal_cost_bn": round(
+            (
+                float(baseline.calculate("gov_spending", compare).sum())
+                - float(abolished.calculate("gov_spending", compare).sum())
+            )
+            / 1e9,
+            4,
+        ),
+        "maximum_amount_component_bn": round(
+            float(baseline.calculate("uc_childcare_element", compare).sum()) / 1e9, 4
+        ),
+        "benefit_units_receiving": receiving,
+        "average_monthly_award_gbp": (
+            round(float(lost[losing].sum()) / receiving / 12) if receiving else None
+        ),
+        "costed_year": year,
+        "costed_year_fiscal_cost_bn": round(
+            (
+                float(baseline.calculate("gov_spending", year).sum())
+                - float(abolished.calculate("gov_spending", year).sum())
+            )
+            / 1e9,
+            4,
+        ),
+    }
+
+
+def _benchmark_comparison(sim, year: int, measures: dict | None = None) -> list[dict]:
     """The model's baseline against published outturns.
 
     Nothing here feeds the estimate. Where the model and the outturn disagree
@@ -289,6 +449,11 @@ def _benchmark_comparison(sim, year: int) -> list[dict]:
             # wraparound and holiday childcare — a separate market the benchmark
             # excludes — and the devolved nations, and would overstate the gap.
             ours = _childcare_expenses_slice(sim, year, england_only=True, under_5=True) / 1e9
+        elif benchmark.get("model_measure"):
+            # Some rows cannot be measured by summing a variable. The UC
+            # childcare element is one: its variable is a maximum-amount
+            # component, so the comparable figure is what abolishing it costs.
+            ours = (measures or {})[benchmark["model_measure"]]["fiscal_cost_bn"]
         else:
             ours = (
                 sum(
@@ -300,6 +465,8 @@ def _benchmark_comparison(sim, year: int) -> list[dict]:
         row = {key: value for key, value in benchmark.items() if key != "model_variables"}
         row["model_bn"] = round(ours, 3)
         row["model_variables"] = ", ".join(benchmark["model_variables"])
+        if benchmark.get("model_measure"):
+            row["model_variables"] = "abolition counterfactual on gov_spending"
         row["ratio_model_to_official"] = (
             round(ours / benchmark["official_bn"], 2) if benchmark.get("official_bn") else None
         )
@@ -371,6 +538,8 @@ def run_year(dataset, year: int) -> dict:
     )
 
     baseline_spending = _spending(baseline, year)
+    print(f"  {year}: UC childcare element, abolition counterfactual ...")
+    uc_childcare = _uc_childcare_fiscal_cost(dataset, baseline, year)
     legs = {}
     for name, sim, label in [
         ("free_hours", free_hours, "15 free hours for all from 9 months"),
@@ -399,40 +568,89 @@ def run_year(dataset, year: int) -> dict:
     # work-incentive channel would be invisible for exactly the people who
     # might move. See childcare_cost_when_working.
     responding = responds_to_childcare(baseline, year)
-    prepared = prepare(
-        baseline,
-        combined,
-        year,
-        childcare_cost_when_working(
-            baseline, year, responding, _childcare_cost_per_person(baseline, year)
-        ),
-        childcare_cost_when_working(
-            combined, year, responding, _childcare_cost_per_person(combined, year)
-        ),
-        _benunit_variable_per_person(baseline, year, "tax_free_childcare"),
-        _benunit_variable_per_person(combined, year, "tax_free_childcare"),
-    )
-    responses = {}
-    for bound, scale in [
-        ("central", sources.ELASTICITY_SCALE_CENTRAL),
-        ("low", sources.ELASTICITY_SCALE_LOW),
-        ("high", sources.ELASTICITY_SCALE_HIGH),
-    ]:
-        responses[bound] = {
-            key: (round(value, 4) if isinstance(value, float) else value)
-            for key, value in participation_response(prepared, elasticity_scale=scale).items()
+
+    def _responses_against(reform_sim) -> dict:
+        """Participation response of one reform against the baseline.
+
+        Run per leg as well as for both together, because a reader choosing a
+        labour supply assumption expects the cost of the thing they are looking
+        at to move. The legs pull in opposite directions — free hours remove a
+        work condition, the subsidy cuts the price of working — so the response
+        to each is not the response to both, and neither is a share of it.
+        """
+        prepared = prepare(
+            baseline,
+            reform_sim,
+            year,
+            childcare_cost_when_working(
+                baseline, year, responding, _childcare_cost_per_person(baseline, year)
+            ),
+            childcare_cost_when_working(
+                reform_sim, year, responding, _childcare_cost_per_person(reform_sim, year)
+            ),
+            _benunit_variable_per_person(baseline, year, "tax_free_childcare"),
+            _benunit_variable_per_person(reform_sim, year, "tax_free_childcare"),
+        )
+        return {
+            bound: {
+                key: (round(value, 4) if isinstance(value, float) else value)
+                for key, value in participation_response(prepared, elasticity_scale=scale).items()
+            }
+            for bound, scale in [
+                ("central", sources.ELASTICITY_SCALE_CENTRAL),
+                ("low", sources.ELASTICITY_SCALE_LOW),
+                ("high", sources.ELASTICITY_SCALE_HIGH),
+            ]
         }
 
-    # Independent cross-check on the participation result, using the childcare
-    # price elasticity directly rather than the whole tax-benefit system.
-    price_check = {
-        bound: price_elasticity_response(baseline, combined, year, elasticity)
-        for bound, elasticity in [
-            ("central", sources.PRICE_ELASTICITY_CENTRAL),
-            ("low", sources.PRICE_ELASTICITY_LOW),
-            ("high", sources.PRICE_ELASTICITY_HIGH),
-        ]
+    responses_full = _responses_against(combined)
+    responses = {
+        bound: {
+            key: value
+            for key, value in response.items()
+            if key != "expected_net_income_change_per_person"
+        }
+        for bound, response in responses_full.items()
     }
+    # Combined is included: it is the default view, so leaving it out meant the
+    # household figures silently fell back to static on the selection most
+    # readers see first.
+    for name, sim in (
+        ("free_hours", free_hours),
+        ("subsidy", subsidy),
+        ("combined", combined),
+    ):
+        leg_responses = responses_full if name == "combined" else _responses_against(sim)
+        legs[name]["labour_supply"] = {
+            bound: {
+                key: value
+                for key, value in response.items()
+                if key != "expected_net_income_change_per_person"
+            }
+            for bound, response in leg_responses.items()
+        }
+        # The distribution on the same behavioural assumption as the cost.
+        legs[name]["household_effects_by_bound"] = {
+            bound: _household_effects(
+                baseline,
+                sim,
+                year,
+                response["expected_net_income_change_per_person"],
+            )
+            for bound, response in leg_responses.items()
+        }
+        legs[name]["dynamic_cost"] = {
+            bound: {
+                "static_cost_bn": legs[name]["static_cost_bn"],
+                "labour_supply_offset_bn": round(response["net_revenue_gbp"] / 1e9, 4),
+                "dynamic_cost_bn": round(
+                    legs[name]["static_cost_bn"] - response["net_revenue_gbp"] / 1e9, 3
+                ),
+                "net_entrants": round(response["net_entrants"]),
+                "net_ftes": round(response["net_ftes"]),
+            }
+            for bound, response in leg_responses.items()
+        }
 
     # Fee-base sensitivity. The subsidy leg is a flat share of childcare
     # spending, so its cost is linear in the spending base. The model's
@@ -443,7 +661,7 @@ def run_year(dataset, year: int) -> dict:
     # substituted for the model's own answer.
     fee_base = next(
         row
-        for row in _benchmark_comparison(baseline, year)
+        for row in _benchmark_comparison(baseline, year, {"uc_childcare_fiscal_cost": uc_childcare})
         if row.get("model_restriction") == "england_under_5"
     )
     # Only the under-5 slice has a benchmark, so only it is rebased. School-age
@@ -470,12 +688,14 @@ def run_year(dataset, year: int) -> dict:
             legs["free_hours"]["static_cost_bn"] + subsidy_only_cost * fee_base_ratio, 3
         ),
         "note": (
-            "Only the under-5 slice is rebased, on the England benchmark; the "
-            "school-age third of the base is left as modelled because nothing is "
-            "published to rebase it against. The CMA flags substantial uncertainty "
-            "in the sector-income figure this benchmark derives from, and its "
-            "direction of error widens rather than closes the gap. Treat this as a "
-            "lower bound on the subsidy leg, as the headline is an upper bound."
+            "Only the under-5 slice is rebased, on the England benchmark of "
+            "about £5.1bn of parent-paid fees; the school-age third of the base "
+            "is left as modelled because nothing is published to rebase it "
+            "against. The benchmark is gross of Tax-Free Childcare and the UC "
+            "childcare element, matching childcare_expenses, which both are "
+            "computed from. The CMA flags substantial uncertainty in the "
+            "sector-income figure this derives from. Treat this as a lower bound "
+            "on the subsidy leg, as the headline is an upper bound."
         ),
     }
 
@@ -497,10 +717,13 @@ def run_year(dataset, year: int) -> dict:
     return {
         "year": year,
         "baseline_spending": baseline_spending,
-        "benchmarks": _benchmark_comparison(baseline, year),
+        "baseline_programmes": _baseline_programmes(baseline, year),
+        "uc_childcare_fiscal_cost": uc_childcare,
+        "benchmarks": _benchmark_comparison(
+            baseline, year, {"uc_childcare_fiscal_cost": uc_childcare}
+        ),
         "legs": legs,
         "labour_supply": responses,
-        "price_elasticity_cross_check": price_check,
         "fee_base_sensitivity": fee_base_sensitivity,
         "dynamic_cost": dynamic,
         "model_parameters": _model_parameters(baseline, year),

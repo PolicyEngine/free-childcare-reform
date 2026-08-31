@@ -1,0 +1,46 @@
+name: Pull request
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install (logic tests only; the pipeline needs the gated dataset)
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check src tests
+      - name: Test
+        run: pytest -q
+
+  dashboard-build:
+    name: Dashboard build and site-shell check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install deps
+        working-directory: dashboard
+        run: bun install --frozen-lockfile
+      - name: Build
+        working-directory: dashboard
+        run: bun run build
+      - name: Assert the page shell is in the built HTML
+        working-directory: dashboard
+        run: |
+          html=.next/server/app/index.html
+          # The page is the analysis and nothing else: no site nav, no brand
+          # bar, no footer. Only the title and intro are server-rendered — the
+          # tabs mount once the results JSON loads — so those are what a
+          # static check can assert. A broken layout fails here.
+          for needle in "Childcare reform costing" "75% subsidy of childcare costs"; do
+            grep -qF -- "$needle" "$html" || { echo "MISSING from built HTML: $needle"; exit 1; }
+          done
+          echo "Title and tabs present."

@@ -62,3 +62,10 @@ export function formatCount(value) {
   }
   return `${(num / 1e3).toFixed(1)}k`;
 }
+
+// UK fiscal years run April to April, so the model's 2027 is 2027-28. Every
+// year shown to a reader goes through this.
+export function formatFiscalYear(year) {
+  const start = Number(year);
+  return `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
+}

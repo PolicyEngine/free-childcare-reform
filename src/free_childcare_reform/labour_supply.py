@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from microdf import MicroSeries
 from policyengine_uk.dynamics.participation import calculate_participation_elasticities
 
 from . import sources
@@ -91,14 +92,17 @@ def _hourly_wage(sim, year: int):
 
 
 def _weighted_median(values: np.ndarray, weights: np.ndarray) -> float:
+    """Median of a weighted sample, via microdf rather than by hand.
+
+    microdf is what policyengine-uk returns from ``calculate``; using it here
+    keeps every weighted statistic in this file on the same implementation
+    rather than a local reimplementation that could drift from it.
+    """
     if not len(values):
         return 0.0
-    order = np.argsort(values)
-    values, weights = values[order], weights[order]
-    cumulative = np.cumsum(weights)
-    if cumulative[-1] <= 0:
+    if float(np.sum(weights)) <= 0:
         return 0.0
-    return float(values[np.searchsorted(cumulative, cumulative[-1] / 2)])
+    return float(MicroSeries(values, weights=weights).median())
 
 
 def impute_entrant_earnings(
@@ -136,12 +140,8 @@ def impute_entrant_earnings(
     is floored at the model's own minimum wage.
     """
     employment_income, wage, working = _hourly_wage(sim, year)
-    weights = np.asarray(
-        sim.calculate("household_weight", year, map_to="person").values, float
-    )
-    youngest = np.asarray(
-        sim.calculate("youngest_child_age", year, map_to="person").values, float
-    )
+    weights = np.asarray(sim.calculate("household_weight", year, map_to="person").values, float)
+    youngest = np.asarray(sim.calculate("youngest_child_age", year, map_to="person").values, float)
     adult = np.asarray(sim.calculate("adult_index", year), float) > 0
     minimum_wage = np.asarray(sim.calculate("minimum_wage", year).values, float)
 
@@ -153,9 +153,7 @@ def impute_entrant_earnings(
     for age in np.unique(youngest[entrants & np.isfinite(youngest)]):
         band = youngest == age
         donors = band & donors_overall
-        median_wage = (
-            _weighted_median(wage[donors], weights[donors]) if donors.any() else fallback
-        )
+        median_wage = _weighted_median(wage[donors], weights[donors]) if donors.any() else fallback
         target = band & entrants
         imputed[target] = np.maximum(median_wage, minimum_wage[target])
     remaining = entrants & (imputed == 0)
@@ -180,9 +178,7 @@ def potential_earnings_quintile(sim, year: int, entrant_earnings: np.ndarray) ->
     """
     employment_income = np.asarray(sim.calculate("employment_income", year), float)
     adult = np.asarray(sim.calculate("adult_index", year), float) > 0
-    weights = np.asarray(
-        sim.calculate("household_weight", year, map_to="person").values, float
-    )
+    weights = np.asarray(sim.calculate("household_weight", year, map_to="person").values, float)
     potential = np.where(employment_income > 0, employment_income, entrant_earnings)
 
     quintile = np.ones(len(potential), dtype=int)
@@ -272,12 +268,18 @@ def responds_to_childcare(sim, year: int) -> np.ndarray:
     The reform's band runs from 9 months to school age. ``youngest_child_age``
     is whole years, so a benefit unit whose youngest child is under 1 is
     treated as having a child below the band and is excluded.
+
+    That is conservative rather than exact. The 9-to-12-month cohort *is*
+    eligible under the reform and is excluded here with the under-9-months,
+    because whole-year ages cannot separate them. Including the whole age-0
+    group instead would add about 780 net entrants to the central 2027-28
+    response — roughly 14% of it — while also sweeping in families whose
+    youngest child is too young to qualify. The response is therefore a floor
+    on this margin as well as on the intensive one.
     """
     if not sources.RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE:
         return np.ones(len(np.asarray(sim.calculate("age", year))), bool)
-    youngest = np.asarray(
-        sim.calculate("youngest_child_age", year, map_to="person").values, float
-    )
+    youngest = np.asarray(sim.calculate("youngest_child_age", year, map_to="person").values, float)
     return (youngest >= 1) & (youngest <= 4)
 
 
@@ -314,15 +316,12 @@ def _net_gain_to_work(
     """
     frame = _gain_to_work(sim, year, entrant_earnings, count_adults)
     frame["childcare_cost_when_working"] = childcare_cost_when_working
-    frame["in_work_income_net_of_childcare"] = (
-        frame["in_work_income"] - childcare_cost_when_working
-    )
+    frame["in_work_income_net_of_childcare"] = frame["in_work_income"] - childcare_cost_when_working
     frame["out_of_work_income_net_of_childcare"] = (
         frame["out_of_work_income"] - cost_contingent_support
     )
     frame["gain_to_work"] = (
-        frame["in_work_income_net_of_childcare"]
-        - frame["out_of_work_income_net_of_childcare"]
+        frame["in_work_income_net_of_childcare"] - frame["out_of_work_income_net_of_childcare"]
     )
     return frame
 
@@ -374,9 +373,9 @@ def prepare(
     # not pay in the baseline there is no proportional change to scale.
     gtw_pct_change = np.zeros_like(gtw_baseline)
     positive = gtw_baseline > 0
-    gtw_pct_change[positive] = (
-        gtw_reform[positive] - gtw_baseline[positive]
-    ) / gtw_baseline[positive]
+    gtw_pct_change[positive] = (gtw_reform[positive] - gtw_baseline[positive]) / gtw_baseline[
+        positive
+    ]
 
     elasticity_wrt_income = calculate_participation_elasticities(
         baseline_sim, potential_earnings_quintile(baseline_sim, year, entrant_earnings)
@@ -389,9 +388,7 @@ def prepare(
     out_of_work = baseline["out_of_work_income"].to_numpy()
     replacement_rate = np.zeros_like(in_work)
     working_positive = in_work > 0
-    replacement_rate[working_positive] = (
-        out_of_work[working_positive] / in_work[working_positive]
-    )
+    replacement_rate[working_positive] = out_of_work[working_positive] / in_work[working_positive]
     replacement_rate = np.clip(replacement_rate, 0, 1)
     elasticity_wrt_gain_to_work = elasticity_wrt_income * (1 - replacement_rate)
 
@@ -410,9 +407,7 @@ def prepare(
     # Insurance paid, plus benefits withdrawn. Measured on the reform's
     # tax-benefit system, so a mover's newly-won childcare entitlements are
     # netted off the gain rather than double-counted.
-    reform_gain = (
-        reform["in_work_income"].to_numpy() - reform["out_of_work_income"].to_numpy()
-    )
+    reform_gain = reform["in_work_income"].to_numpy() - reform["out_of_work_income"].to_numpy()
 
     return {
         "gtw_pct_change": gtw_pct_change,
@@ -423,6 +418,7 @@ def prepare(
         "employment_income": employment_income,
         "imputed_wages": imputed_wages,
         "reform_gain": reform_gain,
+        "gain_to_work_reform": gtw_reform,
         "weights": weights,
     }
 
@@ -461,25 +457,34 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     # negative change leaves with its magnitude.
     entry_probability = np.where(currently_not_working, np.maximum(participation_change, 0), 0)
     exit_probability = np.where(currently_working, np.maximum(-participation_change, 0), 0)
-    entrants = float((entry_probability * weights).sum())
-    leavers = float((exit_probability * weights).sum())
+    entrants = float(MicroSeries(entry_probability, weights=weights).sum())
+    leavers = float(MicroSeries(exit_probability, weights=weights).sum())
     net_entrants = entrants - leavers
 
-    earnings_gained = float((entry_probability * imputed_wages * weights).sum())
-    earnings_lost = float((exit_probability * employment_income * weights).sum())
+    earnings_gained = float(MicroSeries(entry_probability * imputed_wages, weights=weights).sum())
+    earnings_lost = float(MicroSeries(exit_probability * employment_income, weights=weights).sum())
     net_earnings = earnings_gained - earnings_lost
 
     ftes = net_entrants * (HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS)
 
     revenue_from_entrants = float(
-        (entry_probability * (imputed_wages - reform_gain) * weights).sum()
+        MicroSeries(entry_probability * (imputed_wages - reform_gain), weights=weights).sum()
     )
     revenue_lost_to_leavers = float(
-        (exit_probability * (employment_income - reform_gain) * weights).sum()
+        MicroSeries(exit_probability * (employment_income - reform_gain), weights=weights).sum()
     )
     net_revenue = revenue_from_entrants - revenue_lost_to_leavers
 
+    # The same response at person level, so it can be allocated to households.
+    # Entering work raises household net income by the gain to work; leaving
+    # loses it. Expected values, so a person contributes their probability
+    # times that gain rather than a drawn outcome.
+    expected_net_income_change = (entry_probability - exit_probability) * prepared[
+        "gain_to_work_reform"
+    ]
+
     return {
+        "expected_net_income_change_per_person": expected_net_income_change,
         "entrants": entrants,
         "leavers": leavers,
         "net_entrants": net_entrants,
@@ -491,82 +496,12 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
         "revenue_lost_to_leavers_gbp": revenue_lost_to_leavers,
         "net_revenue_gbp": net_revenue,
         "elasticity_scale": elasticity_scale,
-        "responding_adults_m": float(weights[eligible].sum()) / 1e6,
+        "responding_adults_m": float(MicroSeries(eligible, weights=weights).sum()) / 1e6,
         "mean_gain_to_work_change_pct": float(
-            np.average(gtw_pct_change[eligible], weights=weights[eligible])
+            MicroSeries(gtw_pct_change[eligible], weights=weights[eligible]).mean()
         )
-        if weights[eligible].sum()
+        if float(np.sum(weights[eligible]))
         else 0.0,
-    }
-
-
-def price_elasticity_response(
-    baseline_sim,
-    reform_sim,
-    year: int,
-    price_elasticity: float,
-    count_adults: int = 2,
-) -> dict:
-    """Independent cross-check using the childcare price elasticity directly.
-
-    The gain-to-work model above works through the whole tax-benefit system.
-    This is the literature's own arithmetic instead: apply a childcare price
-    elasticity of maternal employment to the proportional fall in the price of
-    the childcare that working requires, scaled by additionality.
-
-    The two are not independent evidence — the elasticity bounds on the
-    gain-to-work model are set from the same literature — but they are
-    independent *arithmetic*, and they answer different questions. The
-    gain-to-work model captures that the reform removes work conditions from
-    childcare support, which cuts work incentives. This one sees only the price
-    of care and so can only be positive. Reporting both bounds the answer.
-
-    The price change is scaled by additionality because a free hour that
-    displaces an hour the family was already buying changes what they pay, not
-    whether they can work. Brewer et al. put additionality at about 29%.
-    """
-    responding = responds_to_childcare(baseline_sim, year) & ~_excluded(
-        baseline_sim, year, count_adults
-    )
-    employment_income = np.asarray(baseline_sim.calculate("employment_income", year), float)
-    gender = np.asarray(baseline_sim.calculate("gender", year)).astype(str)
-    weights = np.asarray(
-        baseline_sim.calculate("household_weight", year, map_to="person").values, float
-    )
-    # The literature's estimates are for maternal employment specifically.
-    mothers = responding & (gender == "FEMALE")
-    not_working_mothers = mothers & (employment_income == 0)
-
-    def net_price(sim) -> float:
-        """Aggregate childcare cost to families, net of cost-contingent support."""
-        expenses = float(sim.calculate("childcare_expenses", year).sum())
-        support = float(sim.calculate("tax_free_childcare", year).sum())
-        return expenses - support
-
-    baseline_price = net_price(baseline_sim)
-    reform_price = net_price(reform_sim)
-    price_change = (reform_price - baseline_price) / baseline_price if baseline_price else 0.0
-    effective_price_change = price_change * sources.FREE_HOURS_ADDITIONALITY
-
-    # Elasticity is negative and the price change is negative, so employment rises.
-    employment_change_pct = price_elasticity * effective_price_change
-    affected = float((not_working_mothers * weights).sum())
-
-    # The elasticity is defined on the employment *rate* of the affected group,
-    # so it applies to mothers in the band who are currently employed.
-    employed_in_band = float(((mothers & (employment_income > 0)) * weights).sum())
-    entrants = employed_in_band * employment_change_pct
-
-    return {
-        "price_elasticity": price_elasticity,
-        "net_childcare_price_change": round(price_change, 4),
-        "additionality": round(sources.FREE_HOURS_ADDITIONALITY, 4),
-        "effective_price_change": round(effective_price_change, 4),
-        "employment_change_pct": round(employment_change_pct, 4),
-        "mothers_in_band_employed_m": round(employed_in_band / 1e6, 3),
-        "mothers_in_band_not_working_m": round(affected / 1e6, 3),
-        "entrants": round(entrants),
-        "net_ftes": round(entrants * (HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS)),
     }
 
 
@@ -626,12 +561,8 @@ def childcare_cost_when_working(
     """
     employment_income = np.asarray(sim.calculate("employment_income", year), float)
     hours = np.asarray(sim.calculate("hours_worked", year).values, float)
-    youngest = np.asarray(
-        sim.calculate("youngest_child_age", year, map_to="person").values, float
-    )
-    weights = np.asarray(
-        sim.calculate("household_weight", year, map_to="person").values, float
-    )
+    youngest = np.asarray(sim.calculate("youngest_child_age", year, map_to="person").values, float)
+    weights = np.asarray(sim.calculate("household_weight", year, map_to="person").values, float)
     working = employment_income > 0
 
     imputed = np.zeros_like(actual_cost)
@@ -642,8 +573,8 @@ def childcare_cost_when_working(
         if not donors.any() or not entrants.any():
             continue
         donor_weight = weights[donors]
-        mean_cost = float(np.average(actual_cost[donors], weights=donor_weight))
-        mean_hours = float(np.average(hours[donors], weights=donor_weight)) / 52
+        mean_cost = float(MicroSeries(actual_cost[donors], weights=donor_weight).mean())
+        mean_hours = float(MicroSeries(hours[donors], weights=donor_weight).mean()) / 52
         if mean_hours <= 0:
             continue
         imputed[entrants] = mean_cost * (HOURS_FOR_NEW_ENTRANTS / mean_hours)

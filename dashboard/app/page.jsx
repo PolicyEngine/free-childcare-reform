@@ -2,21 +2,24 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import BenchmarkTab from "../src/components/BenchmarkTab";
+import { formatFiscalYear } from "../src/lib/formatters";
+import BaselineTab from "../src/components/BaselineTab";
 import CostTab from "../src/components/CostTab";
 import DistributionTab from "../src/components/DistributionTab";
 import MethodologyTab from "../src/components/MethodologyTab";
 
 const TAB_OPTIONS = [
-  { id: "cost", label: "Budget impact" },
-  { id: "distribution", label: "Household effects" },
-  { id: "benchmarks", label: "Benchmarks" },
+  { id: "reform", label: "Reform" },
+  { id: "baseline", label: "Baseline" },
   { id: "methodology", label: "Methodology" },
 ];
 
 function getInitialTab(tabParam) {
-  return TAB_OPTIONS.some((tab) => tab.id === tabParam) ? tabParam : "cost";
+  return TAB_OPTIONS.some((tab) => tab.id === tabParam) ? tabParam : "reform";
 }
+
+const SELECT_CLASS =
+  "h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]";
 
 function TabLink({ onSelect, children }) {
   return (
@@ -36,6 +39,10 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState(() => getInitialTab(searchParams.get("tab")));
   const [data, setData] = useState(null);
   const [year, setYear] = useState(null);
+  // Sub-tabs within "The reform": what it costs, and who gains.
+  const [reformView, setReformView] = useState("budget");
+  // Shared by both reform views, so the controls sit above the switcher.
+  const [bound, setBound] = useState("central");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -68,14 +75,14 @@ function Dashboard() {
 
   function handleTabChange(tab) {
     setActiveTab(tab);
-    router.replace(tab === "cost" ? "/" : `/?tab=${tab}`, { scroll: false });
+    router.replace(tab === "reform" ? "/" : `/?tab=${tab}`, { scroll: false });
   }
 
   return (
     <div className="app-shell min-h-screen">
       <header className="title-row">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4 md:px-8">
-          <h1>Free childcare reform</h1>
+          <h1>Costing a two-part childcare reform</h1>
         </div>
       </header>
 
@@ -86,22 +93,19 @@ function Dashboard() {
             PolicyEngine
           </a>{" "}
           UK&apos;s microsimulation to cost a two-part childcare reform for{" "}
-          <strong>2027, 2028 and 2029</strong>. The first part replaces today&apos;s split —
-          30 free hours for working parents earning under £100,000, 15 hours for 3-4 year
-          olds — with <strong>15 hours free for every child from 9 months to school age</strong>,
-          plus a further 15 hours where parents work and earn under £100,000. The second
-          replaces Tax-Free Childcare with a <strong>75% subsidy of childcare costs for
-          all</strong>, keeping the Universal Credit childcare element. The{" "}
-          <TabLink onSelect={() => handleTabChange("cost")}>Budget impact</TabLink> tab
-          reports the cost both statically and with an extensive-margin labour supply
-          response. The{" "}
-          <TabLink onSelect={() => handleTabChange("distribution")}>Household effects</TabLink>{" "}
-          tab shows who gains, by income quintile. The{" "}
-          <TabLink onSelect={() => handleTabChange("benchmarks")}>Benchmarks</TabLink> tab
-          checks every baseline against published outturns and comparable costings, and is
-          the place to start if you want to know how much weight the headline numbers bear.
-          The{" "}
-          <TabLink onSelect={() => handleTabChange("methodology")}>Methodology</TabLink> tab
+          <strong>2027-28 to 2029-30</strong>. The first replaces today&apos;s split — 30
+          free hours for working parents earning under £100,000, 15 hours for 3-4 year
+          olds — with <strong>15 hours free for every child</strong> from 9 months to
+          school age, plus a further 15 hours where parents work and earn under £100,000.
+          The second replaces Tax-Free Childcare with a{" "}
+          <strong>75% subsidy of childcare costs for all</strong>, keeping the Universal
+          Credit childcare element. The{" "}
+          <TabLink onSelect={() => handleTabChange("reform")}>Reform</TabLink> tab reports
+          what each leg costs and who gains;{" "}
+          <TabLink onSelect={() => handleTabChange("baseline")}>Baseline</TabLink> sets the
+          modelled baseline against published figures, and is the place to judge how much
+          weight the headline bears;{" "}
+          <TabLink onSelect={() => handleTabChange("methodology")}>Methodology</TabLink>{" "}
           explains how each result is computed, with a source for every assumption.
         </p>
 
@@ -130,13 +134,80 @@ function Dashboard() {
 
         {!loading && !error && data && year && (
           <>
-            {activeTab === "cost" && (
-              <CostTab data={data} year={year} onYearChange={setYear} />
+            {activeTab === "reform" && (
+              <div>
+                <div className="mb-5 flex flex-wrap gap-3">
+                  <label className="w-36 shrink-0">
+                    <span className="mb-1 block text-xs font-medium text-slate-500">
+                      Year
+                    </span>
+                    <select
+                      value={year}
+                      onChange={(event) => setYear(Number(event.target.value))}
+                      className={SELECT_CLASS}
+                    >
+                      {data.years.map((y) => (
+                        <option key={y} value={y}>
+                          {formatFiscalYear(y)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="w-64 shrink-0">
+                    <span className="mb-1 block text-xs font-medium text-slate-500">
+                      Labour supply assumption
+                    </span>
+                    <select
+                      value={bound}
+                      onChange={(event) => setBound(event.target.value)}
+                      className={SELECT_CLASS}
+                    >
+                      <option value="none">None — static only</option>
+                      <option value="central">
+                        Central (elasticity = {(data.assumptions || {}).price_elasticity_central})
+                      </option>
+                      <option value="low">
+                        Low (elasticity = {(data.assumptions || {}).price_elasticity_low})
+                      </option>
+                      <option value="high">
+                        High (elasticity = {(data.assumptions || {}).price_elasticity_high})
+                      </option>
+                    </select>
+                  </label>
+                  <div className="min-w-0">
+                    <span className="mb-1 block text-xs font-medium text-slate-500">
+                      View
+                    </span>
+                    <div className="flex h-10 w-fit gap-1 rounded-lg bg-slate-100 p-1">
+                      {[
+                        { id: "budget", label: "Budget impact" },
+                        { id: "households", label: "Household effects" },
+                      ].map((view) => (
+                        <button
+                          key={view.id}
+                          type="button"
+                          onClick={() => setReformView(view.id)}
+                          className={`rounded-md px-3 text-sm font-semibold transition-colors ${
+                            reformView === view.id
+                              ? "bg-white text-slate-900 shadow-sm"
+                              : "text-slate-500 hover:text-slate-700"
+                          }`}
+                        >
+                          {view.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {reformView === "budget" ? (
+                  <CostTab data={data} year={year} bound={bound} />
+                ) : (
+                  <DistributionTab data={data} year={year} bound={bound} />
+                )}
+              </div>
             )}
-            {activeTab === "distribution" && (
-              <DistributionTab data={data} year={year} onYearChange={setYear} />
-            )}
-            {activeTab === "benchmarks" && <BenchmarkTab data={data} year={year} />}
+            {activeTab === "baseline" && <BaselineTab data={data} year={year} />}
             {activeTab === "methodology" && <MethodologyTab data={data} year={year} />}
           </>
         )}
@@ -152,10 +223,10 @@ function Dashboard() {
               PolicyEngine/free-childcare-reform
             </a>
             . Built with{" "}
-            <a href="https://pypi.org/project/policyengine-uk/" target="_blank" rel="noreferrer">
-              policyengine-uk
+            <a href="https://pypi.org/project/policyengine/" target="_blank" rel="noreferrer">
+              policyengine.py
             </a>{" "}
-            v{data?.policyengine_uk_version} on the Enhanced FRS 2024-25.
+            v{data?.policyengine_version} on the Enhanced FRS 2024-25.
           </p>
         </footer>
       </main>
