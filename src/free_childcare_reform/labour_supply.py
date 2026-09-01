@@ -468,6 +468,9 @@ def prepare(
     weights = np.asarray(
         baseline_sim.calculate("household_weight", year, map_to="person").values, float
     )
+    country = np.asarray(baseline_sim.calculate("country", year, map_to="person").values).astype(
+        str
+    )
     imputed_wages = entrant_earnings
     # For someone moving into work the exchequer gains their gross earnings less
     # the rise in their household's net income — income tax and National
@@ -486,6 +489,7 @@ def prepare(
         "imputed_wages": imputed_wages,
         "reform_gain": reform_gain,
         "weekly_hours_worked": weekly_hours_worked,
+        "country": country,
         "weights": weights,
     }
 
@@ -565,8 +569,34 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     # the fiscal cost on two different definitions of one number.
     expected_net_income_change = (entry_probability - exit_probability) * reform_gain
 
+    # The same aggregates restricted to each country, so one control can
+    # govern the whole view. The free-hours leg is England-only by
+    # construction, so its non-England figures are zero rather than omitted.
+    country = prepared["country"]
+    by_country = {}
+    for name in sorted(set(country)):
+        mask = country == name
+        entered = float(MicroSeries(entry_probability[mask], weights=weights[mask]).sum())
+        left = float(MicroSeries(exit_probability[mask], weights=weights[mask]).sum())
+        by_country[name.lower()] = {
+            "entrants": round(entered, 4),
+            "leavers": round(left, 4),
+            "net_entrants": round(entered - left, 4),
+            "net_revenue_gbp": round(
+                float(
+                    MicroSeries(
+                        entry_probability[mask] * (imputed_wages[mask] - reform_gain[mask])
+                        - exit_probability[mask] * (employment_income[mask] - reform_gain[mask]),
+                        weights=weights[mask],
+                    ).sum()
+                ),
+                4,
+            ),
+        }
+
     return {
         "expected_net_income_change_per_person": expected_net_income_change,
+        "by_country": by_country,
         "entrants": entrants,
         "leavers": leavers,
         "net_entrants": net_entrants,

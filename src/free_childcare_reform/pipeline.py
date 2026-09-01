@@ -142,7 +142,11 @@ def _quintile(sim, year: int, entity: str = "household") -> np.ndarray:
 
 
 def _household_effects(
-    baseline_sim, reform_sim, year: int, extra_person_income: np.ndarray | None = None
+    baseline_sim,
+    reform_sim,
+    year: int,
+    extra_person_income: np.ndarray | None = None,
+    country: str | None = None,
 ) -> dict:
     """Change in household net income, by income quintile and by family type.
 
@@ -209,8 +213,14 @@ def _household_effects(
             "quintile": quintile,
             "family_type": [_label(f) for f in family_type],
             "has_young_child": has_young_child,
+            "country": np.asarray(baseline_sim.calculate("country", year).values).astype(str),
         }
     )
+    if country is not None:
+        # Quintiles are still the UK ranking: a country's own quintiles would
+        # not be comparable with the UK view, and the reform does not change
+        # where a household sits in the national distribution.
+        frame = frame[frame["country"] == country.upper()]
 
     def summarise(group: pd.DataFrame) -> dict:
         weight = group["weight"].sum()
@@ -279,6 +289,42 @@ def _household_effects(
         "all_households": {"group": "All", **summarise(frame)},
         "families_with_under_5s": {"group": "Families with a child under 5", **summarise(families)},
     }
+
+
+CHILDCARE_PROGRAMMES = (
+    "universal_childcare_entitlement",
+    "extended_childcare_entitlement",
+    "targeted_childcare_entitlement",
+    "tax_free_childcare",
+)
+
+
+def _cost_by_country(baseline, reform_sim, year: int) -> dict:
+    """A leg's cost split by country, on the childcare programmes it moves.
+
+    The free entitlements are England-only in law and in the model, so their
+    non-England figures are zero by construction rather than by omission.
+    Tax-Free Childcare and its replacement are UK-wide, so that part really
+    does split. Reported for every leg so one control can govern the whole
+    view.
+    """
+    country = np.asarray(baseline.calculate("country", year, map_to="person").values)
+    weights = np.asarray(
+        baseline.calculate("household_weight", year, map_to="person").values, float
+    )
+    difference = np.zeros(len(country), float)
+    for programme in CHILDCARE_PROGRAMMES:
+        before = np.asarray(baseline.calculate(programme, year, map_to="person").values, float)
+        after = np.asarray(reform_sim.calculate(programme, year, map_to="person").values, float)
+        difference += after - before
+    out = {}
+    for name in sorted({str(value) for value in country}):
+        mask = country == name
+        out[name.lower()] = round(
+            float(MicroSeries(difference[mask], weights=weights[mask]).sum()) / 1e9, 4
+        )
+    out["uk"] = round(sum(out.values()), 4)
+    return out
 
 
 def _spending(sim, year: int) -> dict:
@@ -689,7 +735,9 @@ def run_year(dataset, year: int) -> dict:
             "static_cost_bn": round(
                 spending["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 3
             ),
+            "static_cost_by_country_bn": _cost_by_country(baseline, sim, year),
             "household_effects": _household_effects(baseline, sim, year),
+            "household_effects_england": _household_effects(baseline, sim, year, country="england"),
         }
 
     print(f"  {year}: extensive-margin labour supply response ...")
@@ -770,6 +818,16 @@ def run_year(dataset, year: int) -> dict:
                 sim,
                 year,
                 response["expected_net_income_change_per_person"],
+            )
+            for bound, response in leg_responses.items()
+        }
+        legs[name]["household_effects_by_bound_england"] = {
+            bound: _household_effects(
+                baseline,
+                sim,
+                year,
+                response["expected_net_income_change_per_person"],
+                country="england",
             )
             for bound, response in leg_responses.items()
         }

@@ -156,3 +156,32 @@ def test_the_committed_results_were_generated_from_the_committed_source():
         "the committed results were generated from different source than is "
         "checked in — rerun the pipeline"
     )
+
+
+def test_every_output_can_be_read_for_england_alone(results):
+    """The area control governs the whole view, so every block must split.
+
+    Free hours is England-only in law and in the model, so its non-England
+    figures must be exactly zero — not missing, which would be
+    indistinguishable from a leg that was never split.
+    """
+    for year in results["years"]:
+        block = results["by_year"][str(year)]
+        for leg in ("free_hours", "subsidy", "combined"):
+            leg_block = block["legs"][leg]
+            by_country = leg_block["static_cost_by_country_bn"]
+            for area in ("uk", "england", "scotland", "wales", "northern_ireland"):
+                assert area in by_country, (year, leg, area)
+            assert "household_effects_england" in leg_block, (year, leg)
+            assert "household_effects_by_bound_england" in leg_block, (year, leg)
+
+        free_hours = block["legs"]["free_hours"]["static_cost_by_country_bn"]
+        for devolved in ("scotland", "wales", "northern_ireland"):
+            assert free_hours[devolved] == 0, (
+                f"{year}: free hours is England-only, so {devolved} must be zero"
+            )
+        assert free_hours["england"] == pytest.approx(free_hours["uk"])
+
+        for bound in ("low", "central", "high"):
+            by_country = block["labour_supply"][bound]["by_country"]
+            assert "england" in by_country, (year, bound)

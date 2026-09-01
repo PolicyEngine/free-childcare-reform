@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import {
   Bar,
   BarChart,
@@ -51,16 +49,25 @@ const LEG_LABELS = {
   subsidy: "75% subsidy replacing Tax-Free Childcare",
 };
 
-export default function CostTab({ data, year, bound }) {
-  const [subsidyArea, setSubsidyArea] = useState("uk");
+export default function CostTab({ data, year, bound, area }) {
+  const isEngland = area === "england";
+  const areaLabel = isEngland ? ", England" : ", UK";
   const result = data.by_year[String(year)];
   const legs = result.legs;
   const isStatic = bound === "none";
   const dynamic = isStatic ? null : result.dynamic_cost[bound];
-  const response = isStatic ? null : result.labour_supply[bound];
   // Each panel below describes one leg's channel, so it must show that leg's
   // own response rather than the response to both legs together.
-  const freeHoursResponse = isStatic ? null : legs.free_hours.labour_supply[bound];
+  const freeHoursShown = isStatic
+    ? null
+    : isEngland
+      ? legs.free_hours.labour_supply[bound].by_country.england
+      : legs.free_hours.labour_supply[bound];
+  const subsidyShown = isStatic
+    ? null
+    : isEngland
+      ? legs.subsidy.labour_supply[bound].by_country.england
+      : legs.subsidy.labour_supply[bound];
   const src = data.sources || {};
   const A = (source, text) =>
     source ? (
@@ -74,6 +81,21 @@ export default function CostTab({ data, year, bound }) {
   const assumptions = data.assumptions || {};
   const feeBase = result.fee_base_sensitivity;
   const byCountry = result.subsidy_by_country;
+  // One control governs every figure. England splits are static: a country's
+  // labour supply response is reported separately below rather than folded
+  // into a dynamic cost, because the offset is not apportioned by country in
+  // the dynamic-cost block.
+  const cost = (leg) => {
+    if (isEngland) return legs[leg].static_cost_by_country_bn.england;
+    return isStatic
+      ? legs[leg].static_cost_bn
+      : legs[leg].dynamic_cost[bound].dynamic_cost_bn;
+  };
+  const response = isStatic
+    ? null
+    : isEngland
+      ? result.labour_supply[bound].by_country.england
+      : result.labour_supply[bound];
 
   const yearRows = data.years.map((y) => ({
     year: formatFiscalYear(y),
@@ -116,11 +138,7 @@ export default function CostTab({ data, year, bound }) {
         <div className="grid gap-4 sm:grid-cols-3">
           <Stat
             label={`Free hours, England, ${formatFiscalYear(year)}`}
-            value={formatBn(
-              isStatic
-                ? legs.free_hours.static_cost_bn
-                : legs.free_hours.dynamic_cost[bound].dynamic_cost_bn,
-            )}
+            value={formatBn(cost("free_hours"))}
             sub={
               isStatic
                 ? "15 hours for every child from 9 months, plus 15 more where parents work and earn under £100,000."
@@ -128,40 +146,11 @@ export default function CostTab({ data, year, bound }) {
             }
           />
           <Stat
-            label={
-              <span className="flex flex-wrap items-center gap-2">
-                <span>75% subsidy, {formatFiscalYear(year)}</span>
-                <span className="flex gap-1 rounded-md bg-slate-100 p-0.5">
-                  {[
-                    { id: "uk", label: "UK" },
-                    { id: "england", label: "England" },
-                  ].map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => setSubsidyArea(option.id)}
-                      className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors ${
-                        subsidyArea === option.id
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </span>
-              </span>
-            }
-            value={formatBn(
-              subsidyArea === "england"
-                ? byCountry.england
-                : isStatic
-                  ? legs.subsidy.static_cost_bn
-                  : legs.subsidy.dynamic_cost[bound].dynamic_cost_bn,
-            )}
+            label={`75% subsidy${areaLabel}, ${formatFiscalYear(year)}`}
+            value={formatBn(cost("subsidy"))}
             sub={
-              subsidyArea === "england"
-                ? `England's share of the UK cost. Tax-Free Childcare is UK-wide, so this leg has a figure for either area; the rest is ${formatBn(byCountry.scotland)} Scotland, ${formatBn(byCountry.wales)} Wales and ${formatBn(byCountry.northern_ireland)} Northern Ireland. Static only — the labour supply response is not split by country.`
+              isEngland
+                ? `Tax-Free Childcare is UK-wide, so this leg splits: the rest is ${formatBn(byCountry.scotland)} Scotland, ${formatBn(byCountry.wales)} Wales and ${formatBn(byCountry.northern_ireland)} Northern Ireland.`
                 : isStatic
                   ? `Replacing Tax-Free Childcare. On the published fee base this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`
                   : `Static ${formatBn(legs.subsidy.static_cost_bn)}, plus ${formatSignedBn(-legs.subsidy.dynamic_cost[bound].labour_supply_offset_bn)} of labour supply on ${formatCount(legs.subsidy.dynamic_cost[bound].net_entrants)} net entrants. Cheaper childcare makes work pay, so this leg costs less.`
@@ -175,11 +164,13 @@ export default function CostTab({ data, year, bound }) {
             />
           ) : (
             <Stat
-              label="Labour supply, both legs together"
-              value={formatSignedBn(-dynamic.labour_supply_offset_bn)}
-              sub={`${dynamic.net_entrants >= 0 ? "+" : "−"}${formatCount(
-                Math.abs(dynamic.net_entrants),
-              )} net entrants among ${response.responding_adults_m.toFixed(1)}m eligible parents. The legs pull against each other — free hours remove a work condition, the subsidy cuts the price of working — so this is not their sum, and the net sign depends on which dominates. At ${(
+              label={`Labour supply, both legs together${areaLabel}`}
+              value={formatSignedBn(
+                isEngland ? -response.net_revenue_gbp / 1e9 : -dynamic.labour_supply_offset_bn,
+              )}
+              sub={`${(isEngland ? response.net_entrants : dynamic.net_entrants) >= 0 ? "+" : "−"}${formatCount(
+                Math.abs(isEngland ? response.net_entrants : dynamic.net_entrants),
+              )} net entrants${isEngland ? " in England" : ` among ${result.labour_supply[bound].responding_adults_m.toFixed(1)}m eligible parents`}. The legs pull against each other — free hours remove a work condition, the subsidy cuts the price of working — so this is not their sum, and the net sign depends on which dominates. At ${(
                 dynamic.offset_share_of_static_cost * 100
               ).toFixed(1)}% of the static cost, small on every assumption.`}
               footnote={
@@ -341,11 +332,11 @@ export default function CostTab({ data, year, bound }) {
                     </li>
                     <li>
                       On the free-hours leg alone:{" "}
-                      <strong>{formatCount(freeHoursResponse.entrants)}</strong> entrants
-                      against <strong>{formatCount(freeHoursResponse.leavers)}</strong>{" "}
+                      <strong>{formatCount(freeHoursShown.entrants)}</strong> entrants
+                      against <strong>{formatCount(freeHoursShown.leavers)}</strong>{" "}
                       leavers, a net revenue effect of{" "}
                       <strong>
-                        {formatSignedBn(freeHoursResponse.net_revenue_gbp / 1e9)}
+                        {formatSignedBn(freeHoursShown.net_revenue_gbp / 1e9)}
                       </strong>
                       .
                     </li>
@@ -365,7 +356,7 @@ export default function CostTab({ data, year, bound }) {
                     <li>
                       This is the channel that produces the subsidy leg&apos;s{" "}
                       <strong>
-                        {formatCount(result.legs.subsidy.dynamic_cost[bound].net_entrants)}
+                        {formatCount(subsidyShown.net_entrants)}
                       </strong>{" "}
                       net entrants.
                     </li>
