@@ -185,11 +185,12 @@ BENCHMARKS = [
     {
         "measure": "Tax-Free Childcare",
         "model_variables": ["tax_free_childcare"],
-        "official_bn": 0.5998,
-        "official_label": "HMRC £599.8m top-ups, 868,095 families, UK, 2025-26",
+        "official_bn": 0.6322,
+        "official_label": "HMRC £632.2m top-ups to 1,085,020 children, UK, 2024-25",
         "geography": "UK",
-        "period": "2025-26",
-        "kind": "Award gap",
+        "period": "2024-25",
+        "comparison_year": 2024,
+        "kind": "Like-for-like",
         "note": (
             "Model £0.625bn against HMRC's £632.2m at 2024 — 0.99x — on "
             "1,099,437 children against 1,085,020, 1.01x. The average award is "
@@ -346,15 +347,20 @@ COMPARABLE_COSTINGS = [
     {
         "proposal": "Nordic-style universal childcare, 40 hours, 6 months to school age",
         "source": "Women's Budget Group (De Henau)",
-        "date": "2020",
-        "cost_bn": "38-57 gross, 1.7-6.1 net",
+        "date": "2017 costing",
+        "cost_bn": "33-55 gross, 1.7-6.1 net",
         "geography": "UK",
         "note": (
             "A far larger offer — 40 hours a week, 48 weeks a year, from 6 "
             "months — cited only as an upper bound. The net range is small "
-            "because WBG puts tax and benefit recoupment at 89-95% of gross."
+            "because WBG puts tax and benefit recoupment at 89-95% of gross. "
+            "Figures are from the 2017 costing, which is the edition still "
+            "published: a 2020 Budget representation updated the gross range "
+            "to £38-57bn, but that document is no longer reachable, so the "
+            "gross and net figures here are taken from one source rather than "
+            "mixed across vintages."
         ),
-        "url": "https://wbg.org.uk/wp-content/uploads/2020/02/Budget-2020-Representation-WBG.pdf",
+        "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/",
     },
 ]
 

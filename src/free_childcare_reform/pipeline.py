@@ -532,11 +532,15 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
         ),
         "baseline_take_up_rate": round(float(claims.mean()), 4),
         "note": (
-            "Neither figure models new childcare use. The coded scope keeps "
-            "Tax-Free Childcare's take-up, qualifying-child, provider and "
-            "UK-connection rules and its exclusion of Universal Credit and "
-            "tax-credit families; it removes the work test and the £100,000 "
-            "cliff."
+            "Both figures are the subsidy leg on its own, against the "
+            "baseline fee base — not the combined run, where free hours "
+            "displace some paid care first. They are comparable with each "
+            "other and with the subsidy leg's static cost, and not with the "
+            "combined total. Neither models new childcare use. The coded "
+            "scope keeps Tax-Free Childcare's take-up, qualifying-child, "
+            "provider and UK-connection rules and its exclusion of Universal "
+            "Credit and tax-credit families; it removes the work test and the "
+            "£100,000 cliff."
         ),
     }
 
@@ -726,8 +730,11 @@ def run_year(dataset, year: int) -> dict:
             "against. The benchmark is gross of Tax-Free Childcare and the UC "
             "childcare element, matching childcare_expenses, which both are "
             "computed from. The CMA flags substantial uncertainty in the "
-            "sector-income figure this derives from. Treat this as a lower bound "
-            "on the subsidy leg, as the headline is an upper bound."
+            "sector-income figure this derives from, and the residual also "
+            "contains provider income that is not parent-paid fees. This is "
+            "one fixed-quantity accounting scenario, not a lower bound: "
+            "scenarios in the other direction, such as full take-up within the "
+            "coded scope, exceed the headline."
         ),
     }
 

@@ -74,11 +74,11 @@
     {
       "proposal": "Nordic-style universal childcare, 40 hours, 6 months to school age",
       "source": "Women's Budget Group (De Henau)",
-      "date": "2020",
-      "cost_bn": "38-57 gross, 1.7-6.1 net",
+      "date": "2017 costing",
+      "cost_bn": "33-55 gross, 1.7-6.1 net",
       "geography": "UK",
-      "note": "A far larger offer \u2014 40 hours a week, 48 weeks a year, from 6 months \u2014 cited only as an upper bound. The net range is small because WBG puts tax and benefit recoupment at 89-95% of gross.",
-      "url": "https://wbg.org.uk/wp-content/uploads/2020/02/Budget-2020-Representation-WBG.pdf"
+      "note": "A far larger offer \u2014 40 hours a week, 48 weeks a year, from 6 months \u2014 cited only as an upper bound. The net range is small because WBG puts tax and benefit recoupment at 89-95% of gross. Figures are from the 2017 costing, which is the edition still published: a 2020 Budget representation updated the gross range to \u00a338-57bn, but that document is no longer reachable, so the gross and net figures here are taken from one source rather than mixed across vintages.",
+      "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/"
     }
   ],
   "sources": {
@@ -226,7 +226,7 @@
         "as_coded_bn": 4.8389,
         "at_full_take_up_bn": 5.2783,
         "baseline_take_up_rate": 0.8789,
-        "note": "Neither figure models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
+        "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
       },
       "uc_childcare_fiscal_cost": {
         "comparison_year": 2024,
@@ -264,16 +264,17 @@
         },
         {
           "measure": "Tax-Free Childcare",
-          "official_bn": 0.5998,
-          "official_label": "HMRC \u00a3599.8m top-ups, 868,095 families, UK, 2025-26",
+          "official_bn": 0.6322,
+          "official_label": "HMRC \u00a3632.2m top-ups to 1,085,020 children, UK, 2024-25",
           "geography": "UK",
-          "period": "2025-26",
-          "kind": "Award gap",
+          "period": "2024-25",
+          "comparison_year": 2024,
+          "kind": "Like-for-like",
           "note": "Model \u00a30.625bn against HMRC's \u00a3632.2m at 2024 \u2014 0.99x \u2014 on 1,099,437 children against 1,085,020, 1.01x. The average award is \u00a3569 against \u00a3583. That is the like-for-like comparison: same year, and children against children.\n\nAn earlier version of this file reported a 1.28x caseload gap and a 0.87x award, which was wrong on both counts. It set the model's 2027 benefit units against HMRC's 2025-26 *families*, mixing the entity and the year. HMRC publishes both counts for the same outturn \u2014 868,095 families and 1,085,020 children \u2014 so a model benefit-unit count divided by a family count is not a caseload ratio, and comparing across three years adds the caseload growth on top.\n\nThe gap was 2.06x before the routed-spend correction in policyengine-uk-data #473 and the calibration targets in #472 and #474, all of which ship in Enhanced FRS 1.57.2. The release check now measures 0.989x on spending and 1.013x on child caseload.",
           "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-june-2025",
           "model_bn": 0.667,
           "model_variables": "tax_free_childcare",
-          "ratio_model_to_official": 1.11
+          "ratio_model_to_official": 1.06
         },
         {
           "measure": "Universal Credit childcare element",
@@ -2698,7 +2699,7 @@
         "ratio": 0.865,
         "subsidy_cost_bn": 4.185,
         "combined_cost_bn": 6.007,
-        "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
+        "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from, and the residual also contains provider income that is not parent-paid fees. This is one fixed-quantity accounting scenario, not a lower bound: scenarios in the other direction, such as full take-up within the coded scope, exceed the headline."
       },
       "dynamic_cost": {
         "central": {
@@ -2846,7 +2847,7 @@
         "as_coded_bn": 4.9561,
         "at_full_take_up_bn": 5.406,
         "baseline_take_up_rate": 0.8789,
-        "note": "Neither figure models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
+        "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
       },
       "uc_childcare_fiscal_cost": {
         "comparison_year": 2024,
@@ -2884,16 +2885,17 @@
         },
         {
           "measure": "Tax-Free Childcare",
-          "official_bn": 0.5998,
-          "official_label": "HMRC \u00a3599.8m top-ups, 868,095 families, UK, 2025-26",
+          "official_bn": 0.6322,
+          "official_label": "HMRC \u00a3632.2m top-ups to 1,085,020 children, UK, 2024-25",
           "geography": "UK",
-          "period": "2025-26",
-          "kind": "Award gap",
+          "period": "2024-25",
+          "comparison_year": 2024,
+          "kind": "Like-for-like",
           "note": "Model \u00a30.625bn against HMRC's \u00a3632.2m at 2024 \u2014 0.99x \u2014 on 1,099,437 children against 1,085,020, 1.01x. The average award is \u00a3569 against \u00a3583. That is the like-for-like comparison: same year, and children against children.\n\nAn earlier version of this file reported a 1.28x caseload gap and a 0.87x award, which was wrong on both counts. It set the model's 2027 benefit units against HMRC's 2025-26 *families*, mixing the entity and the year. HMRC publishes both counts for the same outturn \u2014 868,095 families and 1,085,020 children \u2014 so a model benefit-unit count divided by a family count is not a caseload ratio, and comparing across three years adds the caseload growth on top.\n\nThe gap was 2.06x before the routed-spend correction in policyengine-uk-data #473 and the calibration targets in #472 and #474, all of which ship in Enhanced FRS 1.57.2. The release check now measures 0.989x on spending and 1.013x on child caseload.",
           "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-june-2025",
           "model_bn": 0.683,
           "model_variables": "tax_free_childcare",
-          "ratio_model_to_official": 1.14
+          "ratio_model_to_official": 1.08
         },
         {
           "measure": "Universal Credit childcare element",
@@ -5318,7 +5320,7 @@
         "ratio": 0.852,
         "subsidy_cost_bn": 4.223,
         "combined_cost_bn": 6.09,
-        "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
+        "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from, and the residual also contains provider income that is not parent-paid fees. This is one fixed-quantity accounting scenario, not a lower bound: scenarios in the other direction, such as full take-up within the coded scope, exceed the headline."
       },
       "dynamic_cost": {
         "central": {
@@ -5466,7 +5468,7 @@
         "as_coded_bn": 5.0884,
         "at_full_take_up_bn": 5.5734,
         "baseline_take_up_rate": 0.8789,
-        "note": "Neither figure models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
+        "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
       },
       "uc_childcare_fiscal_cost": {
         "comparison_year": 2024,
@@ -5504,16 +5506,17 @@
         },
         {
           "measure": "Tax-Free Childcare",
-          "official_bn": 0.5998,
-          "official_label": "HMRC \u00a3599.8m top-ups, 868,095 families, UK, 2025-26",
+          "official_bn": 0.6322,
+          "official_label": "HMRC \u00a3632.2m top-ups to 1,085,020 children, UK, 2024-25",
           "geography": "UK",
-          "period": "2025-26",
-          "kind": "Award gap",
+          "period": "2024-25",
+          "comparison_year": 2024,
+          "kind": "Like-for-like",
           "note": "Model \u00a30.625bn against HMRC's \u00a3632.2m at 2024 \u2014 0.99x \u2014 on 1,099,437 children against 1,085,020, 1.01x. The average award is \u00a3569 against \u00a3583. That is the like-for-like comparison: same year, and children against children.\n\nAn earlier version of this file reported a 1.28x caseload gap and a 0.87x award, which was wrong on both counts. It set the model's 2027 benefit units against HMRC's 2025-26 *families*, mixing the entity and the year. HMRC publishes both counts for the same outturn \u2014 868,095 families and 1,085,020 children \u2014 so a model benefit-unit count divided by a family count is not a caseload ratio, and comparing across three years adds the caseload growth on top.\n\nThe gap was 2.06x before the routed-spend correction in policyengine-uk-data #473 and the calibration targets in #472 and #474, all of which ship in Enhanced FRS 1.57.2. The release check now measures 0.989x on spending and 1.013x on child caseload.",
           "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-june-2025",
           "model_bn": 0.693,
           "model_variables": "tax_free_childcare",
-          "ratio_model_to_official": 1.15
+          "ratio_model_to_official": 1.1
         },
         {
           "measure": "Universal Credit childcare element",
@@ -7938,7 +7941,7 @@
         "ratio": 0.839,
         "subsidy_cost_bn": 4.27,
         "combined_cost_bn": 6.187,
-        "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from. Treat this as a lower bound on the subsidy leg, as the headline is an upper bound."
+        "note": "Only the under-5 slice is rebased, on the England benchmark of about \u00a35.1bn of parent-paid fees; the school-age third of the base is left as modelled because nothing is published to rebase it against. The benchmark is gross of Tax-Free Childcare and the UC childcare element, matching childcare_expenses, which both are computed from. The CMA flags substantial uncertainty in the sector-income figure this derives from, and the residual also contains provider income that is not parent-paid fees. This is one fixed-quantity accounting scenario, not a lower bound: scenarios in the other direction, such as full take-up within the coded scope, exceed the headline."
       },
       "dynamic_cost": {
         "central": {

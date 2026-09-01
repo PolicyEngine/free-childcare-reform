@@ -112,7 +112,8 @@ def test_the_known_gaps_are_flagged_rather_than_hidden(results):
         benchmark["measure"]: benchmark["kind"]
         for benchmark in results["by_year"]["2027"]["benchmarks"]
     }
-    assert kinds["Tax-Free Childcare"] == "Award gap"
+    # Was an award gap; the like-for-like 2024 comparison closed it.
+    assert kinds["Tax-Free Childcare"] == "Like-for-like"
     # It became comparable once measured as a counterfactual rather than by
     # summing a maximum-amount component; what remains is a caseload gap.
     assert kinds["Universal Credit childcare element"] == "Caseload gap"

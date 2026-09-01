@@ -22,7 +22,7 @@ Each leg costed against the current system, on the PolicyEngine UK Enhanced FRS:
 
 **The two legs are reported separately and should not be added.** Free hours displace paid care, so running both at once shrinks the base the 75% subsidy applies to. Both together cost £6.64bn in 2027-28, not the £6.81bn the columns suggest.
 
-The displacement assumption is that 90% of the value of a new free offer replaces care a family was already getting, but displacement is also capped at what they actually spend, and that cap binds hard: modelled childcare spending falls only £0.29bn, or **14% of the £1.97bn of new free hours**. Most newly-eligible families are not working and buy little paid care, so there is little for the free offer to displace. The 90% is the parameter; 14% is what happens — and running it at 71% instead moves the combined cost by £0.03bn.
+Two numbers describe displacement and they are not alternatives. **90%** is the assumed share of a new free offer that replaces care a family was already getting. **14%** is what actually happens in the run, because displacement is separately capped at what a family spends, and that cap binds: most newly-eligible families are not working and buy little paid care, so modelled childcare spending falls by only £0.29bn against £1.97bn of new free hours. Running the parameter at 71% instead moves the combined cost by £0.03bn.
 
 **The childcare fee base is the largest uncertainty, but the rebasing is an illustrative scenario rather than a bound.** The subsidy pays a share of what families spend, and for England's under-5s the model has £6.36bn of fees against about £5.10bn implied by the CMA — **1.25×**. Scaling the model's under-5 fees to that figure takes the subsidy leg to £4.18bn and both legs to £6.00bn.
 
@@ -69,7 +69,7 @@ The exclusion is needed because those mutual exclusions were written for a syste
 
 Leg 2 is **structural**. Tax-Free Childcare's `rate / (1 - rate)` top-up on parental spend is a different functional form from a flat share of costs, so `tax_free_childcare` and `tax_free_childcare_eligible` are replaced: no work test, no income cliff, no per-child cap. TFC's existing disqualification of UC and tax-credit recipients is kept, because those families already receive 85% through UC and stacking would subsidise childcare above its price.
 
-`childcare_expenses` in policyengine-uk is out-of-pocket spend *net of* free hours already received, so hours the reform newly makes free are netted out of it before the subsidy applies. Only 71% of new free hours displaces paid care — the IFS finds that for every 570 free hours offered, children spent only about 163 additional hours in subsidisable care.
+`childcare_expenses` in policyengine-uk is out-of-pocket spend *net of* free hours already received, so hours the reform newly makes free are netted out of it before the subsidy applies. The assumed displacement is 90% of new free hours — the IFS finds only about 54 additional hours of care outside the family for every 570 offered — and realised displacement is 14%, because the cap at actual spend binds.
 
 ### The labour supply response
 
