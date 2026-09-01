@@ -76,7 +76,7 @@ export default function MethodologyTab({ data, year }) {
             {A(src.ifs_free_childcare, "the IFS evaluation")} finds only about 54 additional
             hours of care outside the family for every 570 offered. Displacement is also
             capped at what a family actually spends, and that cap binds: realised
-            displacement is about 12% of the value of the new free hours.
+            displacement is about 14.5% of the value of the new free hours.
           </li>
           <li>
             Free hours are valued at the DfE funding rate — what government pays a

@@ -239,8 +239,19 @@ def _support_per_adult(sim, year: int) -> np.ndarray:
     totals = _values(sim, "tax_free_childcare", year, map_to="benunit").astype(float)
     benunit_ids = _values(sim, "benunit_id", year)
     person_benunit_ids = _values(sim, "benunit_id", year, map_to="person")
+
+    # The join has to be exact. Duplicate benefit-unit ids would make the
+    # reindex ambiguous — pandas raises rather than guessing — and a person
+    # whose benefit unit is missing would silently take zero support, which
+    # is the failure mode this whole projection exists to remove.
+    if len(set(benunit_ids)) != len(benunit_ids):
+        raise ValueError("benunit_id is not unique; the support join is ambiguous")
+    missing = set(person_benunit_ids) - set(benunit_ids)
+    if missing:
+        raise ValueError(f"{len(missing)} benefit units are missing from the join")
+
     lookup = pd.Series(totals, index=benunit_ids)
-    return lookup.reindex(person_benunit_ids).fillna(0.0).to_numpy()
+    return lookup.reindex(person_benunit_ids).to_numpy()
 
 
 def _gain_to_work(
@@ -439,9 +450,18 @@ def prepare(
         positive
     ]
 
-    elasticity_wrt_income = calculate_participation_elasticities(
-        baseline_sim, potential_earnings_quintile(baseline_sim, year, entrant_earnings)
-    )
+    # The upstream helper takes no period and reads its inputs at the
+    # simulation's default calculation period, so the elasticities were 2025's
+    # whatever year was being costed. It has no year argument to pass, so the
+    # default is moved for the call and restored afterwards.
+    previous_period = baseline_sim.default_calculation_period
+    baseline_sim.default_calculation_period = year
+    try:
+        elasticity_wrt_income = calculate_participation_elasticities(
+            baseline_sim, potential_earnings_quintile(baseline_sim, year, entrant_earnings)
+        )
+    finally:
+        baseline_sim.default_calculation_period = previous_period
 
     # OBR Appendix E: an elasticity with respect to in-work income becomes an
     # elasticity with respect to the gain to work by scaling by
@@ -468,6 +488,9 @@ def prepare(
     weights = np.asarray(
         baseline_sim.calculate("household_weight", year, map_to="person").values, float
     )
+    country = np.asarray(baseline_sim.calculate("country", year, map_to="person").values).astype(
+        str
+    )
     imputed_wages = entrant_earnings
     # For someone moving into work the exchequer gains their gross earnings less
     # the rise in their household's net income — income tax and National
@@ -486,6 +509,7 @@ def prepare(
         "imputed_wages": imputed_wages,
         "reform_gain": reform_gain,
         "weekly_hours_worked": weekly_hours_worked,
+        "country": country,
         "weights": weights,
     }
 
@@ -565,8 +589,34 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     # the fiscal cost on two different definitions of one number.
     expected_net_income_change = (entry_probability - exit_probability) * reform_gain
 
+    # The same aggregates restricted to each country, so one control can
+    # govern the whole view. The free-hours leg is England-only by
+    # construction, so its non-England figures are zero rather than omitted.
+    country = prepared["country"]
+    by_country = {}
+    for name in sorted(set(country)):
+        mask = country == name
+        entered = float(MicroSeries(entry_probability[mask], weights=weights[mask]).sum())
+        left = float(MicroSeries(exit_probability[mask], weights=weights[mask]).sum())
+        by_country[name.lower()] = {
+            "entrants": round(entered, 4),
+            "leavers": round(left, 4),
+            "net_entrants": round(entered - left, 4),
+            "net_revenue_gbp": round(
+                float(
+                    MicroSeries(
+                        entry_probability[mask] * (imputed_wages[mask] - reform_gain[mask])
+                        - exit_probability[mask] * (employment_income[mask] - reform_gain[mask]),
+                        weights=weights[mask],
+                    ).sum()
+                ),
+                4,
+            ),
+        }
+
     return {
         "expected_net_income_change_per_person": expected_net_income_change,
+        "by_country": by_country,
         "entrants": entrants,
         "leavers": leavers,
         "net_entrants": net_entrants,
@@ -601,7 +651,10 @@ def _effective_subsidy_rate(sim, year: int, working: np.ndarray) -> float:
     person_benunit_ids = np.asarray(sim.calculate("benunit_id", year, map_to="person").values)
     working_benunits = pd.Series(working, index=person_benunit_ids).groupby(level=0).max()
     mask = working_benunits.reindex(benunit_ids).fillna(False).to_numpy().astype(bool)
-    weights = np.asarray(sim.calculate("household_weight", year, map_to="benunit").values, float)
+    # The benefit-unit weight, not the household weight mapped onto benefit
+    # units: they differ on about 15,000 benefit units, and this rate is a
+    # benefit-unit quantity.
+    weights = np.asarray(sim.calculate("benunit_weight", year).values, float)
     total = float(MicroSeries(expenses[mask], weights=weights[mask]).sum())
     supported = float(MicroSeries(support[mask], weights=weights[mask]).sum())
     return supported / total if total else 0.0

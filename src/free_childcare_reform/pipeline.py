@@ -17,9 +17,13 @@ income quintile. Results are written to JSON for the dashboard.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.metadata
 import json
 import os
+import subprocess
+import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -138,7 +142,11 @@ def _quintile(sim, year: int, entity: str = "household") -> np.ndarray:
 
 
 def _household_effects(
-    baseline_sim, reform_sim, year: int, extra_person_income: np.ndarray | None = None
+    baseline_sim,
+    reform_sim,
+    year: int,
+    extra_person_income: np.ndarray | None = None,
+    country: str | None = None,
 ) -> dict:
     """Change in household net income, by income quintile and by family type.
 
@@ -205,8 +213,14 @@ def _household_effects(
             "quintile": quintile,
             "family_type": [_label(f) for f in family_type],
             "has_young_child": has_young_child,
+            "country": np.asarray(baseline_sim.calculate("country", year).values).astype(str),
         }
     )
+    if country is not None:
+        # Quintiles are still the UK ranking: a country's own quintiles would
+        # not be comparable with the UK view, and the reform does not change
+        # where a household sits in the national distribution.
+        frame = frame[frame["country"] == country.upper()]
 
     def summarise(group: pd.DataFrame) -> dict:
         weight = group["weight"].sum()
@@ -275,6 +289,42 @@ def _household_effects(
         "all_households": {"group": "All", **summarise(frame)},
         "families_with_under_5s": {"group": "Families with a child under 5", **summarise(families)},
     }
+
+
+CHILDCARE_PROGRAMMES = (
+    "universal_childcare_entitlement",
+    "extended_childcare_entitlement",
+    "targeted_childcare_entitlement",
+    "tax_free_childcare",
+)
+
+
+def _cost_by_country(baseline, reform_sim, year: int) -> dict:
+    """A leg's cost split by country, on the same quantity as the headline.
+
+    The `gov_spending` difference, grouped by household country — not a sum of
+    childcare programme variables. An earlier version summed the four
+    programmes directly, which came to £6.667bn against the headline
+    £6.638bn: the £28.7m difference is the Universal Credit interaction, which
+    the programme sum cannot see. Two figures for one cost, differing by an
+    amount that is not rounding.
+
+    `gov_spending` is household-level, so this needs no entity mapping and the
+    parts sum to the whole by construction.
+    """
+    country = np.asarray(baseline.calculate("country", year).values).astype(str)
+    weights = np.asarray(baseline.calculate("household_weight", year).values, float)
+    difference = np.asarray(reform_sim.calculate("gov_spending", year).values, float) - np.asarray(
+        baseline.calculate("gov_spending", year).values, float
+    )
+    out = {}
+    for name in sorted(set(country)):
+        mask = country == name
+        out[name.lower()] = round(
+            float(MicroSeries(difference[mask], weights=weights[mask]).sum()) / 1e9, 4
+        )
+    out["uk"] = round(sum(out.values()), 4)
+    return out
 
 
 def _spending(sim, year: int) -> dict:
@@ -513,6 +563,84 @@ def _build(dataset, scenario=None, childcare_expenses=None, year=None):
     return sim
 
 
+def _subsidy_by_country(baseline, reform_sim, year: int) -> dict:
+    """The subsidy leg split by country.
+
+    Tax-Free Childcare and its replacement are UK-wide, unlike the free
+    entitlements, so this leg alone can be read either way. Computed on the
+    `tax_free_childcare` difference, which is the whole of this leg's cost.
+    """
+    country = np.asarray(baseline.calculate("country", year, map_to="person").values)
+    weights = np.asarray(
+        baseline.calculate("household_weight", year, map_to="person").values, float
+    )
+    before = np.asarray(
+        baseline.calculate("tax_free_childcare", year, map_to="person").values, float
+    )
+    after = np.asarray(
+        reform_sim.calculate("tax_free_childcare", year, map_to="person").values, float
+    )
+    difference = after - before
+    out = {}
+    for name in sorted({str(value) for value in country}):
+        mask = country == name
+        out[name.lower()] = round(
+            float(MicroSeries(difference[mask], weights=weights[mask]).sum()) / 1e9, 4
+        )
+    out["uk"] = round(sum(out.values()), 4)
+    return out
+
+
+def _scope_scenarios(dataset, baseline, free_hours, year: int, baseline_spending: dict) -> dict:
+    """Combined-run totals for each scope dimension, separately and together.
+
+    An earlier version of this analysis reported these as standalone legs
+    added together — the very arithmetic the README forbids two paragraphs
+    earlier. Free hours displace paid care before the subsidy applies, so a
+    combined run costs less than the sum, and every scenario here is built the
+    way the headline combined run is: with the displaced childcare expenses.
+
+    The two dimensions are also kept apart. Take-up and the exclusion of
+    Universal Credit families are independent choices, and conflating them
+    hides that doing both costs more than either.
+    """
+    displaced = displaced_childcare_expenses(
+        np.asarray(baseline.calculate("childcare_expenses", year).values, float),
+        _new_free_hours_value(baseline, free_hours, year),
+        sources.FREE_HOURS_DISPLACEMENT,
+    )
+    base = baseline_spending["gov_spending_bn"]
+
+    def combined(include_uc: bool, full_take_up: bool) -> float:
+        sim = _build(
+            dataset,
+            scenario=free_hours_scenario(PARAMETER_YEARS)
+            + subsidy_scenario(include_uc_families=include_uc),
+            childcare_expenses=displaced,
+            year=year,
+        )
+        if full_take_up:
+            claims = np.asarray(sim.calculate("would_claim_tfc", year))
+            sim.set_input("would_claim_tfc", year, np.ones(len(claims), dtype=bool))
+            sim.set_input("childcare_expenses", year, displaced)
+            sim.reset_calculations()
+        return round(float(sim.calculate("gov_spending", year).sum()) / 1e9 - base, 4)
+
+    return {
+        "as_coded_bn": combined(False, False),
+        "full_take_up_bn": combined(False, True),
+        "uc_families_included_bn": combined(True, False),
+        "uc_families_and_full_take_up_bn": combined(True, True),
+        "note": (
+            "Combined runs, with free hours displacing paid care before the "
+            "subsidy applies — not standalone legs added together, which "
+            "overstates every scenario. Take-up and the exclusion of Universal "
+            "Credit families are separate dimensions and are reported "
+            "separately as well as together."
+        ),
+    }
+
+
 def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
     """The subsidy leg at baseline take-up, and at 100% within the same scope.
 
@@ -541,9 +669,7 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
             float(
                 MicroSeries(
                     claims.astype(float),
-                    weights=np.asarray(
-                        full.calculate("household_weight", year, map_to="benunit").values, float
-                    ),
+                    weights=np.asarray(full.calculate("benunit_weight", year).values, float),
                 ).mean()
             ),
             4,
@@ -560,6 +686,55 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
             "£100,000 cliff."
         ),
     }
+
+
+def _provenance() -> dict:
+    """What produced this file, so a result can be traced back to a commit.
+
+    The dataset revision and package versions were already recorded; the
+    analysis commit, the Python version and the time were not, so two runs of
+    different code against the same data were indistinguishable.
+    """
+    try:
+        commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        dirty = bool(
+            subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.strip()
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        commit, dirty = None, None
+    return {
+        "analysis_commit": commit,
+        "working_tree_dirty": dirty,
+        "source_digest": _source_digest(),
+        "python_version": sys.version.split()[0],
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+    }
+
+
+def _source_digest() -> str:
+    """SHA-256 over the analysis source, so a dirty run is still identified.
+
+    `analysis_commit` alone says "this commit plus unknown uncommitted bytes"
+    when the tree is dirty, which identifies nothing. Hashing the source files
+    themselves pins what actually ran, whether or not it was committed.
+    """
+    digest = hashlib.sha256()
+    for path in sorted((REPO_ROOT / "src").rglob("*.py")):
+        digest.update(path.relative_to(REPO_ROOT).as_posix().encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
 
 
 def run_year(dataset, year: int) -> dict:
@@ -608,7 +783,9 @@ def run_year(dataset, year: int) -> dict:
             "static_cost_bn": round(
                 spending["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 3
             ),
+            "static_cost_by_country_bn": _cost_by_country(baseline, sim, year),
             "household_effects": _household_effects(baseline, sim, year),
+            "household_effects_england": _household_effects(baseline, sim, year, country="england"),
         }
 
     print(f"  {year}: extensive-margin labour supply response ...")
@@ -689,6 +866,16 @@ def run_year(dataset, year: int) -> dict:
                 sim,
                 year,
                 response["expected_net_income_change_per_person"],
+            )
+            for bound, response in leg_responses.items()
+        }
+        legs[name]["household_effects_by_bound_england"] = {
+            bound: _household_effects(
+                baseline,
+                sim,
+                year,
+                response["expected_net_income_change_per_person"],
+                country="england",
             )
             for bound, response in leg_responses.items()
         }
@@ -775,6 +962,8 @@ def run_year(dataset, year: int) -> dict:
         "baseline_spending": baseline_spending,
         "baseline_programmes": _baseline_programmes(baseline, year),
         "subsidy_take_up": _subsidy_take_up_scenario(dataset, baseline, year),
+        "scope_scenarios": _scope_scenarios(dataset, baseline, free_hours, year, baseline_spending),
+        "subsidy_by_country": _subsidy_by_country(baseline, subsidy, year),
         "uc_childcare_fiscal_cost": uc_childcare,
         "benchmarks": _benchmark_comparison(
             baseline, year, {"uc_childcare_fiscal_cost": uc_childcare}
@@ -803,6 +992,7 @@ def run(args: argparse.Namespace) -> None:
         "dataset_revision": DATASET_REVISION,
         "policyengine_uk_version": importlib.metadata.version("policyengine-uk"),
         "policyengine_version": importlib.metadata.version("policyengine"),
+        "provenance": _provenance(),
         "reform_definition": {
             "free_hours": (
                 "15 hours a week of free childcare for every child from 9 months to "
@@ -825,7 +1015,10 @@ def run(args: argparse.Namespace) -> None:
         REPO_ROOT / "dashboard" / "public" / "data" / "free_childcare_reform_results.json",
     ]:
         destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_text(json.dumps(output, indent=2, default=str))
+        # allow_nan=False: Python emits bare NaN and Infinity, which every
+        # browser's JSON.parse rejects. Failing here beats shipping a file the
+        # dashboard cannot read.
+        destination.write_text(json.dumps(output, indent=2, default=str, allow_nan=False))
         print(f"    wrote {destination}")
 
     for year in years:

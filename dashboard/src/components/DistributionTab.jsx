@@ -63,7 +63,7 @@ const LEGS = [
   { id: "subsidy", label: "75% subsidy replacing Tax-Free Childcare" },
 ];
 
-export default function DistributionTab({ data, year, bound }) {
+export default function DistributionTab({ data, year, bound, area }) {
   const [measureId, setMeasureId] = useState("average_gain_gbp");
   const [populationId, setPopulationId] = useState(
     "by_income_quintile_families_with_under_5s",
@@ -76,10 +76,13 @@ export default function DistributionTab({ data, year, bound }) {
   // entering or leaving work times the gain to work — so it allocates to
   // households and can be read by quintile like any other income change.
   const leg = result.legs[legId];
+  const isEngland = area === "england";
+  const dynamicKey = isEngland ? "household_effects_by_bound_england" : "household_effects_by_bound";
+  const staticKey = isEngland ? "household_effects_england" : "household_effects";
   const effects =
-    bound && bound !== "none" && leg.household_effects_by_bound?.[bound]
-      ? leg.household_effects_by_bound[bound]
-      : leg.household_effects;
+    bound && bound !== "none" && leg[dynamicKey]?.[bound]
+      ? leg[dynamicKey][bound]
+      : leg[staticKey];
   const measure = MEASURES.find((m) => m.id === measureId);
   const population = POPULATIONS.find((p) => p.id === populationId);
   const rows = effects[populationId] || [];
@@ -93,7 +96,11 @@ export default function DistributionTab({ data, year, bound }) {
           title="Who gains, and by how much"
           description={
             <>
-              The change in household net income, by income quintile. Quintiles fold
+              The change in household net income, by income quintile.{" "}
+              {isEngland
+                ? "Restricted to English households, which is the population the free entitlements reach. Quintiles remain the UK ranking, so an English household sits where it sits nationally. "
+                : "Households are UK-wide, but the two legs are not: the free entitlements are England-only, so households in Scotland, Wales and Northern Ireland are ranked and counted here while gaining nothing from that leg. Switch the area above to see England alone. "}
+              Quintiles fold
               PolicyEngine&apos;s published household income deciles, so they rank all
               households in the UK — not only those with young children. Free childcare
               hours are counted at the DfE funding rate the model applies, which is what

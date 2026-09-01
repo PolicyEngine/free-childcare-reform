@@ -43,6 +43,7 @@ function Dashboard() {
   const [reformView, setReformView] = useState("budget");
   // Shared by both reform views, so the controls sit above the switcher.
   const [bound, setBound] = useState("central");
+  const [area, setArea] = useState("uk");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -174,6 +175,19 @@ function Dashboard() {
                       </option>
                     </select>
                   </label>
+                  <label className="w-36 shrink-0">
+                    <span className="mb-1 block text-xs font-medium text-slate-500">
+                      Area
+                    </span>
+                    <select
+                      value={area}
+                      onChange={(event) => setArea(event.target.value)}
+                      className={SELECT_CLASS}
+                    >
+                      <option value="uk">UK</option>
+                      <option value="england">England</option>
+                    </select>
+                  </label>
                   <div className="min-w-0">
                     <span className="mb-1 block text-xs font-medium text-slate-500">
                       View
@@ -201,9 +215,9 @@ function Dashboard() {
                 </div>
 
                 {reformView === "budget" ? (
-                  <CostTab data={data} year={year} bound={bound} />
+                  <CostTab data={data} year={year} bound={bound} area={area} />
                 ) : (
-                  <DistributionTab data={data} year={year} bound={bound} />
+                  <DistributionTab data={data} year={year} bound={bound} area={area} />
                 )}
               </div>
             )}
