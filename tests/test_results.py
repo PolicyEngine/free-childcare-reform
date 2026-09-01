@@ -117,7 +117,7 @@ def test_the_known_gaps_are_flagged_rather_than_hidden(results):
     # It became comparable once measured as a counterfactual rather than by
     # summing a maximum-amount component; what remains is a caseload gap.
     assert kinds["Universal Credit childcare element"] == "Caseload gap"
-    assert kinds["Parent-paid childcare fees, England, under-5s"] == "Fee base check"
+    assert kinds["Non-entitlement provider income, England, under-5s"] == "Fee base check"
     assert kinds["Childcare spending, all children, UK"] == "Unbenchmarked"
 
 
@@ -126,7 +126,7 @@ def test_the_fee_base_is_compared_like_for_like(results):
     # against that slice of the model, not the UK all-ages aggregate. Comparing
     # the two would roughly double the apparent gap.
     rows = {row["measure"]: row for row in results["by_year"]["2027"]["benchmarks"]}
-    comparable = rows["Parent-paid childcare fees, England, under-5s"]
+    comparable = rows["Non-entitlement provider income, England, under-5s"]
     full_base = rows["Childcare spending, all children, UK"]
     assert comparable["model_bn"] < full_base["model_bn"]
     assert comparable["ratio_model_to_official"] < 2.5
@@ -146,7 +146,7 @@ def test_the_fee_base_benchmark_is_gross_of_the_support_derived_from_it(results)
     about £14bn - £8.9bn.
     """
     rows = {row["measure"]: row for row in results["by_year"]["2027"]["benchmarks"]}
-    benchmark = rows["Parent-paid childcare fees, England, under-5s"]["official_bn"]
+    benchmark = rows["Non-entitlement provider income, England, under-5s"]["official_bn"]
     assert benchmark == pytest.approx(5.10), (
         "the fee-base benchmark must be the gross CMA residual, not a figure "
         "net of the support computed from childcare_expenses"
@@ -295,9 +295,7 @@ def test_household_effects_respond_to_the_labour_supply_assumption(results):
             assert gains["low"] != gains["central"] != gains["high"], (leg, breakdown)
             static = [
                 row["average_gain_gbp"]
-                for row in results["by_year"]["2027"]["legs"][leg]["household_effects"][
-                    breakdown
-                ]
+                for row in results["by_year"]["2027"]["legs"][leg]["household_effects"][breakdown]
             ]
             assert gains["central"] != static, (leg, breakdown)
 

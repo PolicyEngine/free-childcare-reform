@@ -24,6 +24,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from microdf import MicroSeries
 from policyengine_uk import Microsimulation
 from policyengine_uk.data import UKSingleYearDataset
 from policyengine_uk.utils.scenario import Scenario
@@ -454,15 +455,21 @@ def _benchmark_comparison(sim, year: int, measures: dict | None = None) -> list[
             # component, so the comparable figure is what abolishing it costs.
             ours = (measures or {})[benchmark["model_measure"]]["fiscal_cost_bn"]
         else:
+            # Honour the row's own comparison year. Computing at the costed
+            # year against a published figure for an earlier one measured the
+            # gap between two dates as much as the model — the mistake this
+            # analysis has now made three times.
+            measured_at = benchmark.get("comparison_year", year)
             ours = (
                 sum(
-                    float(sim.calculate(variable, year).sum())
+                    float(sim.calculate(variable, measured_at).sum())
                     for variable in benchmark["model_variables"]
                 )
                 / 1e9
             )
         row = {key: value for key, value in benchmark.items() if key != "model_variables"}
         row["model_bn"] = round(ours, 3)
+        row["model_measured_at"] = benchmark.get("comparison_year", year)
         row["model_variables"] = ", ".join(benchmark["model_variables"])
         if benchmark.get("model_measure"):
             row["model_variables"] = "abolition counterfactual on gov_spending"
@@ -530,7 +537,17 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
         "at_full_take_up_bn": round(
             (float(full.calculate("tax_free_childcare", year).sum()) - baseline_spend) / 1e9, 4
         ),
-        "baseline_take_up_rate": round(float(claims.mean()), 4),
+        "baseline_take_up_rate": round(
+            float(
+                MicroSeries(
+                    claims.astype(float),
+                    weights=np.asarray(
+                        full.calculate("household_weight", year, map_to="benunit").values, float
+                    ),
+                ).mean()
+            ),
+            4,
+        ),
         "note": (
             "Both figures are the subsidy leg on its own, against the "
             "baseline fee base — not the combined run, where free hours "

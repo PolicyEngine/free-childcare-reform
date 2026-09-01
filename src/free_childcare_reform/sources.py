@@ -154,7 +154,8 @@ RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE = True
 #    partly net of a TFC top-up, is not established here; if it is partly net
 #    the true benchmark sits between £3.75bn and £5.1bn.
 #
-# Both point the same way: the subsidy leg's headline cost is an upper bound.
+# Both bear on how the subsidy leg should be read; neither makes its cost a
+# bound in either direction.
 # Neither is a defect of this analysis to patch here — see README, "Correcting
 # the baseline".
 BENCHMARKS = [
@@ -186,7 +187,7 @@ BENCHMARKS = [
         "measure": "Tax-Free Childcare",
         "model_variables": ["tax_free_childcare"],
         "official_bn": 0.6322,
-        "official_label": "HMRC £632.2m top-ups to 1,085,020 children, UK, 2024-25",
+        "official_label": "HMRC £632.2m top-ups to 1,085,020 children in 825,950 families, UK, 2024-25",
         "geography": "UK",
         "period": "2024-25",
         "comparison_year": 2024,
@@ -201,7 +202,8 @@ BENCHMARKS = [
             "a 0.87x award, which was wrong on both counts. It set the model's "
             "2027 benefit units against HMRC's 2025-26 *families*, mixing the "
             "entity and the year. HMRC publishes both counts for the same "
-            "outturn — 868,095 families and 1,085,020 children — so a model "
+            "outturn — 825,950 families and 1,085,020 children in 2024-25 — "
+            "so a model "
             "benefit-unit count divided by a family count is not a caseload "
             "ratio, and comparing across three years adds the caseload growth "
             "on top."
@@ -249,11 +251,11 @@ BENCHMARKS = [
         "url": "https://www.gov.uk/government/statistics/universal-credit-quarterly-statistics-29-april-2013-to-14-may-2026/universal-credit-childcare-element-statistics-to-may-2026",
     },
     {
-        "measure": "Parent-paid childcare fees, England, under-5s",
+        "measure": "Non-entitlement provider income, England, under-5s",
         "model_variables": ["childcare_expenses"],
         "model_restriction": "england_under_5",
         "official_bn": 5.10,
-        "official_label": "~£5.1bn implied, England, under-5s, 2025-26",
+        "official_label": "~£5.1bn residual, England, under-5s, 2025-26 — provider income less entitlement funding, which is parent fees *and other sources*",
         "geography": "England",
         "period": "2025-26",
         "kind": "Fee base check",
@@ -365,7 +367,6 @@ COMPARABLE_COSTINGS = [
 ]
 
 
-
 # ---------------------------------------------------------------------------
 # Sources
 # ---------------------------------------------------------------------------
@@ -440,7 +441,6 @@ BETTENDORF_JONGEN_MULLER = Source(
     "a floor. The two instruments are not separately identified.",
     "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf",
 )
-
 
 
 def as_json(model_parameters: dict[str, Any]) -> dict:
