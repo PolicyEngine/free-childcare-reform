@@ -108,15 +108,17 @@ Central elasticity −0.15, bounds −0.05 and −0.30, from Akgündüz and Plan
 
 ## Reproducing a result
 
-`uv.lock` pins the full dependency set, so `uv sync --frozen` reproduces the environment the results were built in. Each results file also records what produced it — the analysis commit, whether the working tree was dirty, the Python version, the generation time, the Enhanced FRS revision and the PolicyEngine package versions — under `provenance`. A figure can therefore be traced to a commit rather than only to a package version.
+`uv.lock` pins the full dependency set and CI installs from it with `uv sync --frozen`, so the tested environment is the one the results were built in. `.python-version` pins the interpreter patch. Each results file also records what produced it — the analysis commit, whether the working tree was dirty, the Python version, the generation time, the Enhanced FRS revision and the PolicyEngine package versions — under `provenance`, including a SHA-256 digest of the analysis source — so a run from an uncommitted tree still identifies exactly what produced it, and a test fails if the committed results were generated from different source than is checked in. A figure can therefore be traced to a commit rather than only to a package version.
 
 ## Run
 
 ```bash
-pip install -e ".[dev]"
+uv sync --frozen --extra dev
 export HF_TOKEN=hf_xxx
-python -m free_childcare_reform
+uv run --frozen python -m free_childcare_reform
 ```
+
+`--frozen` is deliberate: `pip install -e` resolved fresh dependency versions and ignored the lockfile, so the documented command produced a different environment from the one the committed results were built in.
 
 Costs 2027, 2028 and 2029 by default; `--years 2027` for one. The Enhanced FRS 2024-25 is pinned to a revision for reproducibility.
 

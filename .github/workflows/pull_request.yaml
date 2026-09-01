@@ -10,17 +10,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - name: Install (logic tests only; the pipeline needs the gated dataset)
-        run: pip install -e ".[dev]"
+      - uses: astral-sh/setup-uv@v5
+      - name: Install from the lockfile
+        # `uv sync --frozen` refuses to update uv.lock, so CI runs the exact
+        # dependency set the results were generated with. `pip install -e`
+        # resolved fresh versions and ignored the lock entirely.
+        run: uv sync --frozen --extra dev
+      - name: Check the lockfile matches pyproject
+        run: uv lock --check
       - name: Lint
-        run: ruff check src tests
+        run: uv run --frozen ruff check src tests
+      - name: Format
+        run: uv run --frozen ruff format --check src tests
       - name: Test
-        run: pytest -q
+        run: uv run --frozen pytest -q
       - name: Assert the committed results are present and consistent
-        run: pytest -q tests/test_artifacts.py
+        run: uv run --frozen pytest -q tests/test_artifacts.py
 
   dashboard-build:
     name: Dashboard build and site-shell check
@@ -31,12 +36,25 @@ jobs:
       - name: Install deps
         working-directory: dashboard
         run: bun install --frozen-lockfile
-      - name: Assert the dashboard has data to serve
+      - name: Assert the dashboard has data a browser can parse
+        # Parsed with Bun, not Python: `json.load` accepts bare NaN and
+        # Infinity, which every browser's JSON.parse rejects, so a
+        # Python-only check passes files the dashboard cannot read.
         run: |
           f=dashboard/public/data/free_childcare_reform_results.json
           test -s "$f" || { echo "MISSING or empty: $f"; exit 1; }
-          python3 -c "import json,sys; json.load(open('$f'))" \
-            || { echo "not valid JSON: $f"; exit 1; }
+          bun -e "
+            const text = await Bun.file('$f').text();
+            const data = JSON.parse(text);
+            if (!data.years?.length) throw new Error('no years in results');
+            for (const y of data.years) {
+              const block = data.by_year[String(y)];
+              if (!block?.legs?.combined?.static_cost_bn) {
+                throw new Error('missing combined static cost for ' + y);
+              }
+            }
+            console.log('results parse in a JS runtime:', data.years.join(', '));
+          "
       - name: Build
         working-directory: dashboard
         run: bun run build

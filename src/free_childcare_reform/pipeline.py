@@ -17,6 +17,7 @@ income quintile. Results are written to JSON for the dashboard.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.metadata
 import json
 import os
@@ -594,9 +595,24 @@ def _provenance() -> dict:
     return {
         "analysis_commit": commit,
         "working_tree_dirty": dirty,
+        "source_digest": _source_digest(),
         "python_version": sys.version.split()[0],
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }
+
+
+def _source_digest() -> str:
+    """SHA-256 over the analysis source, so a dirty run is still identified.
+
+    `analysis_commit` alone says "this commit plus unknown uncommitted bytes"
+    when the tree is dirty, which identifies nothing. Hashing the source files
+    themselves pins what actually ran, whether or not it was committed.
+    """
+    digest = hashlib.sha256()
+    for path in sorted((REPO_ROOT / "src").rglob("*.py")):
+        digest.update(path.relative_to(REPO_ROOT).as_posix().encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
 
 
 def run_year(dataset, year: int) -> dict:
@@ -863,7 +879,10 @@ def run(args: argparse.Namespace) -> None:
         REPO_ROOT / "dashboard" / "public" / "data" / "free_childcare_reform_results.json",
     ]:
         destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_text(json.dumps(output, indent=2, default=str))
+        # allow_nan=False: Python emits bare NaN and Infinity, which every
+        # browser's JSON.parse rejects. Failing here beats shipping a file the
+        # dashboard cannot read.
+        destination.write_text(json.dumps(output, indent=2, default=str, allow_nan=False))
         print(f"    wrote {destination}")
 
     for year in years:
