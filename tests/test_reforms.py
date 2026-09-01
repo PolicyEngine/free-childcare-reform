@@ -167,3 +167,48 @@ def test_three_and_four_year_olds_are_unchanged_by_the_reform():
         assert reform["universal_childcare_entitlement"] == pytest.approx(
             baseline["universal_childcare_entitlement"]
         ), age
+
+
+def test_cost_contingent_support_reaches_the_adult_whose_work_decision_it_bears_on():
+    """`tax_free_childcare` is paid on the child's row, not the parent's.
+
+    So `map_to="person"` is a no-op that leaves every adult reading zero, and
+    the out-of-work subtraction silently does nothing — which is what happened
+    (PolicyEngine/free-childcare-reform#3 review). The award has to be
+    aggregated to the benefit unit and projected back onto its adults, which
+    is also how `household_net_income` carries it.
+    """
+    import numpy as np
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.labour_supply import _support_per_adult
+
+    YEAR = 2027
+    situation = {
+        "people": {
+            "child": {"age": {YEAR: 3}},
+            "parent": {
+                "age": {YEAR: 32},
+                "employment_income": {YEAR: 35_000},
+                "childcare_expenses": {YEAR: 6_000},
+            },
+        },
+        "benunits": {"bu": {"members": ["child", "parent"]}},
+        "households": {
+            "hh": {"members": ["child", "parent"], "country": {YEAR: "ENGLAND"}}
+        },
+    }
+    sim = Simulation(situation=situation)
+    per_person = np.asarray(sim.calculate("tax_free_childcare", YEAR, map_to="person"), float)
+    projected = _support_per_adult(sim, YEAR)
+    adult = np.asarray(sim.calculate("adult_index", YEAR), float) > 0
+
+    benunit_total = float(
+        np.asarray(sim.calculate("tax_free_childcare", YEAR, map_to="benunit"), float).sum()
+    )
+    if benunit_total == 0:
+        pytest.skip("no support in this situation to project")
+    assert per_person[adult].sum() == 0, "support sits on the child's row, as expected"
+    assert projected[adult].sum() == pytest.approx(benunit_total * adult.sum()), (
+        "every adult must see the benefit unit's award"
+    )

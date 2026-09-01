@@ -215,6 +215,29 @@ def potential_earnings_quintile(sim, year: int, entrant_earnings: np.ndarray) ->
     quintile[adult] = np.searchsorted(thresholds, potential[adult], side="right") + 1
     return quintile
 
+def _support_per_adult(sim, year: int) -> np.ndarray:
+    """Cost-contingent childcare support, projected onto every person.
+
+    `tax_free_childcare` is a Person variable but is paid on the *qualifying
+    child's* row, so `map_to="person"` is a no-op that leaves every adult
+    reading zero. Aggregating to the benefit unit and projecting back is what
+    puts the award on the adults whose work decision it bears on, and matches
+    how `household_net_income` already carries it.
+    """
+    # `calculate` returns a MicroSeries on a dataset simulation and a bare
+    # array on a situation one, so the values are taken tolerantly to keep the
+    # situation tests able to exercise this.
+    def values(variable: str, **kwargs) -> np.ndarray:
+        result = sim.calculate(variable, year, **kwargs)
+        return np.asarray(getattr(result, "values", result))
+
+    totals = values("tax_free_childcare", map_to="benunit").astype(float)
+    benunit_ids = values("benunit_id")
+    person_benunit_ids = values("benunit_id", map_to="person")
+    lookup = pd.Series(totals, index=benunit_ids)
+    return lookup.reindex(person_benunit_ids).fillna(0.0).to_numpy()
+
+
 def _gain_to_work(
     sim,
     year: int,
@@ -251,9 +274,7 @@ def _gain_to_work(
             np.asarray(
                 sim.calculate("household_net_income", year, map_to="person").values, float
             ),
-            np.asarray(
-                sim.calculate("tax_free_childcare", year, map_to="person").values, float
-            ),
+            _support_per_adult(sim, year),
         )
 
     for index in range(1, count_adults + 1):
