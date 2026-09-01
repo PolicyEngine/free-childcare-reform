@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   Bar,
   BarChart,
@@ -50,6 +52,7 @@ const LEG_LABELS = {
 };
 
 export default function CostTab({ data, year, bound }) {
+  const [subsidyArea, setSubsidyArea] = useState("uk");
   const result = data.by_year[String(year)];
   const legs = result.legs;
   const isStatic = bound === "none";
@@ -70,6 +73,7 @@ export default function CostTab({ data, year, bound }) {
 
   const assumptions = data.assumptions || {};
   const feeBase = result.fee_base_sensitivity;
+  const byCountry = result.subsidy_by_country;
 
   const yearRows = data.years.map((y) => ({
     year: formatFiscalYear(y),
@@ -87,9 +91,19 @@ export default function CostTab({ data, year, bound }) {
               Each leg of the reform costed against the current system, on the PolicyEngine
               UK Enhanced FRS. <strong>The two legs cover different countries.</strong> The
               free entitlements are England-only, in law and in the model, so the free-hours
-              leg is an England cost and carries no Barnett consequentials for the devolved
-              nations. Tax-Free Childcare is UK-wide, so the subsidy replacing it is a UK
-              cost. They are shown separately and should not be added: free hours displace
+              leg is an England cost. Tax-Free Childcare is UK-wide, so the subsidy
+              replacing it can be read either way — switch it below.
+              <span className="mt-2 block">
+                <strong>There is no UK figure for free hours, and one cannot be produced
+                here.</strong>{" "}
+                Early years childcare is devolved: Scotland, Wales and Northern Ireland run
+                their own schemes on their own hours and rates, so a UK cost would mean
+                costing three further reforms this brief does not describe. The model does
+                not carry those schemes either — only the three English entitlements are
+                implemented. What the devolved nations would receive is a Barnett
+                consequential of the England spend, which is a funding transfer rather than
+                a childcare policy, and is not costed here.
+              </span> They are shown separately and should not be added: free hours displace
               paid care, so running both at once costs less than the sum.
               The costs below hold behaviour fixed; choosing a labour supply assumption
               adds an extensive-margin response built on{" "}
@@ -114,16 +128,43 @@ export default function CostTab({ data, year, bound }) {
             }
           />
           <Stat
-            label={`75% subsidy, UK, ${formatFiscalYear(year)}`}
+            label={
+              <span className="flex flex-wrap items-center gap-2">
+                <span>75% subsidy, {formatFiscalYear(year)}</span>
+                <span className="flex gap-1 rounded-md bg-slate-100 p-0.5">
+                  {[
+                    { id: "uk", label: "UK" },
+                    { id: "england", label: "England" },
+                  ].map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setSubsidyArea(option.id)}
+                      className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors ${
+                        subsidyArea === option.id
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </span>
+              </span>
+            }
             value={formatBn(
-              isStatic
-                ? legs.subsidy.static_cost_bn
-                : legs.subsidy.dynamic_cost[bound].dynamic_cost_bn,
+              subsidyArea === "england"
+                ? byCountry.england
+                : isStatic
+                  ? legs.subsidy.static_cost_bn
+                  : legs.subsidy.dynamic_cost[bound].dynamic_cost_bn,
             )}
             sub={
-              isStatic
-                ? `Replacing Tax-Free Childcare. On the published fee base this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`
-                : `Static ${formatBn(legs.subsidy.static_cost_bn)}, plus ${formatSignedBn(-legs.subsidy.dynamic_cost[bound].labour_supply_offset_bn)} of labour supply on ${formatCount(legs.subsidy.dynamic_cost[bound].net_entrants)} net entrants. Cheaper childcare makes work pay, so this leg costs less.`
+              subsidyArea === "england"
+                ? `England's share of the UK cost. Tax-Free Childcare is UK-wide, so this leg has a figure for either area; the rest is ${formatBn(byCountry.scotland)} Scotland, ${formatBn(byCountry.wales)} Wales and ${formatBn(byCountry.northern_ireland)} Northern Ireland. Static only — the labour supply response is not split by country.`
+                : isStatic
+                  ? `Replacing Tax-Free Childcare. On the published fee base this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`
+                  : `Static ${formatBn(legs.subsidy.static_cost_bn)}, plus ${formatSignedBn(-legs.subsidy.dynamic_cost[bound].labour_supply_offset_bn)} of labour supply on ${formatCount(legs.subsidy.dynamic_cost[bound].net_entrants)} net entrants. Cheaper childcare makes work pay, so this leg costs less.`
             }
           />
           {isStatic ? (

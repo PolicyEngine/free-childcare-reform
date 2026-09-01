@@ -517,6 +517,34 @@ def _build(dataset, scenario=None, childcare_expenses=None, year=None):
     return sim
 
 
+def _subsidy_by_country(baseline, reform_sim, year: int) -> dict:
+    """The subsidy leg split by country.
+
+    Tax-Free Childcare and its replacement are UK-wide, unlike the free
+    entitlements, so this leg alone can be read either way. Computed on the
+    `tax_free_childcare` difference, which is the whole of this leg's cost.
+    """
+    country = np.asarray(baseline.calculate("country", year, map_to="person").values)
+    weights = np.asarray(
+        baseline.calculate("household_weight", year, map_to="person").values, float
+    )
+    before = np.asarray(
+        baseline.calculate("tax_free_childcare", year, map_to="person").values, float
+    )
+    after = np.asarray(
+        reform_sim.calculate("tax_free_childcare", year, map_to="person").values, float
+    )
+    difference = after - before
+    out = {}
+    for name in sorted({str(value) for value in country}):
+        mask = country == name
+        out[name.lower()] = round(
+            float(MicroSeries(difference[mask], weights=weights[mask]).sum()) / 1e9, 4
+        )
+    out["uk"] = round(sum(out.values()), 4)
+    return out
+
+
 def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
     """The subsidy leg at baseline take-up, and at 100% within the same scope.
 
@@ -828,6 +856,7 @@ def run_year(dataset, year: int) -> dict:
         "baseline_spending": baseline_spending,
         "baseline_programmes": _baseline_programmes(baseline, year),
         "subsidy_take_up": _subsidy_take_up_scenario(dataset, baseline, year),
+        "subsidy_by_country": _subsidy_by_country(baseline, subsidy, year),
         "uc_childcare_fiscal_cost": uc_childcare,
         "benchmarks": _benchmark_comparison(
             baseline, year, {"uc_childcare_fiscal_cost": uc_childcare}

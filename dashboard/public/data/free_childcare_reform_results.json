@@ -10,11 +10,11 @@
   "policyengine_uk_version": "2.94.0",
   "policyengine_version": "5.3.0",
   "provenance": {
-    "analysis_commit": "e9018ba2415cb79df27aa403ae8737ba6ed0ee11",
+    "analysis_commit": "063c9227eeedd9360069acd8e013fc1377191ef9",
     "working_tree_dirty": true,
-    "source_digest": "ae86c3787819aa7c673e9ee10ee26660e0da9e1398eed79089ac0ab821cb8676",
+    "source_digest": "da03f4d76e5fb1dbe5449fa20eecbbfb3a50a14a14a7cc56a593371c6c5e6bb3",
     "python_version": "3.13.15",
-    "generated_at": "2026-09-01T08:44:56+00:00"
+    "generated_at": "2026-09-01T09:13:22+00:00"
   },
   "reform_definition": {
     "free_hours": "15 hours a week of free childcare for every child from 9 months to school age, plus a further 15 hours where parents work and earn under \u00a3100,000 \u2014 replacing 30 hours for working parents under \u00a3100,000 and 15 hours for 3-4 year olds.",
@@ -234,6 +234,13 @@
         "at_full_take_up_bn": 5.2783,
         "baseline_take_up_rate": 0.8749,
         "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
+      },
+      "subsidy_by_country": {
+        "england": 4.0378,
+        "northern_ireland": 0.1552,
+        "scotland": 0.5114,
+        "wales": 0.1345,
+        "uk": 4.8389
       },
       "uc_childcare_fiscal_cost": {
         "comparison_year": 2024,
@@ -2862,6 +2869,13 @@
         "baseline_take_up_rate": 0.8749,
         "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
       },
+      "subsidy_by_country": {
+        "england": 4.1354,
+        "northern_ireland": 0.1589,
+        "scotland": 0.524,
+        "wales": 0.1378,
+        "uk": 4.9561
+      },
       "uc_childcare_fiscal_cost": {
         "comparison_year": 2024,
         "fiscal_cost_bn": 1.5802,
@@ -5488,6 +5502,13 @@
         "at_full_take_up_bn": 5.5734,
         "baseline_take_up_rate": 0.8749,
         "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
+      },
+      "subsidy_by_country": {
+        "england": 4.2424,
+        "northern_ireland": 0.1628,
+        "scotland": 0.5421,
+        "wales": 0.1411,
+        "uk": 5.0884
       },
       "uc_childcare_fiscal_cost": {
         "comparison_year": 2024,
