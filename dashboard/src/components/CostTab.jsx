@@ -118,12 +118,6 @@ export default function CostTab({ data, year, bound, area }) {
               schemes, which this brief does not reform and the model does not carry — and
               their Barnett consequentials are a funding transfer rather than a childcare
               policy, so they are not costed.
-              <span className="mt-2 block">
-                The legs should not be added: free hours displace paid care, so running
-                both costs less than the sum. Costs hold behaviour fixed unless a labour
-                supply assumption is chosen. Free hours are valued at the DfE funding rate,
-                the subsidy at its cash value.
-              </span>
             </>
           }
         />
