@@ -224,6 +224,12 @@ export default function CostTab({ data, year, bound, area }) {
                     no cliff — so it reaches above £100,000 too.
                   </li>
                   <li>
+                    Not universal, despite the name. The costing keeps Tax-Free
+                    Childcare&apos;s take-up rate and its qualifying-child, provider and
+                    UK-connection rules. What the reform removes is the work test and the
+                    cliff.
+                  </li>
+                  <li>
                     Families on Universal Credit keep the{" "}
                     <strong>85% childcare element</strong> instead, unchanged, rather than
                     stacking the two.

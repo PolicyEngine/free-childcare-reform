@@ -51,7 +51,7 @@ class Source:
 # Running the whole analysis at 71% instead of 90% moves the combined cost by
 # £0.03bn, or 0.4%, and moves neither leg on its own.
 FREE_HOURS_ADDITIONALITY = 54 / 570  # ~0.095
-FREE_HOURS_DISPLACEMENT = 1 - FREE_HOURS_ADDITIONALITY  # ~0.714
+FREE_HOURS_DISPLACEMENT = 1 - FREE_HOURS_ADDITIONALITY  # ~0.905
 
 # Childcare price elasticity of maternal employment, extensive margin. Used for
 # the low and high bounds on the participation response, by scaling the OBR
@@ -356,11 +356,14 @@ COMPARABLE_COSTINGS = [
             "A far larger offer — 40 hours a week, 48 weeks a year, from 6 "
             "months — cited only as an upper bound. The net range is small "
             "because WBG puts tax and benefit recoupment at 89-95% of gross. "
-            "Figures are from the 2017 costing, which is the edition still "
-            "published: a 2020 Budget representation updated the gross range "
-            "to £38-57bn, but that document is no longer reachable, so the "
-            "gross and net figures here are taken from one source rather than "
-            "mixed across vintages."
+            "Figures are all from the 2017 costing, so gross and net come from "
+            "one design and one vintage. A 2020 Budget representation updates "
+            "the gross range to £38-57bn and is available at "
+            "wbg.org.uk/wp-content/uploads/2020/01/"
+            "Budget-Representation-to-HM-Treasury-Feb-2020.pdf; an earlier "
+            "version of this note wrongly said it was unreachable, having only "
+            "checked a dead path. It is not used because pairing its gross "
+            "range with the 2017 net range mixes vintages."
         ),
         "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/",
     },

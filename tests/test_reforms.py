@@ -130,7 +130,8 @@ def test_the_reform_pays_nothing_to_a_child_recorded_as_age_zero():
 
     The reform covers children from 9 months, but FRS ages are whole years, so
     the 0.75 age floor evaluates as `age >= 1` and the 9-to-12-month cohort
-    gets nothing — roughly £0.28bn missing from the free-hours leg. If a future
+    gets nothing. Measured directly, the whole age-zero group is worth £1.76bn
+    and a three-month share about £0.44bn — 22% of the free-hours leg. If a future
     dataset carries sub-year ages this test fails, which is the signal to
     re-cost the leg rather than a regression.
     """
@@ -167,66 +168,63 @@ def test_three_and_four_year_olds_are_unchanged_by_the_reform():
         ), age
 
 
-def test_cost_contingent_support_reaches_the_adult_whose_work_decision_it_bears_on():
-    """`tax_free_childcare` is paid on the child's row, not the parent's.
+class _StubSimulation:
+    """The three variables `_support_per_adult` reads, and nothing else.
 
-    So `map_to="person"` is a no-op that leaves every adult reading zero, and
-    the out-of-work subtraction silently does nothing — which is what happened
-    (PolicyEngine/free-childcare-reform#3 review). The award has to be
-    aggregated to the benefit unit and projected back onto its adults, which
-    is also how `household_net_income` carries it.
+    A situation simulation will not produce Tax-Free Childcare without more
+    scaffolding than a mechanics test should carry, and the earlier version of
+    this test skipped for exactly that reason — it never reached its
+    assertions. A stub makes the projection deterministic and lets the awkward
+    shapes be covered: several benefit units, several children, duplicate ids.
     """
-    import numpy as np
-    from policyengine_uk import Simulation
 
+    def __init__(self, totals, benunit_ids, person_benunit_ids):
+        self._values = {
+            ("tax_free_childcare", "benunit"): np.asarray(totals, float),
+            ("benunit_id", None): np.asarray(benunit_ids),
+            ("benunit_id", "person"): np.asarray(person_benunit_ids),
+        }
+
+    def calculate(self, variable, year, map_to=None):
+        return self._values[(variable, map_to)]
+
+
+def test_support_projects_from_the_benefit_unit_onto_each_of_its_people():
+    """The award is paid on the child's row; every member must see it.
+
+    Two benefit units, the first with two children and two adults, the second
+    with one of each. Reading `tax_free_childcare` per person leaves adults at
+    zero, which is the bug this projection fixes.
+    """
     from free_childcare_reform.labour_supply import _support_per_adult
 
-    YEAR = 2027
-    situation = {
-        "people": {
-            "child": {"age": {YEAR: 3}},
-            "parent": {
-                "age": {YEAR: 32},
-                "employment_income": {YEAR: 35_000},
-                "childcare_expenses": {YEAR: 6_000},
-            },
-        },
-        "benunits": {"bu": {"members": ["child", "parent"]}},
-        "households": {"hh": {"members": ["child", "parent"], "country": {YEAR: "ENGLAND"}}},
-    }
-    sim = Simulation(situation=situation)
-    per_person = np.asarray(sim.calculate("tax_free_childcare", YEAR, map_to="person"), float)
-    projected = _support_per_adult(sim, YEAR)
-    adult = np.asarray(sim.calculate("adult_index", YEAR), float) > 0
-
-    benunit_total = float(
-        np.asarray(sim.calculate("tax_free_childcare", YEAR, map_to="benunit"), float).sum()
+    sim = _StubSimulation(
+        totals=[7_500.0, 2_000.0],
+        benunit_ids=[10, 20],
+        person_benunit_ids=[10, 10, 10, 10, 20, 20],
     )
-    if benunit_total == 0:
-        pytest.skip("no support in this situation to project")
-    assert per_person[adult].sum() == 0, "support sits on the child's row, as expected"
-    assert projected[adult].sum() == pytest.approx(benunit_total * adult.sum()), (
-        "every adult must see the benefit unit's award"
-    )
+    projected = _support_per_adult(sim, 2027)
+    assert projected.tolist() == [7_500.0, 7_500.0, 7_500.0, 7_500.0, 2_000.0, 2_000.0]
 
 
-def test_the_out_of_work_support_adjustment_applies_only_to_existing_workers():
-    """Three deterministic cases, from the #3 review's C10.
+def test_a_benefit_unit_with_no_award_projects_zero_rather_than_nothing():
+    from free_childcare_reform.labour_supply import _support_per_adult
 
-    The adjustment removes support attached to childcare a leaver would stop
-    buying. For someone already out of work it is a double credit: their
-    recorded `childcare_expenses` is a fixed input, so the support sits in
-    `household_net_income` in both employment states and cancels, while the
-    care they would newly buy is already counted net of the subsidy.
-    """
-    import inspect
+    sim = _StubSimulation([0.0, 3_000.0], [1, 2], [1, 1, 2, 2])
+    assert _support_per_adult(sim, 2027).tolist() == [0.0, 0.0, 3_000.0, 3_000.0]
 
-    from free_childcare_reform import labour_supply
 
-    source = inspect.getsource(labour_supply._net_gain_to_work)
-    assert "already_working" in source, (
-        "the out-of-work support adjustment must be restricted to people who are already in work"
-    )
+def test_the_projection_refuses_an_ambiguous_or_incomplete_join():
+    """Silence here is what made the original bug invisible."""
+    from free_childcare_reform.labour_supply import _support_per_adult
+
+    duplicated = _StubSimulation([1.0, 2.0], [5, 5], [5, 5])
+    with pytest.raises(ValueError, match="not unique"):
+        _support_per_adult(duplicated, 2027)
+
+    incomplete = _StubSimulation([1.0], [5], [5, 6])
+    with pytest.raises(ValueError, match="missing"):
+        _support_per_adult(incomplete, 2027)
 
 
 @pytest.mark.parametrize(
@@ -280,3 +278,63 @@ def test_the_gain_to_work_identity_holds_for_each_case(recorded_expenses, employ
             frame["out_of_work_income_net_of_childcare"].to_numpy(),
             frame["out_of_work_income"].to_numpy(),
         ), f"{label}: a non-worker's out-of-work income must not lose support"
+
+
+# Mutation guards. The review reverted six fixes at once and the suite still
+# reported "32 passed", so each of these asserts the mechanism rather than a
+# figure a regenerated artifact would carry along with the mutation.
+
+
+def test_the_effective_subsidy_rate_is_weighted_and_uses_the_benefit_unit_weight():
+    """Two distinct mistakes: no weights at all, and the wrong weights."""
+    import inspect
+
+    from free_childcare_reform.labour_supply import _effective_subsidy_rate
+
+    source = inspect.getsource(_effective_subsidy_rate)
+    assert "MicroSeries" in source, "the rate must be survey-weighted"
+    assert 'calculate("benunit_weight"' in source, (
+        "a benefit-unit rate takes the benefit-unit weight, not the household "
+        "weight mapped onto benefit units"
+    )
+    assert 'map_to="benunit"' not in source.split("benunit_weight")[1][:200]
+
+
+def test_leaver_ftes_use_observed_hours_and_entrants_the_assumption():
+    import inspect
+
+    from free_childcare_reform import labour_supply
+
+    source = inspect.getsource(labour_supply.participation_response)
+    assert "weekly_hours_worked" in source, (
+        "leavers give up observed hours; using the entrant assumption for both "
+        "overstates the net full-time equivalent"
+    )
+    # Asserting the names exist is not enough: a mutation that computes them
+    # and then ignores them passed an earlier version of this test.
+    assert "ftes = entrant_ftes - leaver_ftes" in source, (
+        "the net full-time equivalent must be the difference of the two, not "
+        "net entrants at the entrant assumption"
+    )
+
+
+def test_quintiles_are_placed_against_thresholds_not_ranked():
+    """Ranking split tied imputed earnings by input row order."""
+    import inspect
+
+    from free_childcare_reform.labour_supply import potential_earnings_quintile
+
+    source = inspect.getsource(potential_earnings_quintile)
+    assert "searchsorted" in source, "quintiles must be threshold placement"
+    assert "cumsum" not in source, "weighted-rank assignment was order-dependent"
+
+
+def test_the_age_floor_is_the_extended_scheme_floor():
+    """0.75 evaluates as age 1 on whole-year ages; 1.0 would hide that."""
+    from free_childcare_reform.reforms import UNIVERSAL_ENTITLEMENT_AGE_MIN
+
+    assert UNIVERSAL_ENTITLEMENT_AGE_MIN == 0.75, (
+        "the floor is the extended scheme's, and the fact that whole-year ages "
+        "make it behave as age 1 is a documented limitation, not a reason to "
+        "write 1.0"
+    )
