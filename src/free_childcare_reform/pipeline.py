@@ -300,25 +300,25 @@ CHILDCARE_PROGRAMMES = (
 
 
 def _cost_by_country(baseline, reform_sim, year: int) -> dict:
-    """A leg's cost split by country, on the childcare programmes it moves.
+    """A leg's cost split by country, on the same quantity as the headline.
 
-    The free entitlements are England-only in law and in the model, so their
-    non-England figures are zero by construction rather than by omission.
-    Tax-Free Childcare and its replacement are UK-wide, so that part really
-    does split. Reported for every leg so one control can govern the whole
-    view.
+    The `gov_spending` difference, grouped by household country — not a sum of
+    childcare programme variables. An earlier version summed the four
+    programmes directly, which came to £6.667bn against the headline
+    £6.638bn: the £28.7m difference is the Universal Credit interaction, which
+    the programme sum cannot see. Two figures for one cost, differing by an
+    amount that is not rounding.
+
+    `gov_spending` is household-level, so this needs no entity mapping and the
+    parts sum to the whole by construction.
     """
-    country = np.asarray(baseline.calculate("country", year, map_to="person").values)
-    weights = np.asarray(
-        baseline.calculate("household_weight", year, map_to="person").values, float
+    country = np.asarray(baseline.calculate("country", year).values).astype(str)
+    weights = np.asarray(baseline.calculate("household_weight", year).values, float)
+    difference = np.asarray(reform_sim.calculate("gov_spending", year).values, float) - np.asarray(
+        baseline.calculate("gov_spending", year).values, float
     )
-    difference = np.zeros(len(country), float)
-    for programme in CHILDCARE_PROGRAMMES:
-        before = np.asarray(baseline.calculate(programme, year, map_to="person").values, float)
-        after = np.asarray(reform_sim.calculate(programme, year, map_to="person").values, float)
-        difference += after - before
     out = {}
-    for name in sorted({str(value) for value in country}):
+    for name in sorted(set(country)):
         mask = country == name
         out[name.lower()] = round(
             float(MicroSeries(difference[mask], weights=weights[mask]).sum()) / 1e9, 4

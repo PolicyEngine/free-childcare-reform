@@ -58,16 +58,6 @@ export default function CostTab({ data, year, bound, area }) {
   const dynamic = isStatic ? null : result.dynamic_cost[bound];
   // Each panel below describes one leg's channel, so it must show that leg's
   // own response rather than the response to both legs together.
-  const freeHoursShown = isStatic
-    ? null
-    : isEngland
-      ? legs.free_hours.labour_supply[bound].by_country.england
-      : legs.free_hours.labour_supply[bound];
-  const subsidyShown = isStatic
-    ? null
-    : isEngland
-      ? legs.subsidy.labour_supply[bound].by_country.england
-      : legs.subsidy.labour_supply[bound];
   const src = data.sources || {};
   const A = (source, text) =>
     source ? (
@@ -81,27 +71,41 @@ export default function CostTab({ data, year, bound, area }) {
   const assumptions = data.assumptions || {};
   const feeBase = result.fee_base_sensitivity;
   const byCountry = result.subsidy_by_country;
-  // One control governs every figure. England splits are static: a country's
-  // labour supply response is reported separately below rather than folded
-  // into a dynamic cost, because the offset is not apportioned by country in
-  // the dynamic-cost block.
-  const cost = (leg) => {
-    if (isEngland) return legs[leg].static_cost_by_country_bn.england;
-    return isStatic
-      ? legs[leg].static_cost_bn
-      : legs[leg].dynamic_cost[bound].dynamic_cost_bn;
+  // One accessor for every figure, so the Area and labour supply controls
+  // always select the same view. A country's dynamic cost is its static cost
+  // less its own net revenue — the dynamic_cost block's offset is UK-wide and
+  // would otherwise be applied to an England denominator.
+  const legResponse = (block, leg) =>
+    isEngland ? block.legs[leg].labour_supply[bound].by_country.england : block.legs[leg].labour_supply[bound];
+  const legCost = (block, leg) => {
+    const staticCost = isEngland
+      ? block.legs[leg].static_cost_by_country_bn.england
+      : block.legs[leg].static_cost_bn;
+    if (isStatic) return staticCost;
+    return staticCost - legResponse(block, leg).net_revenue_gbp / 1e9;
   };
+  const cost = (leg) => legCost(result, leg);
+  const staticCost = (leg) =>
+    isEngland ? legs[leg].static_cost_by_country_bn.england : legs[leg].static_cost_bn;
   const response = isStatic
     ? null
     : isEngland
       ? result.labour_supply[bound].by_country.england
       : result.labour_supply[bound];
+  // The combined cost and offset on the selected area, so the share below is
+  // computed on its own denominator rather than the UK one.
+  const combinedStatic = staticCost("combined");
+  const combinedOffset = isStatic ? 0 : response.net_revenue_gbp / 1e9;
+  const offsetShare = combinedStatic ? Math.abs(combinedOffset / combinedStatic) * 100 : 0;
 
-  const yearRows = data.years.map((y) => ({
-    year: formatFiscalYear(y),
-    free_hours: data.by_year[String(y)].legs.free_hours.static_cost_bn,
-    subsidy: data.by_year[String(y)].legs.subsidy.static_cost_bn,
-  }));
+  const yearRows = data.years.map((y) => {
+    const block = data.by_year[String(y)];
+    return {
+      year: formatFiscalYear(y),
+      free_hours: legCost(block, "free_hours"),
+      subsidy: legCost(block, "subsidy"),
+    };
+  });
 
   return (
     <div className="space-y-10">
@@ -114,10 +118,12 @@ export default function CostTab({ data, year, bound, area }) {
               FRS. <strong>The legs cover different countries.</strong> The free
               entitlements are England-only in law and in the model; Tax-Free Childcare and
               the subsidy replacing it are UK-wide. There is no UK figure for free hours
-              because early years childcare is devolved — the other nations run their own
-              schemes, which this brief does not reform and the model does not carry — and
-              their Barnett consequentials are a funding transfer rather than a childcare
-              policy, so they are not costed.
+              because early years childcare is devolved: the other nations run their own
+              schemes, which this brief does not reform. policyengine-uk models Scottish
+              eligibility but not an entitlement amount, and has nothing for Wales or
+              Northern Ireland, so there is no devolved entitlement to reform or cost. An
+              England spending increase would generate Barnett consequentials, which the
+              devolved administrations may spend as they choose; they are not costed here.
             </>
           }
         />
@@ -128,7 +134,7 @@ export default function CostTab({ data, year, bound, area }) {
             sub={
               isStatic
                 ? "15 hours for every child from 9 months, plus 15 more where parents work and earn under £100,000."
-                : `Static ${formatBn(legs.free_hours.static_cost_bn)}, plus ${formatSignedBn(-legs.free_hours.dynamic_cost[bound].labour_supply_offset_bn)} of labour supply on ${formatCount(legs.free_hours.dynamic_cost[bound].net_entrants)} net entrants. Unconditional hours remove a reason to work, so this leg costs more.`
+                : `Static ${formatBn(staticCost('free_hours'))}, plus ${formatSignedBn(--legResponse(result, 'free_hours').net_revenue_gbp / 1e9)} of labour supply on ${formatCount(legResponse(result, 'free_hours').net_entrants)} net entrants. Unconditional hours remove a reason to work, so this leg costs more.`
             }
           />
           <Stat
@@ -139,7 +145,7 @@ export default function CostTab({ data, year, bound, area }) {
                 ? `Tax-Free Childcare is UK-wide, so this leg splits: the rest is ${formatBn(byCountry.scotland)} Scotland, ${formatBn(byCountry.wales)} Wales and ${formatBn(byCountry.northern_ireland)} Northern Ireland.`
                 : isStatic
                   ? `Replacing Tax-Free Childcare. On the published fee base this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`
-                  : `Static ${formatBn(legs.subsidy.static_cost_bn)}, plus ${formatSignedBn(-legs.subsidy.dynamic_cost[bound].labour_supply_offset_bn)} of labour supply on ${formatCount(legs.subsidy.dynamic_cost[bound].net_entrants)} net entrants. Cheaper childcare makes work pay, so this leg costs less.`
+                  : `Static ${formatBn(staticCost('subsidy'))}, plus ${formatSignedBn(--legResponse(result, 'subsidy').net_revenue_gbp / 1e9)} of labour supply on ${formatCount(legResponse(result, 'subsidy').net_entrants)} net entrants. Cheaper childcare makes work pay, so this leg costs less.`
             }
           />
           {isStatic ? (
@@ -151,14 +157,10 @@ export default function CostTab({ data, year, bound, area }) {
           ) : (
             <Stat
               label={`Labour supply, both legs together${areaLabel}`}
-              value={formatSignedBn(
-                isEngland ? -response.net_revenue_gbp / 1e9 : -dynamic.labour_supply_offset_bn,
-              )}
+              value={formatSignedBn(-combinedOffset)}
               sub={`${(isEngland ? response.net_entrants : dynamic.net_entrants) >= 0 ? "+" : "−"}${formatCount(
                 Math.abs(isEngland ? response.net_entrants : dynamic.net_entrants),
-              )} net entrants${isEngland ? " in England" : ` among ${result.labour_supply[bound].responding_adults_m.toFixed(1)}m eligible parents`}. The legs pull against each other — free hours remove a work condition, the subsidy cuts the price of working — so this is not their sum, and the net sign depends on which dominates. At ${(
-                dynamic.offset_share_of_static_cost * 100
-              ).toFixed(1)}% of the static cost, small on every assumption.`}
+              )} net entrants${isEngland ? " in England" : ` among ${result.labour_supply[bound].responding_adults_m.toFixed(1)}m eligible parents`}. The legs pull against each other — free hours remove a work condition, the subsidy cuts the price of working — so this is not their sum, and the net sign depends on which dominates. At ${offsetShare.toFixed(2)}% of the static cost, small on every assumption.`}
               footnote={
                 <>
                   {BOUND_NOTES[bound]?.(assumptions)}{" "}
@@ -324,11 +326,11 @@ export default function CostTab({ data, year, bound, area }) {
                     </li>
                     <li>
                       On the free-hours leg alone:{" "}
-                      <strong>{formatCount(freeHoursShown.entrants)}</strong> entrants
-                      against <strong>{formatCount(freeHoursShown.leavers)}</strong>{" "}
+                      <strong>{formatCount(legResponse(result, 'free_hours').entrants)}</strong> entrants
+                      against <strong>{formatCount(legResponse(result, 'free_hours').leavers)}</strong>{" "}
                       leavers, a net revenue effect of{" "}
                       <strong>
-                        {formatSignedBn(freeHoursShown.net_revenue_gbp / 1e9)}
+                        {formatSignedBn(legResponse(result, 'free_hours').net_revenue_gbp / 1e9)}
                       </strong>
                       .
                     </li>
@@ -348,7 +350,7 @@ export default function CostTab({ data, year, bound, area }) {
                     <li>
                       This is the channel that produces the subsidy leg&apos;s{" "}
                       <strong>
-                        {formatCount(subsidyShown.net_entrants)}
+                        {formatCount(legResponse(result, 'subsidy').net_entrants)}
                       </strong>{" "}
                       net entrants.
                     </li>

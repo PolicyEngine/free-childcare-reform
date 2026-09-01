@@ -10,11 +10,11 @@
   "policyengine_uk_version": "2.94.0",
   "policyengine_version": "5.3.0",
   "provenance": {
-    "analysis_commit": "accaa72a86429b1ac880a74922d1ac03f4d16ce4",
+    "analysis_commit": "b24bfab9826a703873baa9e20b95fb89e80c9531",
     "working_tree_dirty": true,
-    "source_digest": "f0bf31064748eb048778dc01e60c3dbf3ef733b7de881c5e956ea9c3c01f1887",
+    "source_digest": "c6fa821ac981e87f16215374e318873a60e9c20452e181aae7b6081d15e35882",
     "python_version": "3.13.15",
-    "generated_at": "2026-09-01T11:46:04+00:00"
+    "generated_at": "2026-09-01T11:56:55+00:00"
   },
   "reform_definition": {
     "free_hours": "15 hours a week of free childcare for every child from 9 months to school age, plus a further 15 hours where parents work and earn under \u00a3100,000 \u2014 replacing 30 hours for working parents under \u00a3100,000 and 15 hours for 3-4 year olds.",
@@ -126,7 +126,7 @@
     },
     "bettendorf_jongen_muller": {
       "label": "Bettendorf, Jongen and Muller \u2014 Childcare subsidies and labour supply",
-      "description": "Netherlands. A joint reform \u2014 childcare subsidies plus an earned income tax credit \u2014 raised maternal hours 6.2% against employment 3.0%, so the intensive margin moved about twice as much. Why the participation-only estimate here is a floor. The two instruments are not separately identified.",
+      "description": "Netherlands, CPB. A joint reform \u2014 childcare subsidies plus an earned income tax credit \u2014 raised maternal hours 6.2% against employment 3.0%, so the intensive margin moved about twice as much. Cited only for that ratio, which is why the participation-only estimate here is a floor: the two instruments are not separately identified, so neither level is transferable.",
       "url": "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf"
     }
   },
@@ -3458,11 +3458,11 @@
           },
           "static_cost_bn": 6.638,
           "static_cost_by_country_bn": {
-            "england": 5.8654,
+            "england": 5.8368,
             "northern_ireland": 0.1552,
             "scotland": 0.5114,
             "wales": 0.1345,
-            "uk": 6.6665
+            "uk": 6.6379
           },
           "household_effects": {
             "by_income_quintile": [
@@ -8502,11 +8502,11 @@
           },
           "static_cost_bn": 6.798,
           "static_cost_by_country_bn": {
-            "england": 6.0067,
+            "england": 5.9774,
             "northern_ireland": 0.1589,
             "scotland": 0.524,
             "wales": 0.1378,
-            "uk": 6.8274
+            "uk": 6.7981
           },
           "household_effects": {
             "by_income_quintile": [
@@ -13546,11 +13546,11 @@
           },
           "static_cost_bn": 6.977,
           "static_cost_by_country_bn": {
-            "england": 6.1609,
+            "england": 6.1308,
             "northern_ireland": 0.1628,
             "scotland": 0.5421,
             "wales": 0.1411,
-            "uk": 7.0069
+            "uk": 6.9768
           },
           "household_effects": {
             "by_income_quintile": [

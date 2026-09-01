@@ -149,12 +149,40 @@ def test_the_committed_results_were_generated_from_the_committed_source():
     unknown uncommitted bytes". The digest pins what actually ran, so it must
     match the source in the tree now.
     """
+    import subprocess
+
     from free_childcare_reform.pipeline import _source_digest
 
-    recorded = json.loads(ROOT_RESULTS.read_text())["provenance"]["source_digest"]
-    assert recorded == _source_digest(), (
+    provenance = json.loads(ROOT_RESULTS.read_text())["provenance"]
+    assert provenance["source_digest"] == _source_digest(), (
         "the committed results were generated from different source than is "
         "checked in — rerun the pipeline"
+    )
+
+    # The digest alone allows a run whose commit is stale: it pins the source
+    # files but not which commit they belonged to. In CI, where the tree is a
+    # clean checkout, the recorded commit must be the one being tested.
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    dirty = bool(
+        subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    )
+    if dirty:
+        pytest.skip("working tree is dirty; commit-equality is checked in CI")
+    assert provenance["analysis_commit"] == head, (
+        f"results were generated at {provenance['analysis_commit'][:8]} but HEAD "
+        f"is {head[:8]} — rerun the pipeline and commit the artifacts together"
     )
 
 
@@ -185,3 +213,107 @@ def test_every_output_can_be_read_for_england_alone(results):
         for bound in ("low", "central", "high"):
             by_country = block["labour_supply"][bound]["by_country"]
             assert "england" in by_country, (year, bound)
+
+
+COUNTRIES = ("england", "scotland", "wales", "northern_ireland")
+
+
+def _number(value, path):
+    """A finite number, and not a bool — `isinstance(True, int)` is True."""
+    assert not isinstance(value, bool), f"{path} is a boolean, not a number"
+    assert isinstance(value, (int, float)), f"{path} is {type(value).__name__}"
+    assert math.isfinite(value), f"{path} is {value}"
+
+
+def test_country_costs_reconcile_to_the_headline(results):
+    """The parts must sum to the whole, on the same quantity.
+
+    An earlier version summed four childcare programme variables while the
+    headline used `gov_spending`, differing by £28.7m of Universal Credit
+    interaction — two figures for one cost, differing by more than rounding.
+    """
+    for year in results["years"]:
+        for leg in ("free_hours", "subsidy", "combined"):
+            block = results["by_year"][str(year)]["legs"][leg]
+            by_country = block["static_cost_by_country_bn"]
+            for area in COUNTRIES + ("uk",):
+                _number(by_country[area], f"{year}/{leg}/{area}")
+            parts = sum(by_country[country] for country in COUNTRIES)
+            assert by_country["uk"] == pytest.approx(parts, abs=0.001), (year, leg)
+            assert by_country["uk"] == pytest.approx(block["static_cost_bn"], abs=0.002), (
+                f"{year}/{leg}: country total must reconcile to the headline"
+            )
+
+
+def test_the_free_hours_leg_is_england_only_in_every_country_block(results):
+    for year in results["years"]:
+        by_country = results["by_year"][str(year)]["legs"]["free_hours"][
+            "static_cost_by_country_bn"
+        ]
+        for devolved in ("scotland", "wales", "northern_ireland"):
+            assert by_country[devolved] == 0, (year, devolved)
+
+
+def test_geography_and_distribution_blocks_are_fully_typed(results):
+    """Rejects null, boolean and wrong-shaped objects.
+
+    A mutation setting `subsidy_by_country` to null, an England cost to
+    `true` and a country response to null passed every earlier artifact test
+    while crashing a client on its first property access.
+    """
+    for year in results["years"]:
+        block = results["by_year"][str(year)]
+
+        by_country = block["subsidy_by_country"]
+        assert isinstance(by_country, dict), year
+        for area in COUNTRIES + ("uk",):
+            _number(by_country[area], f"{year}/subsidy_by_country/{area}")
+
+        for bound in ("low", "central", "high"):
+            responses = block["labour_supply"][bound]["by_country"]
+            assert isinstance(responses, dict), (year, bound)
+            for area in COUNTRIES:
+                response = responses[area]
+                assert isinstance(response, dict), (year, bound, area)
+                for field in ("entrants", "leavers", "net_entrants", "net_revenue_gbp"):
+                    _number(response[field], f"{year}/{bound}/{area}/{field}")
+
+        for leg in ("free_hours", "subsidy", "combined"):
+            leg_block = block["legs"][leg]
+            for key in ("household_effects_england", "household_effects"):
+                effects = leg_block[key]
+                assert isinstance(effects, dict), (year, leg, key)
+                for breakdown in (
+                    "by_income_quintile",
+                    "by_income_quintile_families_with_under_5s",
+                ):
+                    rows = effects[breakdown]
+                    assert isinstance(rows, list) and rows, (year, leg, key, breakdown)
+                    for row in rows:
+                        assert isinstance(row["group"], str)
+                        _number(row["average_gain_gbp"], f"{year}/{leg}/{key}/{breakdown}")
+            for bound in ("low", "central", "high"):
+                assert isinstance(leg_block["household_effects_by_bound_england"][bound], dict), (
+                    year,
+                    leg,
+                    bound,
+                )
+
+
+def test_the_scope_scenarios_are_ordered_and_distinct(results):
+    """Take-up and Universal Credit inclusion are separate dimensions."""
+    for year in results["years"]:
+        scenarios = results["by_year"][str(year)]["scope_scenarios"]
+        for key in (
+            "as_coded_bn",
+            "full_take_up_bn",
+            "uc_families_included_bn",
+            "uc_families_and_full_take_up_bn",
+        ):
+            _number(scenarios[key], f"{year}/scope_scenarios/{key}")
+        assert (
+            scenarios["as_coded_bn"]
+            < scenarios["full_take_up_bn"]
+            < scenarios["uc_families_and_full_take_up_bn"]
+        ), year
+        assert scenarios["as_coded_bn"] < scenarios["uc_families_included_bn"], year

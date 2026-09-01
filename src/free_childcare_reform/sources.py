@@ -438,10 +438,11 @@ OBR_LABOUR_SUPPLY = Source(
 
 BETTENDORF_JONGEN_MULLER = Source(
     "Bettendorf, Jongen and Muller — Childcare subsidies and labour supply",
-    "Netherlands. A joint reform — childcare subsidies plus an earned income tax "
-    "credit — raised maternal hours 6.2% against employment 3.0%, so the intensive "
-    "margin moved about twice as much. Why the participation-only estimate here is "
-    "a floor. The two instruments are not separately identified.",
+    "Netherlands, CPB. A joint reform — childcare subsidies plus an earned income "
+    "tax credit — raised maternal hours 6.2% against employment 3.0%, so the "
+    "intensive margin moved about twice as much. Cited only for that ratio, which "
+    "is why the participation-only estimate here is a floor: the two instruments "
+    "are not separately identified, so neither level is transferable.",
     "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf",
 )
 
