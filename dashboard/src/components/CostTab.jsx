@@ -257,10 +257,22 @@ export default function CostTab({ data, year, bound }) {
         <section>
           <div className="rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="text-lg font-semibold tracking-tight text-slate-900">
-              What moves employment, and in which direction
+              Labour supply response
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Two forces pull against each other. The reported response is the net of
+              This is an <strong>extensive-margin</strong> model:{" "}
+              {A(src.obr_labour_supply, "the OBR's participation elasticities")} — which
+              vary by gender, partner employment, age of youngest child and earnings
+              quintile — are applied to the percentage change in each person&apos;s gain to
+              work, giving an expected change in their probability of working rather than a
+              drawn outcome. The <strong>intensive margin</strong> is not modelled at all:
+              no one already in work changes their hours, and{" "}
+              {A(src.bettendorf_jongen_muller, "Dutch evidence")} suggests hours move about
+              twice as much as employment, so what follows is a floor on the total response
+              rather than the whole of it.
+            </p>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Two forces pull against each other, and the reported figure is the net of
               them, which is why it is small.
             </p>
             <dl className="mt-5 grid gap-4 sm:grid-cols-2">
