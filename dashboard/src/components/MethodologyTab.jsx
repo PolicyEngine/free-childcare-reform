@@ -164,13 +164,14 @@ export default function MethodologyTab({ data, year }) {
               Resources Survey ages are whole years, so the reform&apos;s 0.75 age floor
               evaluates as &ldquo;age 1 or over&rdquo;, and no child recorded as age 0
               receives the entitlement — verified as exactly zero children. The
-              9-to-12-month cohort the reform covers is therefore not costed here. Taking
-              the age-1 cohort as the analogue — 158,982 children at £6,934 each — a
-              quarter of a birth year is roughly 40,000 children and about{" "}
-              <strong>£0.28bn, some 14% of the free-hours leg</strong>, which is missing
-              from the cost. Modelling it needs sub-year ages in the survey, not a
-              different threshold. The labour supply response omits the same cohort, so
-              both sides are consistent.
+              9-to-12-month cohort the reform covers is therefore not costed here.
+              Measured directly, lowering the floor to zero raises the leg from £1.97bn to
+              £3.73bn, so the whole age-zero group is worth £1.76bn and a three-month
+              share is about <strong>£0.44bn, or 22% of the free-hours leg</strong>, which
+              is missing from the cost. Modelling it properly needs month-of-age and
+              term-start rules — eligibility begins the term after a child turns nine
+              months — not a different threshold. The labour supply response omits the
+              same children, so both sides are consistent.
             </li>
             <li>
               <strong>The participation elasticities are read at 2025.</strong> The

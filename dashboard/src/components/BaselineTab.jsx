@@ -171,7 +171,8 @@ export default function BaselineTab({ data, year }) {
         {sensitivity ? (
           <p className="mt-4 text-sm leading-6 text-slate-600">
             <strong>
-              The childcare fee base is the largest uncertainty in the costing.
+              The childcare fee base is the largest uncertainty, and this rebasing is an
+              illustrative scenario rather than a bound.
             </strong>{" "}
             The 75% subsidy pays a share of what families spend, and for England&apos;s
             under-5s the model has {formatBn(sensitivity.model_england_under_5_bn)} of
@@ -180,7 +181,10 @@ export default function BaselineTab({ data, year }) {
             {feeBaseRatio.toFixed(2)}× as much. Scaling the model&apos;s under-5 fees to
             that estimate would take the subsidy leg from{" "}
             {formatBn(result.legs.subsidy.static_cost_bn)} to{" "}
-            {formatBn(sensitivity.subsidy_cost_bn)}. Free hours are unaffected.
+            {formatBn(sensitivity.subsidy_cost_bn)}. Free hours are unaffected. The CMA
+            does not publish that figure as gross parent-paid fees — it is a residual of
+            an uncertain sector-income estimate, and it contains other provider income —
+            so this is one fixed-quantity accounting scenario, not the end of an interval.
           </p>
         ) : null}
       </section>

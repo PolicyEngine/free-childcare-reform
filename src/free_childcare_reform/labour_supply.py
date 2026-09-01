@@ -171,17 +171,32 @@ def impute_entrant_earnings(
 def potential_earnings_quintile(sim, year: int, entrant_earnings: np.ndarray) -> np.ndarray:
     """Earnings quintile on *potential* earnings, across adults only.
 
-    ``calculate_earnings_quintile`` upstream applies ``pd.qcut`` to raw
-    ``employment_income`` over every person in the dataset — children included.
-    More than half that population has no earnings, so its bottom two quintiles
-    are entirely non-earners and every non-worker lands in Q1 or Q2. Since the
-    OBR's Table A1 elasticities rise steeply as the quintile falls, that hands
-    every potential entrant close to the top elasticity in the table.
+    Placement against the weighted quintile boundaries of working adults'
+    observed earnings, which is what policyengine-uk's
+    ``calculate_earnings_quintile`` now does. Workers are placed on their
+    actual earnings, non-workers on the earnings imputed here.
 
-    The OBR's quintiles are of the relevant adult population, on potential
-    earnings — actual for workers, imputed for non-workers, which is what the
-    upstream docstring describes but not what it does. That is what this
-    computes.
+    An earlier version of this function ranked adults by cumulative weight
+    instead, to split the point masses that imputed earnings create — many
+    non-workers share one imputed value per age band. That reasoning had two
+    stated grounds, both now stale: upstream no longer applies ``pd.qcut``
+    over every person including children, and the hourly-wage units bug it
+    worked around is fixed. It also had a defect of its own. Ranking forces
+    equal population shares and splits a tied mass across a boundary by input
+    row order, so two adults with identical circumstances could draw different
+    elasticities according to their position in the file. Threshold placement
+    puts a mass wholly in the quintile its value belongs to, and the OBR's
+    Table A1 is indexed on position in the earnings distribution rather than
+    on equal shares of adults.
+
+    The change matters: net entrants move from about -5,600 to -10,400 in
+    2027-28. Scaling imputed entrant earnings to full-time equivalent before
+    placing them, as upstream does, would give about -14,600 instead. That
+    scaling is an unvalidated assumption upstream, so it is not adopted here,
+    and the difference is reported as a bound rather than resolved.
+
+    The local imputation of entrant earnings is kept: it is by age of youngest
+    child, which is the margin this reform moves.
     """
     employment_income = np.asarray(sim.calculate("employment_income", year), float)
     adult = np.asarray(sim.calculate("adult_index", year), float) > 0
@@ -189,27 +204,43 @@ def potential_earnings_quintile(sim, year: int, entrant_earnings: np.ndarray) ->
     potential = np.where(employment_income > 0, employment_income, entrant_earnings)
 
     quintile = np.ones(len(potential), dtype=int)
-    index = np.flatnonzero(adult)
-    if not len(index):
-        return quintile
-    values, adult_weights = potential[index], weights[index]
-    total = adult_weights.sum()
-    if total <= 0:
+    working_adults = adult & (employment_income > 0)
+    if not working_adults.any():
         return quintile
 
-    # Assign by weighted rank rather than by value cutoffs. Every non-worker in
-    # a given band shares one imputed value, so potential earnings carry large
-    # point masses; cutting on values would drop a whole mass into a single
-    # quintile and leave others empty. Ranking splits ties across the boundary
-    # instead. The sort is stable, so the result is deterministic.
-    order = np.argsort(values, kind="stable")
-    cumulative = np.cumsum(adult_weights[order])
-    # Midpoint of each person's own weight, so a mass straddling a boundary is
-    # divided rather than assigned whole to either side.
-    position = (cumulative - adult_weights[order] / 2) / total
-    ranked = np.clip((position * 5).astype(int) + 1, 1, 5)
-    quintile[index[order]] = ranked
+    observed = MicroSeries(employment_income[working_adults], weights=weights[working_adults])
+    thresholds = [float(observed.quantile(q)) for q in (0.2, 0.4, 0.6, 0.8)]
+    quintile[adult] = np.searchsorted(thresholds, potential[adult], side="right") + 1
     return quintile
+
+
+def _values(sim, variable: str, year: int, **kwargs) -> np.ndarray:
+    """Variable values as a plain array.
+
+    `calculate` returns a MicroSeries on a dataset simulation and a bare array
+    on a situation one. Taking the values tolerantly lets the gain-to-work
+    machinery be exercised on a hand-built household, which is what the
+    identity tests need.
+    """
+    result = sim.calculate(variable, year, **kwargs)
+    return np.asarray(getattr(result, "values", result))
+
+
+def _support_per_adult(sim, year: int) -> np.ndarray:
+    """Cost-contingent childcare support, projected onto every person.
+
+    `tax_free_childcare` is a Person variable but is paid on the *qualifying
+    child's* row, so `map_to="person"` is a no-op that leaves every adult
+    reading zero. Aggregating to the benefit unit and projecting back is what
+    puts the award on the adults whose work decision it bears on, and matches
+    how `household_net_income` already carries it.
+    """
+
+    totals = _values(sim, "tax_free_childcare", year, map_to="benunit").astype(float)
+    benunit_ids = _values(sim, "benunit_id", year)
+    person_benunit_ids = _values(sim, "benunit_id", year, map_to="person")
+    lookup = pd.Series(totals, index=benunit_ids)
+    return lookup.reindex(person_benunit_ids).fillna(0.0).to_numpy()
 
 
 def _gain_to_work(
@@ -228,17 +259,23 @@ def _gain_to_work(
     """
     original = np.asarray(sim.calculate("employment_income", year), float)
     adult_index = np.asarray(sim.calculate("adult_index", year), float)
-    net_income = np.asarray(
-        sim.calculate("household_net_income", year, map_to="person").values, float
-    )
+    net_income = _values(sim, "household_net_income", year, map_to="person").astype(float)
     out_of_work = net_income.copy()
     in_work = net_income.copy()
+    # Cost-contingent childcare support a non-worker would still receive.
+    # Measured with employment switched off rather than assumed: baseline
+    # Tax-Free Childcare carries a work test and falls to zero, but the
+    # reform's subsidy does not, so it persists. Taking it at baseline
+    # employment subtracted the baseline's support even though the
+    # recomputation had already removed it.
+    out_of_work_support = np.zeros_like(net_income)
 
-    def recompute(employment: np.ndarray) -> np.ndarray:
+    def recompute(employment: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         sim.reset_calculations()
         sim.set_input("employment_income", year, employment)
-        return np.asarray(
-            sim.calculate("household_net_income", year, map_to="person").values, float
+        return (
+            _values(sim, "household_net_income", year, map_to="person").astype(float),
+            _support_per_adult(sim, year),
         )
 
     for index in range(1, count_adults + 1):
@@ -247,19 +284,27 @@ def _gain_to_work(
             continue
         without = original.copy()
         without[is_adult] = 0
-        out_of_work[is_adult] = recompute(without)[is_adult]
+        without_income, without_support = recompute(without)
+        out_of_work[is_adult] = without_income[is_adult]
+        out_of_work_support[is_adult] = without_support[is_adult]
 
         with_work = original.copy()
         with_work[is_adult] = np.where(
             original[is_adult] > 0, original[is_adult], entrant_earnings[is_adult]
         )
-        in_work[is_adult] = recompute(with_work)[is_adult]
+        in_work[is_adult] = recompute(with_work)[0][is_adult]
 
     # Restore the simulation to the state it was handed to us in.
     sim.reset_calculations()
     sim.set_input("employment_income", year, original)
 
-    return pd.DataFrame({"in_work_income": in_work, "out_of_work_income": out_of_work})
+    return pd.DataFrame(
+        {
+            "in_work_income": in_work,
+            "out_of_work_income": out_of_work,
+            "out_of_work_support": out_of_work_support,
+        }
+    )
 
 
 def responds_to_childcare(sim, year: int) -> np.ndarray:
@@ -292,7 +337,6 @@ def _net_gain_to_work(
     sim,
     year: int,
     childcare_cost_when_working: np.ndarray,
-    cost_contingent_support: np.ndarray,
     entrant_earnings: np.ndarray,
     count_adults: int = 2,
 ) -> pd.DataFrame:
@@ -322,8 +366,25 @@ def _net_gain_to_work(
     frame = _gain_to_work(sim, year, entrant_earnings, count_adults)
     frame["childcare_cost_when_working"] = childcare_cost_when_working
     frame["in_work_income_net_of_childcare"] = frame["in_work_income"] - childcare_cost_when_working
-    frame["out_of_work_income_net_of_childcare"] = (
-        frame["out_of_work_income"] - cost_contingent_support
+    # Only the support a non-worker would actually still receive is netted
+    # off, measured with employment switched off rather than at baseline
+    # employment. In the baseline that is zero, because Tax-Free Childcare is
+    # work-tested and the recomputation has already removed it; under the
+    # reform the subsidy has no work test, so it persists and must come out.
+    # Only for people already in work. For them the out-of-work state has to
+    # lose support attached to childcare they would stop buying, and under the
+    # reform — which has no work test — it otherwise persists on their
+    # recorded spend.
+    #
+    # For an original non-worker the same subtraction is a double credit.
+    # `childcare_expenses` is a fixed input, so their recorded support sits in
+    # `household_net_income` in *both* states and cancels in the difference,
+    # while the care they would newly buy is already counted net of the
+    # subsidy in `childcare_cost_when_working`. Adding it a third time
+    # overstated their gain to work.
+    already_working = np.asarray(sim.calculate("employment_income", year), float) > 0
+    frame["out_of_work_income_net_of_childcare"] = frame["out_of_work_income"] - np.where(
+        already_working, frame["out_of_work_support"].to_numpy(), 0.0
     )
     frame["gain_to_work"] = (
         frame["in_work_income_net_of_childcare"] - frame["out_of_work_income_net_of_childcare"]
@@ -337,8 +398,6 @@ def prepare(
     year: int,
     baseline_childcare_cost: np.ndarray,
     reform_childcare_cost: np.ndarray,
-    baseline_cost_contingent_support: np.ndarray,
-    reform_cost_contingent_support: np.ndarray,
     count_adults: int = 2,
 ) -> dict:
     """Everything the response needs that does not depend on the elasticity.
@@ -357,7 +416,6 @@ def prepare(
         baseline_sim,
         year,
         baseline_childcare_cost,
-        baseline_cost_contingent_support,
         entrant_earnings,
         count_adults,
     )
@@ -365,7 +423,6 @@ def prepare(
         reform_sim,
         year,
         reform_childcare_cost,
-        reform_cost_contingent_support,
         entrant_earnings,
         count_adults,
     )
@@ -398,6 +455,11 @@ def prepare(
     elasticity_wrt_gain_to_work = elasticity_wrt_income * (1 - replacement_rate)
 
     employment_income = np.asarray(baseline_sim.calculate("employment_income", year), float)
+    # Observed weekly hours, for converting leavers to full-time equivalents at
+    # their own hours rather than an entrant's.
+    weekly_hours_worked = (
+        np.asarray(baseline_sim.calculate("hours_worked", year).values, float) / WEEKS_PER_YEAR
+    )
     excluded = _excluded(baseline_sim, year, count_adults)
     eligible = ~excluded & responds_to_childcare(baseline_sim, year)
     currently_working = eligible & (employment_income > 0)
@@ -423,6 +485,7 @@ def prepare(
         "employment_income": employment_income,
         "imputed_wages": imputed_wages,
         "reform_gain": reform_gain,
+        "weekly_hours_worked": weekly_hours_worked,
         "weights": weights,
     }
 
@@ -469,7 +532,16 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     earnings_lost = float(MicroSeries(exit_probability * employment_income, weights=weights).sum())
     net_earnings = earnings_gained - earnings_lost
 
-    ftes = net_entrants * (HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS)
+    # Entrants and leavers are converted at their own hours. Entrants are
+    # assumed to work HOURS_FOR_NEW_ENTRANTS; leavers give up the hours they
+    # are observed working, which are longer, so using the entrant figure for
+    # both overstated the net full-time equivalent.
+    entrant_ftes = entrants * (HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS)
+    leaver_hours = prepared["weekly_hours_worked"]
+    leaver_ftes = float(
+        MicroSeries(exit_probability * (leaver_hours / FULL_TIME_HOURS), weights=weights).sum()
+    )
+    ftes = entrant_ftes - leaver_ftes
 
     revenue_from_entrants = float(
         MicroSeries(entry_probability * (imputed_wages - reform_gain), weights=weights).sum()
@@ -520,9 +592,8 @@ def _effective_subsidy_rate(sim, year: int, working: np.ndarray) -> float:
 
     Read from the simulation rather than restated, so it reflects whichever
     scenario is being measured: Tax-Free Childcare's capped top-up in the
-    baseline, the flat share under the reform. The Universal Credit childcare
-    element is excluded because the reform leaves it unchanged, so it cancels
-    out of the *difference* in the gain to work that drives the response.
+    baseline, the flat share under the reform. Survey-weighted — an earlier
+    version divided raw sample sums.
     """
     expenses = np.asarray(sim.calculate("childcare_expenses", year, map_to="benunit").values, float)
     support = np.asarray(sim.calculate("tax_free_childcare", year, map_to="benunit").values, float)
@@ -530,8 +601,10 @@ def _effective_subsidy_rate(sim, year: int, working: np.ndarray) -> float:
     person_benunit_ids = np.asarray(sim.calculate("benunit_id", year, map_to="person").values)
     working_benunits = pd.Series(working, index=person_benunit_ids).groupby(level=0).max()
     mask = working_benunits.reindex(benunit_ids).fillna(False).to_numpy().astype(bool)
-    total = expenses[mask].sum()
-    return float(support[mask].sum() / total) if total else 0.0
+    weights = np.asarray(sim.calculate("household_weight", year, map_to="benunit").values, float)
+    total = float(MicroSeries(expenses[mask], weights=weights[mask]).sum())
+    supported = float(MicroSeries(support[mask], weights=weights[mask]).sum())
+    return supported / total if total else 0.0
 
 
 def childcare_cost_when_working(
@@ -589,5 +662,14 @@ def childcare_cost_when_working(
             continue
         imputed[entrants] = mean_cost * (HOURS_FOR_NEW_ENTRANTS / mean_hours)
 
+    # A worker's cost is what they record, gross: `household_net_income`
+    # already contains the subsidy they receive on it, so netting it off here
+    # too would count it twice.
+    #
+    # An entrant's cost is net of the subsidy, and that is not the same
+    # double-count. `childcare_expenses` is a fixed input, so a non-worker
+    # records roughly nothing and their in-work income carries no subsidy —
+    # the model cannot know they would start buying care. Applying the rate to
+    # the imputed cost is the only place the subsidy reaches them.
     net_of_subsidy = 1 - _effective_subsidy_rate(sim, year, working)
     return np.where(working, actual_cost, imputed * net_of_subsidy)

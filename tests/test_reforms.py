@@ -92,9 +92,7 @@ def _situation(child_age: float, employment_income: float = 0):
             "parent": {"age": {YEAR: 32}, "employment_income": {YEAR: employment_income}},
         },
         "benunits": {"bu": {"members": ["child", "parent"]}},
-        "households": {
-            "hh": {"members": ["child", "parent"], "country": {YEAR: "ENGLAND"}}
-        },
+        "households": {"hh": {"members": ["child", "parent"], "country": {YEAR: "ENGLAND"}}},
     }
 
 
@@ -167,3 +165,118 @@ def test_three_and_four_year_olds_are_unchanged_by_the_reform():
         assert reform["universal_childcare_entitlement"] == pytest.approx(
             baseline["universal_childcare_entitlement"]
         ), age
+
+
+def test_cost_contingent_support_reaches_the_adult_whose_work_decision_it_bears_on():
+    """`tax_free_childcare` is paid on the child's row, not the parent's.
+
+    So `map_to="person"` is a no-op that leaves every adult reading zero, and
+    the out-of-work subtraction silently does nothing — which is what happened
+    (PolicyEngine/free-childcare-reform#3 review). The award has to be
+    aggregated to the benefit unit and projected back onto its adults, which
+    is also how `household_net_income` carries it.
+    """
+    import numpy as np
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.labour_supply import _support_per_adult
+
+    YEAR = 2027
+    situation = {
+        "people": {
+            "child": {"age": {YEAR: 3}},
+            "parent": {
+                "age": {YEAR: 32},
+                "employment_income": {YEAR: 35_000},
+                "childcare_expenses": {YEAR: 6_000},
+            },
+        },
+        "benunits": {"bu": {"members": ["child", "parent"]}},
+        "households": {"hh": {"members": ["child", "parent"], "country": {YEAR: "ENGLAND"}}},
+    }
+    sim = Simulation(situation=situation)
+    per_person = np.asarray(sim.calculate("tax_free_childcare", YEAR, map_to="person"), float)
+    projected = _support_per_adult(sim, YEAR)
+    adult = np.asarray(sim.calculate("adult_index", YEAR), float) > 0
+
+    benunit_total = float(
+        np.asarray(sim.calculate("tax_free_childcare", YEAR, map_to="benunit"), float).sum()
+    )
+    if benunit_total == 0:
+        pytest.skip("no support in this situation to project")
+    assert per_person[adult].sum() == 0, "support sits on the child's row, as expected"
+    assert projected[adult].sum() == pytest.approx(benunit_total * adult.sum()), (
+        "every adult must see the benefit unit's award"
+    )
+
+
+def test_the_out_of_work_support_adjustment_applies_only_to_existing_workers():
+    """Three deterministic cases, from the #3 review's C10.
+
+    The adjustment removes support attached to childcare a leaver would stop
+    buying. For someone already out of work it is a double credit: their
+    recorded `childcare_expenses` is a fixed input, so the support sits in
+    `household_net_income` in both employment states and cancels, while the
+    care they would newly buy is already counted net of the subsidy.
+    """
+    import inspect
+
+    from free_childcare_reform import labour_supply
+
+    source = inspect.getsource(labour_supply._net_gain_to_work)
+    assert "already_working" in source, (
+        "the out-of-work support adjustment must be restricted to people who are already in work"
+    )
+
+
+@pytest.mark.parametrize(
+    "recorded_expenses,employment_income,label",
+    [
+        (6_000, 35_000, "worker with recorded childcare"),
+        (0, 0, "non-worker with no recorded childcare"),
+        (6_000, 0, "non-worker with recorded childcare"),
+    ],
+)
+def test_the_gain_to_work_identity_holds_for_each_case(recorded_expenses, employment_income, label):
+    """The gain to work is in-work income less childcare, minus out-of-work.
+
+    Only an existing worker's out-of-work side has support removed. The third
+    case is the one that was wrong: a non-worker with recorded spend was
+    credited that support a second time.
+    """
+    import numpy as np
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.labour_supply import _net_gain_to_work
+
+    YEAR = 2027
+    situation = {
+        "people": {
+            "child": {"age": {YEAR: 3}},
+            "parent": {
+                "age": {YEAR: 32},
+                "employment_income": {YEAR: employment_income},
+                "childcare_expenses": {YEAR: recorded_expenses},
+            },
+        },
+        "benunits": {"bu": {"members": ["child", "parent"]}},
+        "households": {"hh": {"members": ["child", "parent"], "country": {YEAR: "ENGLAND"}}},
+    }
+    sim = Simulation(situation=situation)
+    people = len(np.asarray(sim.calculate("age", YEAR)))
+    frame = _net_gain_to_work(
+        sim, YEAR, np.zeros(people), np.full(people, 20_000.0), count_adults=1
+    )
+    working = np.asarray(sim.calculate("employment_income", YEAR), float) > 0
+    expected_out_of_work = frame["out_of_work_income"].to_numpy() - np.where(
+        working, frame["out_of_work_support"].to_numpy(), 0.0
+    )
+    assert np.allclose(
+        frame["gain_to_work"].to_numpy(),
+        frame["in_work_income_net_of_childcare"].to_numpy() - expected_out_of_work,
+    ), label
+    if not working.any():
+        assert np.allclose(
+            frame["out_of_work_income_net_of_childcare"].to_numpy(),
+            frame["out_of_work_income"].to_numpy(),
+        ), f"{label}: a non-worker's out-of-work income must not lose support"

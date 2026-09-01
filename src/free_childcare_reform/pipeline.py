@@ -24,6 +24,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from microdf import MicroSeries
 from policyengine_uk import Microsimulation
 from policyengine_uk.data import UKSingleYearDataset
 from policyengine_uk.utils.scenario import Scenario
@@ -454,15 +455,21 @@ def _benchmark_comparison(sim, year: int, measures: dict | None = None) -> list[
             # component, so the comparable figure is what abolishing it costs.
             ours = (measures or {})[benchmark["model_measure"]]["fiscal_cost_bn"]
         else:
+            # Honour the row's own comparison year. Computing at the costed
+            # year against a published figure for an earlier one measured the
+            # gap between two dates as much as the model — the mistake this
+            # analysis has now made three times.
+            measured_at = benchmark.get("comparison_year", year)
             ours = (
                 sum(
-                    float(sim.calculate(variable, year).sum())
+                    float(sim.calculate(variable, measured_at).sum())
                     for variable in benchmark["model_variables"]
                 )
                 / 1e9
             )
         row = {key: value for key, value in benchmark.items() if key != "model_variables"}
         row["model_bn"] = round(ours, 3)
+        row["model_measured_at"] = benchmark.get("comparison_year", year)
         row["model_variables"] = ", ".join(benchmark["model_variables"])
         if benchmark.get("model_measure"):
             row["model_variables"] = "abolition counterfactual on gov_spending"
@@ -504,6 +511,55 @@ def _build(dataset, scenario=None, childcare_expenses=None, year=None):
         sim.set_input("childcare_expenses", year, childcare_expenses)
         sim.reset_calculations()
     return sim
+
+
+def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
+    """The subsidy leg at baseline take-up, and at 100% within the same scope.
+
+    "75% for all" does not describe what is costed. The reform keeps
+    Tax-Free Childcare's `would_claim_tfc` take-up along with its
+    qualifying-child, provider and UK-connection rules, and its exclusion of
+    Universal Credit and tax-credit families. Removing the work test and the
+    £100,000 cliff is what changes; universal participation is not modelled.
+    Both figures are reported so the difference is visible rather than
+    inferred.
+    """
+    baseline_spend = float(baseline.calculate("tax_free_childcare", year).sum())
+    coded = _build(dataset, scenario=subsidy_scenario())
+    full = _build(dataset, scenario=subsidy_scenario())
+    claims = np.asarray(full.calculate("would_claim_tfc", year))
+    full.set_input("would_claim_tfc", year, np.ones(len(claims), dtype=bool))
+    full.reset_calculations()
+    return {
+        "as_coded_bn": round(
+            (float(coded.calculate("tax_free_childcare", year).sum()) - baseline_spend) / 1e9, 4
+        ),
+        "at_full_take_up_bn": round(
+            (float(full.calculate("tax_free_childcare", year).sum()) - baseline_spend) / 1e9, 4
+        ),
+        "baseline_take_up_rate": round(
+            float(
+                MicroSeries(
+                    claims.astype(float),
+                    weights=np.asarray(
+                        full.calculate("household_weight", year, map_to="benunit").values, float
+                    ),
+                ).mean()
+            ),
+            4,
+        ),
+        "note": (
+            "Both figures are the subsidy leg on its own, against the "
+            "baseline fee base — not the combined run, where free hours "
+            "displace some paid care first. They are comparable with each "
+            "other and with the subsidy leg's static cost, and not with the "
+            "combined total. Neither models new childcare use. The coded "
+            "scope keeps Tax-Free Childcare's take-up, qualifying-child, "
+            "provider and UK-connection rules and its exclusion of Universal "
+            "Credit and tax-credit families; it removes the work test and the "
+            "£100,000 cliff."
+        ),
+    }
 
 
 def run_year(dataset, year: int) -> dict:
@@ -587,8 +643,6 @@ def run_year(dataset, year: int) -> dict:
             childcare_cost_when_working(
                 reform_sim, year, responding, _childcare_cost_per_person(reform_sim, year)
             ),
-            _benunit_variable_per_person(baseline, year, "tax_free_childcare"),
-            _benunit_variable_per_person(reform_sim, year, "tax_free_childcare"),
         )
         return {
             bound: {
@@ -693,8 +747,11 @@ def run_year(dataset, year: int) -> dict:
             "against. The benchmark is gross of Tax-Free Childcare and the UC "
             "childcare element, matching childcare_expenses, which both are "
             "computed from. The CMA flags substantial uncertainty in the "
-            "sector-income figure this derives from. Treat this as a lower bound "
-            "on the subsidy leg, as the headline is an upper bound."
+            "sector-income figure this derives from, and the residual also "
+            "contains provider income that is not parent-paid fees. This is "
+            "one fixed-quantity accounting scenario, not a lower bound: "
+            "scenarios in the other direction, such as full take-up within the "
+            "coded scope, exceed the headline."
         ),
     }
 
@@ -717,6 +774,7 @@ def run_year(dataset, year: int) -> dict:
         "year": year,
         "baseline_spending": baseline_spending,
         "baseline_programmes": _baseline_programmes(baseline, year),
+        "subsidy_take_up": _subsidy_take_up_scenario(dataset, baseline, year),
         "uc_childcare_fiscal_cost": uc_childcare,
         "benchmarks": _benchmark_comparison(
             baseline, year, {"uc_childcare_fiscal_cost": uc_childcare}

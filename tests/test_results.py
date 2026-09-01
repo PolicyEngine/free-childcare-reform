@@ -112,11 +112,12 @@ def test_the_known_gaps_are_flagged_rather_than_hidden(results):
         benchmark["measure"]: benchmark["kind"]
         for benchmark in results["by_year"]["2027"]["benchmarks"]
     }
-    assert kinds["Tax-Free Childcare"] == "Award gap"
+    # Was an award gap; the like-for-like 2024 comparison closed it.
+    assert kinds["Tax-Free Childcare"] == "Like-for-like"
     # It became comparable once measured as a counterfactual rather than by
     # summing a maximum-amount component; what remains is a caseload gap.
     assert kinds["Universal Credit childcare element"] == "Caseload gap"
-    assert kinds["Parent-paid childcare fees, England, under-5s"] == "Fee base check"
+    assert kinds["Non-entitlement provider income, England, under-5s"] == "Fee base check"
     assert kinds["Childcare spending, all children, UK"] == "Unbenchmarked"
 
 
@@ -125,7 +126,7 @@ def test_the_fee_base_is_compared_like_for_like(results):
     # against that slice of the model, not the UK all-ages aggregate. Comparing
     # the two would roughly double the apparent gap.
     rows = {row["measure"]: row for row in results["by_year"]["2027"]["benchmarks"]}
-    comparable = rows["Parent-paid childcare fees, England, under-5s"]
+    comparable = rows["Non-entitlement provider income, England, under-5s"]
     full_base = rows["Childcare spending, all children, UK"]
     assert comparable["model_bn"] < full_base["model_bn"]
     assert comparable["ratio_model_to_official"] < 2.5
@@ -145,7 +146,7 @@ def test_the_fee_base_benchmark_is_gross_of_the_support_derived_from_it(results)
     about £14bn - £8.9bn.
     """
     rows = {row["measure"]: row for row in results["by_year"]["2027"]["benchmarks"]}
-    benchmark = rows["Parent-paid childcare fees, England, under-5s"]["official_bn"]
+    benchmark = rows["Non-entitlement provider income, England, under-5s"]["official_bn"]
     assert benchmark == pytest.approx(5.10), (
         "the fee-base benchmark must be the gross CMA residual, not a figure "
         "net of the support computed from childcare_expenses"
@@ -294,8 +295,45 @@ def test_household_effects_respond_to_the_labour_supply_assumption(results):
             assert gains["low"] != gains["central"] != gains["high"], (leg, breakdown)
             static = [
                 row["average_gain_gbp"]
-                for row in results["by_year"]["2027"]["legs"][leg]["household_effects"][
-                    breakdown
-                ]
+                for row in results["by_year"]["2027"]["legs"][leg]["household_effects"][breakdown]
             ]
             assert gains["central"] != static, (leg, breakdown)
+
+
+def test_the_subsidy_is_not_credited_twice_in_the_gain_to_work(results):
+    """`household_net_income` excludes Tax-Free Childcare and its replacement.
+
+    So netting the subsidy off the childcare a worker pays already credits it.
+    Subtracting cost-contingent support from out-of-work income as well counted
+    the same subsidy twice for every potential entrant, and inflated the
+    subsidy leg's response to roughly double what it should be — enough to
+    flip the sign of the combined response.
+
+    Pinned by the consequence: the subsidy leg's entrants must stay inside the
+    range the price-elasticity literature supports for a reform of this size —
+    the IFS put the 15-to-30-hour expansion at about 12,000 mothers a year.
+    """
+    for year in YEARS:
+        subsidy = results["by_year"][year]["legs"]["subsidy"]["labour_supply"]["central"]
+        assert 0 < subsidy["net_entrants"] < 25_000, year
+
+
+def test_leavers_are_converted_to_ftes_at_their_own_hours(results):
+    """Leavers give up observed hours, which are longer than an entrant's.
+
+    Using the entrant assumption for both overstated the net full-time
+    equivalent. The free-hours leg produces only leavers, so its FTE loss must
+    exceed what the entrant-hours conversion would give.
+    """
+    from free_childcare_reform.labour_supply import FULL_TIME_HOURS, HOURS_FOR_NEW_ENTRANTS
+
+    entrant_rate = HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS
+    for year in YEARS:
+        leg = results["by_year"][year]["legs"]["free_hours"]["labour_supply"]["central"]
+        # Effectively zero: the free-hours leg cannot raise the gain to work,
+        # so it produces leavers only.
+        assert leg["entrants"] < 1, year
+        naive = -leg["leavers"] * entrant_rate
+        assert leg["net_ftes"] < naive, (
+            f"{year}: leaver FTEs should exceed the entrant-hours conversion"
+        )

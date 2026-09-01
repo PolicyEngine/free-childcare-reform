@@ -60,11 +60,13 @@ from policyengine_uk.utils.scenario import Scenario
 # IN PRACTICE THIS IS AGE 1, NOT 9 MONTHS. FRS ages are whole years, so
 # `age >= 0.75` evaluates as `age >= 1` and no child recorded as age 0
 # receives the entitlement: verified as exactly zero on the pinned dataset.
-# The 9-to-12-month cohort the brief names is therefore not costed. On the
-# age-1 cohort as an analogue — 158,982 children at £6,934 each — a quarter
-# of a birth year is roughly 40,000 children and about £0.28bn, some 14% of
-# the free-hours leg. The leg is understated by that much, and modelling it
-# properly needs sub-year ages rather than a different threshold here.
+# The 9-to-12-month cohort the brief names is therefore not costed.
+#
+# Measured rather than extrapolated: lowering the floor to 0 raises the leg
+# from £1.9666bn to £3.7270bn, so the whole age-zero group is worth £1.7604bn
+# and a three-month share is about £0.4401bn — 22% of the leg. Modelling it
+# properly needs month-of-age and term-start rules, since eligibility begins
+# the term after a child turns nine months, not a different threshold here.
 UNIVERSAL_ENTITLEMENT_AGE_MIN = 0.75
 # The subsidy that replaces Tax-Free Childcare: 75% of childcare costs, with no
 # work test, no £100k cliff and no per-child cap.
