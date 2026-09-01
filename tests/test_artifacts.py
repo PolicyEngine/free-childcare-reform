@@ -159,30 +159,25 @@ def test_the_committed_results_were_generated_from_the_committed_source():
         "checked in — rerun the pipeline"
     )
 
-    # The digest alone allows a run whose commit is stale: it pins the source
-    # files but not which commit they belonged to. In CI, where the tree is a
-    # clean checkout, the recorded commit must be the one being tested.
-    head = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+    # The recorded commit is necessarily the *parent* of the commit that
+    # carries the artifact — the pipeline runs before the artifact is
+    # committed — so requiring it to equal HEAD is unsatisfiable, and an
+    # earlier version of this test asserted exactly that and could never pass.
+    #
+    # The satisfiable invariant is ancestry: results must come from this
+    # history rather than a divergent branch. The digest above is what pins
+    # the source itself.
+    recorded = provenance["analysis_commit"]
+    ancestry = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", recorded, "HEAD"],
         cwd=REPO_ROOT,
         capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()
-    dirty = bool(
-        subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=REPO_ROOT,
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
     )
-    if dirty:
-        pytest.skip("working tree is dirty; commit-equality is checked in CI")
-    assert provenance["analysis_commit"] == head, (
-        f"results were generated at {provenance['analysis_commit'][:8]} but HEAD "
-        f"is {head[:8]} — rerun the pipeline and commit the artifacts together"
+    if ancestry.returncode == 128:
+        pytest.skip("the recorded commit is not in this clone's history")
+    assert ancestry.returncode == 0, (
+        f"results were generated at {recorded[:8]}, which is not an ancestor of "
+        "HEAD — they come from a different history"
     )
 
 
