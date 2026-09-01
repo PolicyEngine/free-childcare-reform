@@ -591,6 +591,56 @@ def _subsidy_by_country(baseline, reform_sim, year: int) -> dict:
     return out
 
 
+def _scope_scenarios(dataset, baseline, free_hours, year: int, baseline_spending: dict) -> dict:
+    """Combined-run totals for each scope dimension, separately and together.
+
+    An earlier version of this analysis reported these as standalone legs
+    added together — the very arithmetic the README forbids two paragraphs
+    earlier. Free hours displace paid care before the subsidy applies, so a
+    combined run costs less than the sum, and every scenario here is built the
+    way the headline combined run is: with the displaced childcare expenses.
+
+    The two dimensions are also kept apart. Take-up and the exclusion of
+    Universal Credit families are independent choices, and conflating them
+    hides that doing both costs more than either.
+    """
+    displaced = displaced_childcare_expenses(
+        np.asarray(baseline.calculate("childcare_expenses", year).values, float),
+        _new_free_hours_value(baseline, free_hours, year),
+        sources.FREE_HOURS_DISPLACEMENT,
+    )
+    base = baseline_spending["gov_spending_bn"]
+
+    def combined(include_uc: bool, full_take_up: bool) -> float:
+        sim = _build(
+            dataset,
+            scenario=free_hours_scenario(PARAMETER_YEARS)
+            + subsidy_scenario(include_uc_families=include_uc),
+            childcare_expenses=displaced,
+            year=year,
+        )
+        if full_take_up:
+            claims = np.asarray(sim.calculate("would_claim_tfc", year))
+            sim.set_input("would_claim_tfc", year, np.ones(len(claims), dtype=bool))
+            sim.set_input("childcare_expenses", year, displaced)
+            sim.reset_calculations()
+        return round(float(sim.calculate("gov_spending", year).sum()) / 1e9 - base, 4)
+
+    return {
+        "as_coded_bn": combined(False, False),
+        "full_take_up_bn": combined(False, True),
+        "uc_families_included_bn": combined(True, False),
+        "uc_families_and_full_take_up_bn": combined(True, True),
+        "note": (
+            "Combined runs, with free hours displacing paid care before the "
+            "subsidy applies — not standalone legs added together, which "
+            "overstates every scenario. Take-up and the exclusion of Universal "
+            "Credit families are separate dimensions and are reported "
+            "separately as well as together."
+        ),
+    }
+
+
 def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
     """The subsidy leg at baseline take-up, and at 100% within the same scope.
 
@@ -619,9 +669,7 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
             float(
                 MicroSeries(
                     claims.astype(float),
-                    weights=np.asarray(
-                        full.calculate("household_weight", year, map_to="benunit").values, float
-                    ),
+                    weights=np.asarray(full.calculate("benunit_weight", year).values, float),
                 ).mean()
             ),
             4,
@@ -914,6 +962,7 @@ def run_year(dataset, year: int) -> dict:
         "baseline_spending": baseline_spending,
         "baseline_programmes": _baseline_programmes(baseline, year),
         "subsidy_take_up": _subsidy_take_up_scenario(dataset, baseline, year),
+        "scope_scenarios": _scope_scenarios(dataset, baseline, free_hours, year, baseline_spending),
         "subsidy_by_country": _subsidy_by_country(baseline, subsidy, year),
         "uc_childcare_fiscal_cost": uc_childcare,
         "benchmarks": _benchmark_comparison(

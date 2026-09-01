@@ -338,3 +338,64 @@ def test_the_age_floor_is_the_extended_scheme_floor():
         "make it behave as age 1 is a documented limitation, not a reason to "
         "write 1.0"
     )
+
+
+def _reform_situation(child_expenses: float, employment_income: float):
+    """A household where the reform subsidy is actually paid.
+
+    Two entity subtleties have to be right at once, and getting either wrong
+    silently produces zero — which is how earlier versions of this test ended
+    up asserting nothing. `childcare_expenses` must sit on the *child*,
+    because the subsidy is computed on the qualifying child's row from that
+    child's expenses; and earnings must be high enough that the benefit unit
+    is not entitled to Universal Credit, which the reform excludes.
+    """
+    YEAR = 2027
+    return YEAR, {
+        "people": {
+            "child": {"age": {YEAR: 3}, "childcare_expenses": {YEAR: child_expenses}},
+            "parent": {"age": {YEAR: 32}, "employment_income": {YEAR: employment_income}},
+        },
+        "benunits": {"bu": {"members": ["child", "parent"], "would_claim_tfc": {YEAR: True}}},
+        "households": {"hh": {"members": ["child", "parent"], "country": {YEAR: "ENGLAND"}}},
+    }
+
+
+def test_a_worker_sees_positive_child_row_support_projected_onto_them():
+    """The C2 case, with support that is actually nonzero.
+
+    The award is £4,500 — 75% of £6,000 — and sits entirely on the child's
+    row. Reading it per person leaves the parent at zero; the projection is
+    what puts it on the adult whose work decision it bears on.
+    """
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.labour_supply import _support_per_adult
+    from free_childcare_reform.reforms import subsidy_scenario
+
+    year, situation = _reform_situation(child_expenses=6_000, employment_income=80_000)
+    sim = Simulation(situation=situation, scenario=subsidy_scenario())
+
+    per_person = np.asarray(sim.calculate("tax_free_childcare", year), float)
+    assert per_person.sum() == pytest.approx(4_500), "the reform must actually pay here"
+    assert per_person[1] == 0, "the award sits on the child's row, not the parent's"
+
+    projected = _support_per_adult(sim, year)
+    assert projected.tolist() == pytest.approx([4_500.0, 4_500.0])
+
+
+def test_a_non_worker_carries_no_recorded_support_to_project():
+    """The other half of the C10 identity.
+
+    With no recorded childcare there is nothing in either employment state,
+    so nothing can be double-credited — which is why the adjustment had to be
+    restricted to people already in work rather than removed outright.
+    """
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.labour_supply import _support_per_adult
+    from free_childcare_reform.reforms import subsidy_scenario
+
+    year, situation = _reform_situation(child_expenses=0, employment_income=0)
+    sim = Simulation(situation=situation, scenario=subsidy_scenario())
+    assert _support_per_adult(sim, year).tolist() == [0.0, 0.0]
