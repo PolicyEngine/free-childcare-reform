@@ -93,7 +93,11 @@ export default function DistributionTab({ data, year, bound }) {
           title="Who gains, and by how much"
           description={
             <>
-              The change in household net income, by income quintile. Quintiles fold
+              The change in household net income, by income quintile.{" "}
+              <strong>Households are UK-wide, but the two legs are not.</strong> The free
+              entitlements are England-only, so households in Scotland, Wales and Northern
+              Ireland gain nothing from that leg while still being ranked and counted here;
+              the 75% subsidy replacing Tax-Free Childcare is UK-wide. Quintiles fold
               PolicyEngine&apos;s published household income deciles, so they rank all
               households in the UK — not only those with young children. Free childcare
               hours are counted at the DfE funding rate the model applies, which is what

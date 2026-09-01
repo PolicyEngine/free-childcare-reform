@@ -85,8 +85,12 @@ export default function CostTab({ data, year, bound }) {
           description={
             <>
               Each leg of the reform costed against the current system, on the PolicyEngine
-              UK Enhanced FRS. They are shown separately and should not be added: free
-              hours displace paid care, so running both at once costs less than the sum.
+              UK Enhanced FRS. <strong>The two legs cover different countries.</strong> The
+              free entitlements are England-only, in law and in the model, so the free-hours
+              leg is an England cost and carries no Barnett consequentials for the devolved
+              nations. Tax-Free Childcare is UK-wide, so the subsidy replacing it is a UK
+              cost. They are shown separately and should not be added: free hours displace
+              paid care, so running both at once costs less than the sum.
               The costs below hold behaviour fixed; choosing a labour supply assumption
               adds an extensive-margin response built on{" "}
               {A(src.obr_labour_supply, "the OBR's participation elasticities")}, with
@@ -97,7 +101,7 @@ export default function CostTab({ data, year, bound }) {
         />
         <div className="grid gap-4 sm:grid-cols-3">
           <Stat
-            label={`Free hours, ${formatFiscalYear(year)}`}
+            label={`Free hours, England, ${formatFiscalYear(year)}`}
             value={formatBn(
               isStatic
                 ? legs.free_hours.static_cost_bn
@@ -110,7 +114,7 @@ export default function CostTab({ data, year, bound }) {
             }
           />
           <Stat
-            label={`75% subsidy, ${formatFiscalYear(year)}`}
+            label={`75% subsidy, UK, ${formatFiscalYear(year)}`}
             value={formatBn(
               isStatic
                 ? legs.subsidy.static_cost_bn
@@ -167,6 +171,7 @@ export default function CostTab({ data, year, bound }) {
             <div className="rounded-xl bg-slate-50 p-4">
               <dt className="text-sm font-semibold text-slate-900">
                 Leg 1 — 15 free hours for everyone, plus 15 more for working parents
+                (England)
               </dt>
               <dd className="mt-2 text-sm leading-6 text-slate-600">
                 <ul className="list-disc space-y-1 pl-5">
@@ -188,7 +193,7 @@ export default function CostTab({ data, year, bound }) {
             </div>
             <div className="rounded-xl bg-slate-50 p-4">
               <dt className="text-sm font-semibold text-slate-900">
-                Leg 2 — a 75% subsidy replacing Tax-Free Childcare
+                Leg 2 — a 75% subsidy replacing Tax-Free Childcare (UK)
               </dt>
               <dd className="mt-2 text-sm leading-6 text-slate-600">
                 <ul className="list-disc space-y-1 pl-5">
