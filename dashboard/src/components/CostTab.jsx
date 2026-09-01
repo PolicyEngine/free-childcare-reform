@@ -110,28 +110,20 @@ export default function CostTab({ data, year, bound, area }) {
           title={`Budget impact, ${formatFiscalYear(data.years[0])} to ${formatFiscalYear(data.years[data.years.length - 1])}`}
           description={
             <>
-              Each leg of the reform costed against the current system, on the PolicyEngine
-              UK Enhanced FRS. <strong>The two legs cover different countries.</strong> The
-              free entitlements are England-only, in law and in the model, so the free-hours
-              leg is an England cost. Tax-Free Childcare is UK-wide, so the subsidy
-              replacing it can be read either way — switch it below.
+              Each leg costed against the current system, on the PolicyEngine UK Enhanced
+              FRS. <strong>The legs cover different countries.</strong> The free
+              entitlements are England-only in law and in the model; Tax-Free Childcare and
+              the subsidy replacing it are UK-wide. There is no UK figure for free hours
+              because early years childcare is devolved — the other nations run their own
+              schemes, which this brief does not reform and the model does not carry — and
+              their Barnett consequentials are a funding transfer rather than a childcare
+              policy, so they are not costed.
               <span className="mt-2 block">
-                <strong>There is no UK figure for free hours, and one cannot be produced
-                here.</strong>{" "}
-                Early years childcare is devolved: Scotland, Wales and Northern Ireland run
-                their own schemes on their own hours and rates, so a UK cost would mean
-                costing three further reforms this brief does not describe. The model does
-                not carry those schemes either — only the three English entitlements are
-                implemented. What the devolved nations would receive is a Barnett
-                consequential of the England spend, which is a funding transfer rather than
-                a childcare policy, and is not costed here.
-              </span> They are shown separately and should not be added: free hours displace
-              paid care, so running both at once costs less than the sum.
-              The costs below hold behaviour fixed; choosing a labour supply assumption
-              adds an extensive-margin response built on{" "}
-              {A(src.obr_labour_supply, "the OBR's participation elasticities")}, with
-              childcare treated as a cost of working. Free hours are valued at the DfE
-              funding rate the model applies; the subsidy at its cash value.
+                The legs should not be added: free hours displace paid care, so running
+                both costs less than the sum. Costs hold behaviour fixed unless a labour
+                supply assumption is chosen. Free hours are valued at the DfE funding rate,
+                the subsidy at its cash value.
+              </span>
             </>
           }
         />
