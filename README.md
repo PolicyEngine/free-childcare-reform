@@ -1,4 +1,4 @@
-# Free childcare reform
+# Two childcare reforms: free hours and a 75% subsidy
 
 Costing of a two-part childcare reform for the UK, fiscal years 2027-28 to 2029-30, on the PolicyEngine UK Enhanced FRS — static and with a labour supply response on both margins: participation, and hours among parents in work.
 
