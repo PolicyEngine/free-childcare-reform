@@ -390,7 +390,8 @@ export default function CostTab({ data, year, bound, intensive, area }) {
                   all mothers, zeros included, so it already contains people moving into work
                   — the paper&apos;s own employment effect accounts for most of it. Adding it to
                   the participation response counts that channel twice, and the treatment
-                  was 12.5 extra free hours a week, not a 100% price fall.
+                  was a move from part-time (12.5-15 hours a week) to full-time school hours
+                  (30-35), not a 100% price fall.
                 </li>
               ) : null}
             </ul>
