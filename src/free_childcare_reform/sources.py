@@ -283,7 +283,7 @@ BENCHMARKS = [
             "Derived, not published: the CMA estimates England's early years "
             "sector income at about £14bn in 2025-26, of which £8.9bn is funded "
             "entitlements, leaving about £5.1bn that parents pay providers. "
-            "Both terms are the CMA's, deliberately: the entitlements row above "
+            "Both terms are the CMA's: the entitlements row above "
             "uses the IFS's £8.7bn for the same quantity, and mixing the two "
             "sources inside one subtraction would make the residual an artefact "
             "of the mismatch. On the IFS figure the residual would be £5.3bn "
@@ -373,17 +373,11 @@ COMPARABLE_COSTINGS = [
         "cost_bn": "33-55 gross, 1.7-6.1 net",
         "geography": "UK",
         "note": (
-            "A far larger offer — 40 hours a week, 48 weeks a year, from 6 "
-            "months — cited only as an upper bound. The net range is small "
-            "because WBG puts tax and benefit recoupment at 89-95% of gross. "
-            "Figures are all from the 2017 costing, so gross and net come from "
-            "one design and one vintage. A 2020 Budget representation updates "
-            "the gross range to £38-57bn and is available at "
-            "wbg.org.uk/wp-content/uploads/2020/01/"
-            "Budget-Representation-to-HM-Treasury-Feb-2020.pdf; an earlier "
-            "version of this note wrongly said it was unreachable, having only "
-            "checked a dead path. It is not used because pairing its gross "
-            "range with the 2017 net range mixes vintages."
+            "40 hours a week, 48 weeks a year, from 6 months — an upper bound. "
+            "The net range is small because WBG puts tax and benefit recoupment "
+            "at 89-95% of gross. Gross and net are both from the 2017 costing; "
+            "the 2020 Budget representation's £38-57bn gross range is not used, "
+            "as pairing it with the 2017 net range would mix vintages."
         ),
         "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/",
     },

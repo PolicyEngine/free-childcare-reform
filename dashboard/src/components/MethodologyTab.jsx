@@ -41,7 +41,7 @@ export default function MethodologyTab({ data, year }) {
           <li>
             <strong>Free hours is a single parameter change.</strong> policyengine-uk
             models the three DfE schemes as mutually exclusive rather than stacking, and
-            the universal entitlement already carries no work or income test — it is just
+            the universal entitlement already carries no work or income test — it is
             limited to 3-4 year olds and switched off for families on the extended
             (working-parent) scheme, which pays the full 30 hours. So the reform&apos;s
             second tier is already what the extended scheme delivers, and the first is
@@ -75,7 +75,7 @@ export default function MethodologyTab({ data, year }) {
             hours displaces care a family was already getting —{" "}
             {A(src.ifs_free_childcare, "the IFS evaluation")} finds only about 54 additional
             hours of care outside the family for every 570 offered. Displacement is also
-            capped at what a family actually spends, and that cap binds: realised
+            capped at what a family spends, and that cap binds: realised
             displacement is about 14.5% of the value of the new free hours.
           </li>
           <li>
@@ -99,15 +99,12 @@ export default function MethodologyTab({ data, year }) {
             policyengine-uk ships an{" "}
             {A(src.obr_labour_supply, "OBR-methodology labour supply framework")}, but its
             coordinator runs only the intensive margin and its participation model measures
-            work incentives in household net income, which does not net off childcare
-            costs. Childcare is a cost of working, so the main channel by which a childcare
-            subsidy raises employment is invisible to it. This analysis reuses the OBR
-            elasticities and gain-to-work machinery and adds the two missing terms:
-            out-of-pocket childcare is subtracted from in-work income, and cost-contingent
-            support from out-of-work income.
+            work incentives in household net income, before childcare costs. This analysis
+            reuses the OBR elasticities and gain-to-work machinery and adds two terms:
+            out-of-pocket childcare in work, and cost-contingent support out of work.
           </li>
           <li>
-            Two upstream defects are worked around here and reported as{" "}
+            Two upstream defects are worked around and reported as{" "}
             <a
               href="https://github.com/PolicyEngine/policyengine-uk/issues/1839"
               target="_blank"
@@ -117,52 +114,54 @@ export default function MethodologyTab({ data, year }) {
               policyengine-uk#1839
             </a>
             : a units error crediting a non-worker with about <strong>£194</strong> of
-            annual earnings for entering part-time work rather than roughly £21,600, and
-            the absence of any imputation of what a potential entrant would{" "}
-            <em>pay</em> for childcare, which leaves 85% of eligible non-workers with a
-            subsidy applied to zero. Both suppress the extensive margin; the fixes belong
-            upstream rather than in this repo.
+            annual earnings for entering part-time work rather than roughly £21,600, and no
+            imputation of what an entrant would <em>pay</em> for childcare, leaving 85% of
+            eligible non-workers with a subsidy applied to zero.
           </li>
           <li>
             Elasticities are the OBR&apos;s, by gender, partner employment, age of youngest
             child and earnings quintile, scaled by{" "}
             {assumptions.elasticity_scale_low?.toFixed(2)}× and{" "}
             {assumptions.elasticity_scale_high?.toFixed(2)}× for the low and high bounds.
-            The central childcare price elasticity of {assumptions.price_elasticity_central}{" "}
-            sits below {A(src.akgunduz_plantenga, "the meta-analytic mean of −0.277")}{" "}
-            because of publication bias, a European mean of −0.19 against a US −0.35, and
-            smaller elasticities in high part-time, high participation countries.
+            The central price elasticity of {assumptions.price_elasticity_central} sits
+            below {A(src.akgunduz_plantenga, "the meta-analytic mean of −0.277")}: publication
+            bias, a European mean of −0.19 against a US −0.35, and smaller elasticities in
+            high part-time, high participation countries.
           </li>
           <li>
-            The participation response is a floor in two ways. Whole-year ages cannot separate the
-            9-to-12-month cohort from younger babies, so that cohort is excluded with
-            them — including the whole age-0 group would add roughly 14% to the central
-            response, while sweeping in families whose youngest child is too young to
-            qualify. The response is also confined to parents whose <em>youngest</em>{" "}
-            child is eligible —{" "}
-            {A(src.ifs_free_childcare, "the IFS")} finds no effect where a younger,
-            non-eligible child still needs care. The elasticity bounds are the handle on
-            uncertainty: the central childcare price elasticity of{" "}
-            {assumptions.price_elasticity_central} scales to {assumptions.price_elasticity_low}{" "}
-            and {assumptions.price_elasticity_high} for the low and high cases. The two
-            margins are switched on independently on the Reform tab.
+            The participation response is a floor. Whole-year ages exclude the 9-to-12-month
+            cohort (including all of age 0 would add roughly 14% to the central response),
+            and only parents whose <em>youngest</em> child is eligible respond, as{" "}
+            {A(src.ifs_free_childcare, "the IFS")} finds no effect where a younger child
+            still needs care.
           </li>
           <li>
-            <strong>The intensive margin is modelled separately.</strong> Parents in the
-            same population who are already in work and paying for childcare change their
-            hours with the price of it, at a childcare price elasticity of hours of{" "}
-            {assumptions.hours_price_elasticity}, derived from{" "}
+            The price elasticity of {assumptions.price_elasticity_central} scales to{" "}
+            {assumptions.price_elasticity_low} and {assumptions.price_elasticity_high} for
+            the low and high cases. The two margins are switched on independently on the
+            Reform tab.
+          </li>
+          <li>
+            <strong>Intensive margin, step by step.</strong> Population: parents in the same
+            population who are in work and pay for childcare. Price: expenses less the
+            subsidy or Tax-Free Childcare, less displaced free hours, less the Universal
+            Credit childcare support realised (the award difference from an abolition
+            counterfactual, not the element&apos;s face value).
+          </li>
+          <li>
+            Hours change = elasticity × price change, with an elasticity of{" "}
+            {assumptions.hours_price_elasticity} derived from{" "}
             {A(src.brewer_hours, "Brewer et al.")}: +0.600 hours a week over a sample mean of
-            14.319, against a 100% price fall. The price is what the family pays after the
-            subsidy, displaced free hours and the Universal Credit childcare support it
-            actually receives — the award difference from an abolition counterfactual, not
-            the element&apos;s face value, most of which the taper withdraws. Earnings move
-            with hours at a constant wage, and the revenue comes from rerunning each leg
-            with the higher earnings. The elasticity is a total-hours effect measured over
-            all mothers, zeros included, so it already contains the participation channel
-            and the two margins overlap rather than add;{" "}
+            14.319, against a 100% price fall. Earnings move with hours at a constant wage;
+            revenue comes from rerunning each leg with the higher earnings.
+          </li>
+          <li>
+            The hours figure is read at one setting, independent of the extensive-margin
+            elasticity. The +0.600 is a total-hours effect over all mothers, zeros
+            included, so it contains the participation channel and the two margins overlap
+            rather than add;{" "}
             {A(src.bettendorf_jongen_muller, "Dutch evidence")} that hours move about twice
-            as much as employment is the same point from the other direction.
+            as much as employment makes the same point.
           </li>
         </Block>
       </section>
@@ -205,7 +204,7 @@ export default function MethodologyTab({ data, year }) {
               is that those rates do not change under the reform.
             </li>
             <li>
-              <strong>That assumption is the important one.</strong> Making 15 hours
+              <strong>That assumption drives the cost.</strong> Making 15 hours
               unconditional would draw in families who use no formal childcare today, which
               pushes the cost the other way. The 2024-25 expansion came in 26-28% above
               forecast on take-up alone.
@@ -226,11 +225,10 @@ export default function MethodologyTab({ data, year }) {
               larger than the model shows.
             </li>
             <li>
-              <strong>No macro feedback, and a single hours elasticity.</strong> The hours
-              response assumes labour demand absorbs the extra hours at the current wage,
-              and no demand-side or multiplier effect is modelled. {A(src.de_henau, "One UK study")} finds 61-72% of the gross
-              cost recouped once those are included, but it assumes the employment response
-              rather than estimating it.
+              <strong>No macro feedback.</strong> Labour demand is assumed to absorb the
+              extra hours at the current wage; no multiplier is modelled.{" "}
+              {A(src.de_henau, "One UK study")} finds 61-72% of the gross cost recouped with
+              those included, but assumes the employment response rather than estimating it.
             </li>
           </ul>
         </div>

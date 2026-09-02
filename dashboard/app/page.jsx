@@ -21,6 +21,31 @@ function getInitialTab(tabParam) {
 const SELECT_CLASS =
   "h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]";
 
+// A labelled switch. Tinted when on, so the state reads at a glance, unlike
+// two pills that both look "selected".
+function Toggle({ on, onChange, label, hint }) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2 whitespace-nowrap" title={hint}>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        onClick={() => onChange(!on)}
+        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+          on ? "bg-[color:var(--pe-color-primary-600)]" : "bg-slate-300"
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+            on ? "translate-x-4" : "translate-x-0.5"
+          }`}
+        />
+      </button>
+      <span className={on ? "font-semibold text-slate-900" : "text-slate-500"}>{label}</span>
+    </label>
+  );
+}
+
 function TabLink({ onSelect, children }) {
   return (
     <button
@@ -163,42 +188,38 @@ function Dashboard() {
                     <span className="mb-1 block text-xs font-medium text-slate-500">
                       Labour supply
                     </span>
-                    <div className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 text-sm">
-                      <label className="flex items-center gap-1.5">
-                        <input
-                          type="checkbox"
-                          checked={extensive}
-                          onChange={(event) => setExtensive(event.target.checked)}
-                        />
-                        Extensive margin
-                      </label>
+                    <div className="flex h-10 items-center gap-4 rounded-lg border border-slate-200 bg-white px-3 text-sm">
+                      <Toggle
+                        on={extensive}
+                        onChange={setExtensive}
+                        label="Extensive margin"
+                        hint="Participation: OBR elasticities on the gain to work"
+                      />
                       {extensive ? (
                         <select
                           value={bound}
                           onChange={(event) => setBound(event.target.value)}
-                          className="h-7 rounded-md border border-slate-200 bg-white px-1 text-sm"
+                          className="h-7 rounded-md border border-slate-200 bg-slate-50 px-1.5 text-sm text-slate-700"
                           aria-label="Extensive margin elasticity"
                         >
                           <option value="central">
-                            Central (elasticity = {(data.assumptions || {}).price_elasticity_central})
+                            Central ({(data.assumptions || {}).price_elasticity_central})
                           </option>
                           <option value="low">
-                            Low (elasticity = {(data.assumptions || {}).price_elasticity_low})
+                            Low ({(data.assumptions || {}).price_elasticity_low})
                           </option>
                           <option value="high">
-                            High (elasticity = {(data.assumptions || {}).price_elasticity_high})
+                            High ({(data.assumptions || {}).price_elasticity_high})
                           </option>
                         </select>
                       ) : null}
-                      <label className="flex items-center gap-1.5">
-                        <input
-                          type="checkbox"
-                          checked={intensive}
-                          onChange={(event) => setIntensive(event.target.checked)}
-                        />
-                        Intensive margin (hours elasticity ={" "}
-                        {(data.assumptions || {}).hours_price_elasticity})
-                      </label>
+                      <span className="h-5 w-px bg-slate-200" aria-hidden />
+                      <Toggle
+                        on={intensive}
+                        onChange={setIntensive}
+                        label="Intensive margin"
+                        hint={`Hours: elasticity ${(data.assumptions || {}).hours_price_elasticity}, one setting`}
+                      />
                     </div>
                   </div>
                   <label className="w-36 shrink-0">

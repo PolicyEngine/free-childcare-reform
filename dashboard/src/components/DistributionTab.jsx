@@ -102,16 +102,13 @@ export default function DistributionTab({ data, year, bound, intensive, area }) 
             <>
               The change in household net income, by income quintile.{" "}
               {isEngland
-                ? "Restricted to English households, which is the population the free entitlements reach. Quintiles remain the UK ranking, so an English household sits where it sits nationally. "
-                : "Households are UK-wide, but the two legs are not: the free entitlements are England-only, so households in Scotland, Wales and Northern Ireland are ranked and counted here while gaining nothing from that leg. Switch the area above to see England alone. "}
-              Quintiles fold
-              PolicyEngine&apos;s published household income deciles, so they rank all
-              households in the UK — not only those with young children. Free childcare
-              hours are counted at the DfE funding rate the model applies, which is what
-              the government pays a provider, not what a family would have paid on the open
-              market.{" "}
+                ? "English households only, the population the free entitlements reach; quintiles remain the UK ranking. "
+                : "Households are UK-wide but the free entitlements are England-only, so households in Scotland, Wales and Northern Ireland are counted here while gaining nothing from that leg. "}
+              Quintiles rank all UK households, not only those with young children. Free
+              hours are valued at the DfE funding rate, which is what government pays a
+              provider rather than the market price.{" "}
               {hasExtensive || hasIntensive
-                ? `These figures include the labour supply response chosen above${hasExtensive ? ": each person's expected change in net income from entering or leaving work" : ""}${hasExtensive && hasIntensive ? ", and" : hasIntensive ? ":" : ""}${hasIntensive ? " the net gain from parents in work adding hours as childcare gets cheaper" : ""} — added to the household's gain.${hasExtensive ? " The participation part falls mostly on the bottom quintile, where the entrants are." : ""}${hasIntensive ? " The hours part falls on working families paying for childcare, which sit higher up." : ""}`
+                ? `Figures include the labour supply response chosen above: ${hasExtensive ? "each person's expected change in net income from entering or leaving work" : ""}${hasExtensive && hasIntensive ? ", and " : ""}${hasIntensive ? "the net gain from parents in work adding hours" : ""}.${hasExtensive ? " The participation part falls mostly on the bottom quintile." : ""}${hasIntensive ? " The hours part falls on working families paying for childcare, higher up." : ""}`
                 : "These figures are static. Choosing a labour supply assumption above adds each person's expected gain from entering or leaving work."}
             </>
           }
