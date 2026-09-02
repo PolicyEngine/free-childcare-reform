@@ -1057,21 +1057,29 @@ def run_year(dataset, year: int) -> dict:
             for bound, response in leg_responses.items()
         }
         # The distribution on the same behavioural assumption as the cost.
-        # Both margins laid over the static distribution, so the household
-        # view moves with the same assumption as the cost.
-        behavioural_income = {
+        # The two margins are switched on independently in the dashboard, so
+        # each combination is emitted: participation alone by bound (the
+        # pre-existing key, unchanged in meaning), participation plus the
+        # central hours response by bound, and the hours response alone.
+        hours_income = leg_hours["central"]["expected_net_income_change_per_person"]
+        participation_income = {
             bound: response["expected_net_income_change_per_person"]
-            + leg_hours[bound]["expected_net_income_change_per_person"]
             for bound, response in leg_responses.items()
         }
-        legs[name]["household_effects_by_bound"] = {
-            bound: _household_effects(baseline, sim, year, extra)
-            for bound, extra in behavioural_income.items()
-        }
-        legs[name]["household_effects_by_bound_england"] = {
-            bound: _household_effects(baseline, sim, year, extra, country="england")
-            for bound, extra in behavioural_income.items()
-        }
+        for suffix, country in (("", None), ("_england", "england")):
+            legs[name][f"household_effects_by_bound{suffix}"] = {
+                bound: _household_effects(baseline, sim, year, extra, country=country)
+                for bound, extra in participation_income.items()
+            }
+            legs[name][f"household_effects_by_bound_with_hours{suffix}"] = {
+                bound: _household_effects(
+                    baseline, sim, year, extra + hours_income, country=country
+                )
+                for bound, extra in participation_income.items()
+            }
+            legs[name][f"household_effects_hours{suffix}"] = _household_effects(
+                baseline, sim, year, hours_income, country=country
+            )
         legs[name]["dynamic_cost"] = {
             bound: _dynamic_cost(legs[name]["static_cost_bn"], response, leg_hours[bound])
             for bound, response in leg_responses.items()
