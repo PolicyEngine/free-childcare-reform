@@ -327,7 +327,9 @@ def test_the_extended_take_up_scenario_is_a_real_rerun(results):
         extended = block["subsidy_take_up"]["extended_entitlement_flag"]
         assert extended["flag"] == "would_claim_extended_childcare"
         rate = extended["take_up_rate_among_qualifying"]
-        assert 0 < rate < block["subsidy_take_up"]["baseline_take_up_rate"], year
+        # Both rates are among benefit units with a qualifying child, so the
+        # ratio below is like for like.
+        assert 0 < rate < block["subsidy_take_up"]["baseline_take_up_rate"] < 1, year
         for leg in ("subsidy", "combined"):
             coded = block["legs"][leg]
             alt = extended["legs"][leg]

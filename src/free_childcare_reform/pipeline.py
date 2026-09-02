@@ -665,15 +665,10 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
         "at_full_take_up_bn": round(
             (float(full.calculate("tax_free_childcare", year).sum()) - baseline_spend) / 1e9, 4
         ),
-        "baseline_take_up_rate": round(
-            float(
-                MicroSeries(
-                    claims.astype(float),
-                    weights=np.asarray(full.calculate("benunit_weight", year).values, float),
-                ).mean()
-            ),
-            4,
-        ),
+        # Among benefit units with a TFC-qualifying child, the same mask as the
+        # extended-flag rate below, so the two are like for like. Over every
+        # benefit unit the figure was 0.87 and read as a different population.
+        "baseline_take_up_rate": _take_up_among_qualifying(baseline, year, claims),
         "note": (
             "Both figures are the subsidy leg on its own, against the "
             "baseline fee base — not the combined run, where free hours "
@@ -686,6 +681,21 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
             "£100,000 cliff."
         ),
     }
+
+
+def _take_up_among_qualifying(baseline, year: int, claims: np.ndarray) -> float:
+    """Weighted share of benefit units with a TFC-qualifying child carrying a take-up flag."""
+    qualifying = (
+        np.asarray(
+            baseline.calculate("tax_free_childcare_qualifying_child", year, map_to="benunit").values
+        )
+        > 0
+    )
+    weights = np.asarray(baseline.calculate("benunit_weight", year).values, float)
+    return round(
+        float(MicroSeries(claims[qualifying].astype(float), weights=weights[qualifying]).mean()),
+        4,
+    )
 
 
 def _extended_take_up_scenario(
@@ -705,14 +715,7 @@ def _extended_take_up_scenario(
         childcare_expenses=displaced_expenses,
         year=year,
     )
-    claims = np.asarray(baseline.calculate(flag, year)).astype(float)
-    qualifying = (
-        np.asarray(
-            baseline.calculate("tax_free_childcare_qualifying_child", year, map_to="benunit").values
-        )
-        > 0
-    )
-    weights = np.asarray(baseline.calculate("benunit_weight", year).values, float)
+    claims = np.asarray(baseline.calculate(flag, year))
     legs = {}
     for name, sim in (("subsidy", subsidy), ("combined", combined)):
         responses = responses_against(sim)
@@ -733,9 +736,7 @@ def _extended_take_up_scenario(
         }
     return {
         "flag": flag,
-        "take_up_rate_among_qualifying": round(
-            float(MicroSeries(claims[qualifying], weights=weights[qualifying]).mean()), 4
-        ),
+        "take_up_rate_among_qualifying": _take_up_among_qualifying(baseline, year, claims),
         "legs": legs,
         "note": (
             "The subsidy defined for would_claim_extended_childcare instead of "
