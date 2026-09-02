@@ -9,8 +9,9 @@ Costs, for 2027, 2028 and 2029, a reform that
 * replaces Tax-Free Childcare with a 75% subsidy of childcare costs for all,
   keeping the Universal Credit childcare element.
 
-Each leg is costed on its own and then together, statically and with an
-extensive-margin labour supply response. Household effects are reported by
+Each leg is costed on its own and then together, statically and with a
+labour supply response on both margins — participation, and hours among
+parents in work. Household effects are reported by
 income quintile. Results are written to JSON for the dashboard.
 """
 
