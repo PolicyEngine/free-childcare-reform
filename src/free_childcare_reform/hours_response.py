@@ -44,20 +44,40 @@ from .labour_supply import (
 )
 
 
-def out_of_pocket_childcare(sim, year: int, childcare_cost: np.ndarray) -> np.ndarray:
+def realised_uc_childcare_support(sim, sim_without_element, year: int) -> np.ndarray:
+    """Universal Credit actually paid because of the childcare element, per benefit unit.
+
+    ``uc_childcare_element`` is a component of the UC *maximum amount* before
+    the earnings taper, and for a working family most of its face value is
+    withdrawn again by the taper. Subtracting it from childcare cost would
+    understate what those families pay. What reaches them is the difference
+    between their UC award and the award with the element's coverage rate set
+    to zero — the same counterfactual the baseline benchmark uses.
+    """
+    with_element = _values(sim, "universal_credit", year).astype(float)
+    without = _values(sim_without_element, "universal_credit", year).astype(float)
+    return np.maximum(with_element - without, 0.0)
+
+
+def out_of_pocket_childcare(
+    sim, year: int, childcare_cost: np.ndarray, uc_support: np.ndarray
+) -> np.ndarray:
     """What an adult's benefit unit pays for childcare after cost-contingent support.
 
     ``childcare_cost`` is the benefit unit's ``childcare_expenses`` projected
     onto its adults. Tax-Free Childcare (or the subsidy that replaces it) and
-    the Universal Credit childcare element are both paid against that spend,
-    so both come off it: the price a parent responds to is what they are left
-    paying. The UC element does not change under the reform, but it belongs in
-    the base the change is measured against.
+    the realised Universal Credit childcare support — ``uc_support``, per
+    benefit unit, from :func:`realised_uc_childcare_support` — are both paid
+    against that spend, so both come off it: the price a parent responds to is
+    what they are left paying.
     """
-    uc_element = _values(sim, "uc_childcare_element", year, map_to="benunit").astype(float)
     benunit_ids = _values(sim, "benunit_id", year)
     person_benunit_ids = _values(sim, "benunit_id", year, map_to="person")
-    uc_per_adult = pd.Series(uc_element, index=benunit_ids).reindex(person_benunit_ids).to_numpy()
+    uc_per_adult = (
+        pd.Series(np.asarray(uc_support, float), index=benunit_ids)
+        .reindex(person_benunit_ids)
+        .to_numpy()
+    )
     return np.maximum(childcare_cost - _support_per_adult(sim, year) - uc_per_adult, 0.0)
 
 
@@ -68,11 +88,15 @@ def hours_response(
     baseline_childcare_cost: np.ndarray,
     reform_childcare_cost: np.ndarray,
     rerun_with_earnings: Callable[[np.ndarray], object],
+    baseline_uc_support: np.ndarray,
+    reform_uc_support: np.ndarray,
     elasticity_scale: float = 1.0,
     count_adults: int = 2,
 ) -> dict:
     """Hours, earnings and revenue from parents in work changing their hours.
 
+    ``baseline_uc_support`` and ``reform_uc_support`` are the realised UC
+    childcare support per benefit unit in each simulation.
     ``rerun_with_earnings`` builds the reform simulation again with the given
     ``employment_income`` array, so the revenue on the extra hours is computed
     by the model rather than at an assumed marginal rate.
@@ -91,8 +115,12 @@ def hours_response(
     eligible = ~_excluded(baseline_sim, year, count_adults) & responds_to_childcare(
         baseline_sim, year
     )
-    baseline_price = out_of_pocket_childcare(baseline_sim, year, baseline_childcare_cost)
-    reform_price = out_of_pocket_childcare(reform_sim, year, reform_childcare_cost)
+    baseline_price = out_of_pocket_childcare(
+        baseline_sim, year, baseline_childcare_cost, baseline_uc_support
+    )
+    reform_price = out_of_pocket_childcare(
+        reform_sim, year, reform_childcare_cost, reform_uc_support
+    )
     responding = eligible & (employment_income > 0) & (hours > 0) & (baseline_price > 0)
 
     # Proportional change in the price of childcare, bounded at a 100% fall:
