@@ -63,7 +63,7 @@ const LEGS = [
   { id: "subsidy", label: "75% subsidy replacing Tax-Free Childcare" },
 ];
 
-export default function DistributionTab({ data, year, bound, area }) {
+export default function DistributionTab({ data, year, bound, intensive, area }) {
   const [measureId, setMeasureId] = useState("average_gain_gbp");
   const [populationId, setPopulationId] = useState(
     "by_income_quintile_families_with_under_5s",
@@ -77,12 +77,16 @@ export default function DistributionTab({ data, year, bound, area }) {
   // households and can be read by quintile like any other income change.
   const leg = result.legs[legId];
   const isEngland = area === "england";
-  const dynamicKey = isEngland ? "household_effects_by_bound_england" : "household_effects_by_bound";
-  const staticKey = isEngland ? "household_effects_england" : "household_effects";
-  const effects =
-    bound && bound !== "none" && leg[dynamicKey]?.[bound]
-      ? leg[dynamicKey][bound]
-      : leg[staticKey];
+  const suffix = isEngland ? "_england" : "";
+  const hasExtensive = Boolean(bound) && bound !== "none";
+  const hasIntensive = Boolean(intensive);
+  // Each combination of the two margins is a separate block in the results,
+  // so switching one off returns exactly the figures published without it.
+  const effects = hasExtensive
+    ? leg[`household_effects_by_bound${hasIntensive ? "_with_hours" : ""}${suffix}`][bound]
+    : hasIntensive
+      ? leg[`household_effects_hours${suffix}`]
+      : leg[`household_effects${suffix}`];
   const measure = MEASURES.find((m) => m.id === measureId);
   const population = POPULATIONS.find((p) => p.id === populationId);
   const rows = effects[populationId] || [];
@@ -98,16 +102,13 @@ export default function DistributionTab({ data, year, bound, area }) {
             <>
               The change in household net income, by income quintile.{" "}
               {isEngland
-                ? "Restricted to English households, which is the population the free entitlements reach. Quintiles remain the UK ranking, so an English household sits where it sits nationally. "
-                : "Households are UK-wide, but the two legs are not: the free entitlements are England-only, so households in Scotland, Wales and Northern Ireland are ranked and counted here while gaining nothing from that leg. Switch the area above to see England alone. "}
-              Quintiles fold
-              PolicyEngine&apos;s published household income deciles, so they rank all
-              households in the UK — not only those with young children. Free childcare
-              hours are counted at the DfE funding rate the model applies, which is what
-              the government pays a provider, not what a family would have paid on the open
-              market.{" "}
-              {bound && bound !== "none"
-                ? "These figures include the labour supply response at the assumption chosen above: each person's expected change in net income from entering or leaving work is added to their household's gain. It falls mostly on the bottom quintile, where the entrants are."
+                ? "English households only, the population the free entitlements reach; quintiles remain the UK ranking. "
+                : "Households are UK-wide but the free entitlements are England-only, so households in Scotland, Wales and Northern Ireland are counted here while gaining nothing from that leg. "}
+              Quintiles rank all UK households, not only those with young children. Free
+              hours are valued at the DfE funding rate, which is what government pays a
+              provider rather than the market price.{" "}
+              {hasExtensive || hasIntensive
+                ? `Figures include the labour supply response chosen above: ${hasExtensive ? "each person's expected change in net income from entering or leaving work" : ""}${hasExtensive && hasIntensive ? ", and " : ""}${hasIntensive ? "the net gain from parents in work adding hours" : ""}.${hasExtensive ? " The participation part falls mostly on the bottom quintile." : ""}${hasIntensive ? " The hours part falls on working families paying for childcare, higher up." : ""}`
                 : "These figures are static. Choosing a labour supply assumption above adds each person's expected gain from entering or leaving work."}
             </>
           }

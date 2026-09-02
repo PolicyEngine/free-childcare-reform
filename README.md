@@ -1,6 +1,6 @@
-# Free childcare reform
+# Two childcare reforms: free hours and a 75% subsidy
 
-Costing of a two-part childcare reform for the UK, fiscal years 2027-28 to 2029-30, on the PolicyEngine UK Enhanced FRS — static and with an extensive-margin labour supply response.
+Costing of a two-part childcare reform for the UK, fiscal years 2027-28 to 2029-30, on the PolicyEngine UK Enhanced FRS — static and with a labour supply response on both margins: participation, and hours among parents in work.
 
 **Dashboard: https://free-childcare-reform.vercel.app/uk/free-childcare-reform**
 
@@ -34,7 +34,9 @@ The sign has moved twice under review and should not be leaned on. It has moved 
 
 Placing imputed entrant earnings at full-time equivalent, as policyengine-uk does, would move the figure again. That is an unvalidated upstream assumption and is not adopted here.
 
-The response is a floor in several ways — whole-year ages exclude the 9-to-12-month cohort, the response is confined to parents whose youngest child is eligible, and only the extensive margin is modelled — but it is also not robust: see the audit findings below.
+The participation response is a floor in several ways — whole-year ages exclude the 9-to-12-month cohort, and the response is confined to parents whose youngest child is eligible — but it is also not robust: see the audit findings below.
+
+**The intensive margin is much larger, and overlaps with it.** Parents already in work and paying for childcare see their out-of-pocket cost fall by about 58% under both legs together, and at a childcare price elasticity of hours of −0.042 that is 2.4% more hours: about 30,565 full-time equivalents, £1.67bn of earnings and **£0.67bn** back to the exchequer once the model has taxed the extra earnings and withdrawn benefits on them. That takes the combined dynamic cost to **£5.95bn**. The elasticity was proposed by Max Mosley and is derived from Brewer et al. (+0.600 hours a week over a mean of 14.319, against a 100% price fall); it is a total-hours effect measured over all mothers including those not working, so it already contains the participation channel and the two margins should not be read as additive. The treatment it comes from was 12.5 extra free hours a week, not a price fall of 100%. See `hours_response.py` and `sources.HOURS_PRICE_ELASTICITY`.
 
 **Distributionally, the average gain broadly rises with income, but the free-hours leg does not.** Among families with a child under 5 in 2027-28, on the central labour supply assumption, the average annual gain runs Q1 £1,066, Q2 £942, Q3 £2,106, Q4 £2,393, Q5 £3,035 — the bottom two quintiles are close, Q2 is the lowest, and the gradient establishes itself from Q3 up. Low-income families gain less in cash because Universal Credit already covers 85% of their childcare costs, which this reform keeps, and because they use fewer paid hours.
 
@@ -95,12 +97,13 @@ gain to work = in-work net income
 
 The second correction matters because `childcare_expenses` is a fixed input: without it a non-worker is credited with a subsidy on care they are not buying, and the reform's work-condition-free subsidy would look worthless as a work incentive. Free-hours entitlements are deliberately *not* netted out of out-of-work income — their availability out of work is a real reduction in the gain to work, and the model should show it.
 
-Central elasticity −0.15, bounds −0.05 and −0.30, from Akgündüz and Plantenga's meta-analysis adjusted downward for the UK (publication bias; a European mean of −0.19 against a US mean of −0.35; and significantly smaller elasticities in high part-time, high participation countries). The response is confined to parents whose *youngest* child is in the eligible band, following the IFS. Only the extensive margin is modelled, so this is a floor on the total response.
+Central elasticity −0.15, bounds −0.05 and −0.30, from Akgündüz and Plantenga's meta-analysis adjusted downward for the UK (publication bias; a European mean of −0.19 against a US mean of −0.35; and significantly smaller elasticities in high part-time, high participation countries). The response is confined to parents whose *youngest* child is in the eligible band, following the IFS. The hours response uses the same population, restricted to those in work with a positive out-of-pocket childcare cost, and scales with the same low/central/high multiplier.
 
 ## Layout
 
 - `src/free_childcare_reform/reforms.py` — the two legs, and the displacement adjustment.
 - `src/free_childcare_reform/labour_supply.py` — the extensive-margin participation response.
+- `src/free_childcare_reform/hours_response.py` — the intensive-margin hours response for parents in work.
 - `src/free_childcare_reform/sources.py` — every non-PolicyEngine number, with a source URL.
 - `src/free_childcare_reform/pipeline.py` — orchestration and results JSON.
 - `dashboard/` — Next.js dashboard: Reform (budget impact and household effects), Baseline and Methodology.
@@ -158,4 +161,4 @@ Measured directly rather than extrapolated: lowering the floor to 0 raises the f
 - **Childcare supply is assumed to accommodate demand.** No capacity constraint and no fee response to a 75% subsidy, which would be expected to raise prices.
 - **Free hours are valued at the DfE funding rate**, not the market price, so a family's true gain is larger where providers charge above it. There is no regional variation in the rate.
 - **The entitlements are England-only** in law and in the model; Barnett consequentials are not costed. Tax-Free Childcare and its replacement are UK-wide.
-- **No intensive margin and no macro feedback.** Hours changes among existing workers are not modelled. One UK study finds 61-72% of gross cost recouped once demand-side effects are included, but it assumes the employment response rather than estimating it.
+- **The hours response is a single elasticity applied at a constant wage, and no macro feedback.** It assumes labour demand absorbs the extra hours at the current wage, and the elasticity contains the participation channel (above). One UK study finds 61-72% of gross cost recouped once demand-side effects are included, but it assumes the employment response rather than estimating it.

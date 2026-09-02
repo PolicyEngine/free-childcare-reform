@@ -44,6 +44,11 @@ def test_free_hours_leg_is_near_the_published_analogue(results):
 
 
 def test_the_labour_supply_response_is_small_relative_to_the_cost(results):
+    """Both margins together, on the central assumption.
+
+    The hours margin dominates the offset, so this is now mostly a guard on
+    that elasticity's scale rather than on the participation response.
+    """
     for year in YEARS:
         dynamic = results["by_year"][year]["dynamic_cost"]["central"]
         assert abs(dynamic["offset_share_of_static_cost"]) < 0.25

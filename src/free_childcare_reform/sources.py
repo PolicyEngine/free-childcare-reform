@@ -72,6 +72,26 @@ PRICE_ELASTICITY_CENTRAL = -0.15
 PRICE_ELASTICITY_LOW = -0.05
 PRICE_ELASTICITY_HIGH = -0.30
 
+# Childcare price elasticity of hours worked, for parents already in work.
+#
+# Derived from Brewer, Cattan, Crawford and Rabe (IFS WP20/09): full-time
+# eligibility raised mothers' usual weekly hours by +0.600 (Table A.3, panel
+# B, column 1, s.e. 0.264, file page 41) against a sample mean of 14.319 hours
+# (Table 1, file page 17),
+# a +4.19% change, taken against a 100% fall in the childcare price:
+# 0.0419 / -1 = -0.042. Proposed for this analysis by Max Mosley.
+#
+# Two caveats that travel with the number. First, the +0.600 is measured on
+# all mothers with zeros for non-workers, and 14.319 is that same all-mothers
+# mean, so it is a total-hours effect — extensive and intensive together, not
+# an intensive effect for those in work. The paper's own +3.5pp employment
+# effect at typical part-time hours accounts for most of it, so this
+# component overlaps with the participation response reported alongside it
+# and the two should not be read as additive. Second, the treatment was 12.5
+# extra free hours a week in term time, not a 100% price fall, so as a
+# per-unit-price elasticity this is a floor (treatment: file page 8).
+HOURS_PRICE_ELASTICITY = -0.042
+
 # Scale applied to the OBR participation elasticities for the low and high
 # bounds of the gain-to-work model. Set to the ratio of the low and high price
 # elasticities to the central one, so the two methods' uncertainty bands are
@@ -263,7 +283,7 @@ BENCHMARKS = [
             "Derived, not published: the CMA estimates England's early years "
             "sector income at about £14bn in 2025-26, of which £8.9bn is funded "
             "entitlements, leaving about £5.1bn that parents pay providers. "
-            "Both terms are the CMA's, deliberately: the entitlements row above "
+            "Both terms are the CMA's: the entitlements row above "
             "uses the IFS's £8.7bn for the same quantity, and mixing the two "
             "sources inside one subtraction would make the residual an artefact "
             "of the mismatch. On the IFS figure the residual would be £5.3bn "
@@ -353,17 +373,11 @@ COMPARABLE_COSTINGS = [
         "cost_bn": "33-55 gross, 1.7-6.1 net",
         "geography": "UK",
         "note": (
-            "A far larger offer — 40 hours a week, 48 weeks a year, from 6 "
-            "months — cited only as an upper bound. The net range is small "
-            "because WBG puts tax and benefit recoupment at 89-95% of gross. "
-            "Figures are all from the 2017 costing, so gross and net come from "
-            "one design and one vintage. A 2020 Budget representation updates "
-            "the gross range to £38-57bn and is available at "
-            "wbg.org.uk/wp-content/uploads/2020/01/"
-            "Budget-Representation-to-HM-Treasury-Feb-2020.pdf; an earlier "
-            "version of this note wrongly said it was unreachable, having only "
-            "checked a dead path. It is not used because pairing its gross "
-            "range with the 2017 net range mixes vintages."
+            "40 hours a week, 48 weeks a year, from 6 months — an upper bound. "
+            "The net range is small because WBG puts tax and benefit recoupment "
+            "at 89-95% of gross. Gross and net are both from the 2017 costing; "
+            "the 2020 Budget representation's £38-57bn gross range is not used, "
+            "as pairing it with the 2017 net range would mix vintages."
         ),
         "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/",
     },
@@ -446,6 +460,18 @@ BETTENDORF_JONGEN_MULLER = Source(
     "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf",
 )
 
+BREWER_HOURS = Source(
+    "Brewer, Cattan, Crawford and Rabe — Does more free childcare help parents work more? (IFS WP20/09)",
+    "England. Table A.3 (file page 41): full-time eligibility raised mothers' usual "
+    "weekly hours by 0.600 (s.e. 0.264), measured over all mothers with zeros for "
+    "non-workers, against the Table 1 (file page 17) sample mean of 14.319 hours. "
+    "The -0.042 hours elasticity used here is that +4.19% taken against a 100% "
+    "price fall; the treatment was 12.5 extra free hours a week (file page 8), not "
+    "a 100% price fall. It is a total-hours effect that contains the participation "
+    "channel, so it overlaps with the extensive-margin result.",
+    "https://ifs.org.uk/sites/default/files/output_url_files/WP202009-Does-more-free-childcare-help-parents-work-more.pdf#page=41",
+)
+
 
 def as_json(model_parameters: dict[str, Any]) -> dict:
     """Registry as emitted to the results JSON.
@@ -465,8 +491,12 @@ def as_json(model_parameters: dict[str, Any]) -> dict:
             "elasticity_scale_low": round(ELASTICITY_SCALE_LOW, 4),
             "elasticity_scale_high": round(ELASTICITY_SCALE_HIGH, 4),
             "participation_change_bound": PARTICIPATION_CHANGE_BOUND,
+            "hours_price_elasticity": HOURS_PRICE_ELASTICITY,
             "restrict_to_youngest_child_eligible": RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE,
-            "margin": "extensive (participation) only; the intensive margin is not modelled",
+            "margin": (
+                "extensive (participation) and intensive (hours among parents in work); "
+                "the hours elasticity is a total-hours effect, so the two overlap"
+            ),
             "incidence": (
                 "Free hours are valued at the DfE funding rate the model applies; "
                 "the subsidy is valued at its cash value to the family."
@@ -475,6 +505,7 @@ def as_json(model_parameters: dict[str, Any]) -> dict:
         "comparable_costings": COMPARABLE_COSTINGS,
         "sources": {
             "ifs_free_childcare": asdict(IFS_FREE_CHILDCARE),
+            "brewer_hours": asdict(BREWER_HOURS),
             "akgunduz_plantenga": asdict(AKGUNDUZ_PLANTENGA),
             "baker_gruber_milligan": asdict(BAKER_GRUBER_MILLIGAN),
             "dfe_30_hours_evaluation": asdict(DFE_30_HOURS_EVALUATION),

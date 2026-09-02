@@ -12,7 +12,8 @@ def main() -> None:
         prog="free-childcare-reform",
         description=(
             "Cost a universal free childcare reform on the PolicyEngine UK Enhanced FRS, "
-            "statically and with an extensive-margin labour supply response."
+            "statically and with a labour supply response on both the participation and "
+            "hours margins."
         ),
     )
     parser.add_argument(
