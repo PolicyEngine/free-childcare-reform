@@ -34,7 +34,7 @@ from policyengine_uk.data import UKSingleYearDataset
 from policyengine_uk.utils.scenario import Scenario
 
 from . import reforms, sources
-from .hours_response import hours_response
+from .hours_response import hours_response, realised_uc_childcare_support
 from .labour_supply import (
     childcare_cost_when_working,
     participation_response,
@@ -423,6 +423,17 @@ UC_CHILDCARE_COMPARISON_YEAR = 2024
 UC_COUNTERFACTUAL_YEARS = [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030]
 
 
+def _without_uc_childcare_element() -> Scenario:
+    """The UC childcare element's coverage rate set to zero, every relevant year."""
+    return Scenario(
+        parameter_changes={
+            "gov.dwp.universal_credit.elements.childcare.coverage_rate": {
+                parameter_year: 0 for parameter_year in UC_COUNTERFACTUAL_YEARS
+            }
+        }
+    )
+
+
 def _uc_childcare_fiscal_cost(dataset, baseline, year: int) -> dict:
     """What the UC childcare element actually costs, by abolishing it.
 
@@ -436,16 +447,7 @@ def _uc_childcare_fiscal_cost(dataset, baseline, year: int) -> dict:
     value never reaches a household, because the taper would have withdrawn
     it anyway.
     """
-    abolished = _build(
-        dataset,
-        scenario=Scenario(
-            parameter_changes={
-                "gov.dwp.universal_credit.elements.childcare.coverage_rate": {
-                    parameter_year: 0 for parameter_year in UC_COUNTERFACTUAL_YEARS
-                }
-            }
-        ),
-    )
+    abolished = _build(dataset, scenario=_without_uc_childcare_element())
     # Measured at the year DWP's outturn covers, not the costed year. A 2027
     # figure against a 2024-25 outturn would measure three years of caseload
     # growth as much as it measures the model.
@@ -982,9 +984,33 @@ def run_year(dataset, year: int) -> dict:
         year=year,
     )
 
+    # Realised UC childcare support, by the abolition counterfactual: the
+    # element's face value is mostly withdrawn by the taper for working
+    # families, so it cannot be subtracted from what they pay.
+    no_uc_childcare = _without_uc_childcare_element()
+    baseline_uc_support = realised_uc_childcare_support(
+        baseline, _build(dataset, scenario=no_uc_childcare), year
+    )
+    leg_scenarios = {
+        "free_hours": (free_hours_scenario(PARAMETER_YEARS), displaced_expenses),
+        "subsidy": (subsidy_scenario(), None),
+        "combined": (free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(), displaced_expenses),
+    }
+
     def _hours_against(name: str, reform_sim) -> dict:
         if name == "free_hours":
             reform_sim = free_hours_displaced
+        scenario, expenses = leg_scenarios[name]
+        reform_uc_support = realised_uc_childcare_support(
+            reform_sim,
+            _build(
+                dataset,
+                scenario=scenario + no_uc_childcare,
+                childcare_expenses=expenses,
+                year=year,
+            ),
+            year,
+        )
         return {
             bound: hours_response(
                 baseline,
@@ -993,6 +1019,8 @@ def run_year(dataset, year: int) -> dict:
                 _childcare_cost_per_person(baseline, year),
                 _childcare_cost_per_person(reform_sim, year),
                 leg_builders[name],
+                baseline_uc_support,
+                reform_uc_support,
                 elasticity_scale=scale,
             )
             for bound, scale in [

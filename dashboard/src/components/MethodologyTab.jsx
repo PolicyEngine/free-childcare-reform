@@ -134,20 +134,35 @@ export default function MethodologyTab({ data, year }) {
             smaller elasticities in high part-time, high participation countries.
           </li>
           <li>
-            The response is a floor in three ways. Whole-year ages cannot separate the
+            The participation response is a floor in two ways. Whole-year ages cannot separate the
             9-to-12-month cohort from younger babies, so that cohort is excluded with
             them — including the whole age-0 group would add roughly 14% to the central
             response, while sweeping in families whose youngest child is too young to
             qualify. The response is also confined to parents whose <em>youngest</em>{" "}
             child is eligible —{" "}
             {A(src.ifs_free_childcare, "the IFS")} finds no effect where a younger,
-            non-eligible child still needs care. Only the extensive margin is modelled, and{" "}
-            {A(src.bettendorf_jongen_muller, "Dutch evidence")} suggests hours respond about
-            twice as much as employment, so this is a floor rather than the whole response.
-            The elasticity bounds are the handle on uncertainty: the central childcare
-            price elasticity of {assumptions.price_elasticity_central} scales to{" "}
-            {assumptions.price_elasticity_low} and {assumptions.price_elasticity_high} for
-            the low and high cases.
+            non-eligible child still needs care. The elasticity bounds are the handle on
+            uncertainty: the central childcare price elasticity of{" "}
+            {assumptions.price_elasticity_central} scales to {assumptions.price_elasticity_low}{" "}
+            and {assumptions.price_elasticity_high} for the low and high cases, and the same
+            multiplier is applied to both margins.
+          </li>
+          <li>
+            <strong>The intensive margin is modelled separately.</strong> Parents in the
+            same population who are already in work and paying for childcare change their
+            hours with the price of it, at a childcare price elasticity of hours of{" "}
+            {assumptions.hours_price_elasticity}, derived from{" "}
+            {A(src.brewer_hours, "Brewer et al.")}: +0.600 hours a week over a sample mean of
+            14.319, against a 100% price fall. The price is what the family pays after the
+            subsidy, displaced free hours and the Universal Credit childcare support it
+            actually receives — the award difference from an abolition counterfactual, not
+            the element&apos;s face value, most of which the taper withdraws. Earnings move
+            with hours at a constant wage, and the revenue comes from rerunning each leg
+            with the higher earnings. The elasticity is a total-hours effect measured over
+            all mothers, zeros included, so it already contains the participation channel
+            and the two margins overlap rather than add;{" "}
+            {A(src.bettendorf_jongen_muller, "Dutch evidence")} that hours move about twice
+            as much as employment is the same point from the other direction.
           </li>
         </Block>
       </section>
@@ -211,9 +226,9 @@ export default function MethodologyTab({ data, year }) {
               larger than the model shows.
             </li>
             <li>
-              <strong>No intensive margin, no macro feedback.</strong> Hours changes among
-              existing workers are not modelled, and neither is any demand-side or
-              multiplier effect. {A(src.de_henau, "One UK study")} finds 61-72% of the gross
+              <strong>No macro feedback, and a single hours elasticity.</strong> The hours
+              response assumes labour demand absorbs the extra hours at the current wage,
+              and no demand-side or multiplier effect is modelled. {A(src.de_henau, "One UK study")} finds 61-72% of the gross
               cost recouped once those are included, but it assumes the employment response
               rather than estimating it.
             </li>

@@ -340,8 +340,8 @@ export default function CostTab({ data, year, bound, area }) {
               <strong>{assumptions.hours_price_elasticity}</strong>, derived from{" "}
               {A(src.brewer_hours, "Brewer et al.")} (+0.600 hours a week on a mean of
               14.319, against a 100% price fall), applied to each parent&apos;s own change in
-              out-of-pocket cost after the subsidy and displaced free hours, at a constant
-              wage. The revenue on the extra hours comes from rerunning the model with the
+              out-of-pocket cost after the subsidy, displaced free hours and the Universal
+              Credit childcare support the family actually receives, at a constant wage. The revenue on the extra hours comes from rerunning the model with the
               higher earnings, not from an assumed tax rate. The low and high assumptions
               scale both margins by the same factor.
             </p>
