@@ -63,7 +63,7 @@ const LEGS = [
   { id: "subsidy", label: "75% subsidy replacing Tax-Free Childcare" },
 ];
 
-export default function DistributionTab({ data, year, bound, area }) {
+export default function DistributionTab({ data, year, bound, intensive, area }) {
   const [measureId, setMeasureId] = useState("average_gain_gbp");
   const [populationId, setPopulationId] = useState(
     "by_income_quintile_families_with_under_5s",
@@ -77,12 +77,16 @@ export default function DistributionTab({ data, year, bound, area }) {
   // households and can be read by quintile like any other income change.
   const leg = result.legs[legId];
   const isEngland = area === "england";
-  const dynamicKey = isEngland ? "household_effects_by_bound_england" : "household_effects_by_bound";
-  const staticKey = isEngland ? "household_effects_england" : "household_effects";
-  const effects =
-    bound && bound !== "none" && leg[dynamicKey]?.[bound]
-      ? leg[dynamicKey][bound]
-      : leg[staticKey];
+  const suffix = isEngland ? "_england" : "";
+  const hasExtensive = Boolean(bound) && bound !== "none";
+  const hasIntensive = Boolean(intensive);
+  // Each combination of the two margins is a separate block in the results,
+  // so switching one off returns exactly the figures published without it.
+  const effects = hasExtensive
+    ? leg[`household_effects_by_bound${hasIntensive ? "_with_hours" : ""}${suffix}`][bound]
+    : hasIntensive
+      ? leg[`household_effects_hours${suffix}`]
+      : leg[`household_effects${suffix}`];
   const measure = MEASURES.find((m) => m.id === measureId);
   const population = POPULATIONS.find((p) => p.id === populationId);
   const rows = effects[populationId] || [];
@@ -106,8 +110,8 @@ export default function DistributionTab({ data, year, bound, area }) {
               hours are counted at the DfE funding rate the model applies, which is what
               the government pays a provider, not what a family would have paid on the open
               market.{" "}
-              {bound && bound !== "none"
-                ? "These figures include the labour supply response at the assumption chosen above, on both margins: each person's expected change in net income from entering or leaving work, and the net gain from parents in work adding hours as childcare gets cheaper, are added to their household's gain. The participation part falls mostly on the bottom quintile, where the entrants are; the hours part on working families paying for childcare, which sit higher up."
+              {hasExtensive || hasIntensive
+                ? `These figures include the labour supply response chosen above${hasExtensive ? ": each person's expected change in net income from entering or leaving work" : ""}${hasExtensive && hasIntensive ? ", and" : hasIntensive ? ":" : ""}${hasIntensive ? " the net gain from parents in work adding hours as childcare gets cheaper" : ""} — added to the household's gain.${hasExtensive ? " The participation part falls mostly on the bottom quintile, where the entrants are." : ""}${hasIntensive ? " The hours part falls on working families paying for childcare, which sit higher up." : ""}`
                 : "These figures are static. Choosing a labour supply assumption above adds each person's expected gain from entering or leaving work."}
             </>
           }

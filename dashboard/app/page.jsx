@@ -43,6 +43,11 @@ function Dashboard() {
   const [reformView, setReformView] = useState("budget");
   // Shared by both reform views, so the controls sit above the switcher.
   const [bound, setBound] = useState("central");
+  // The two labour supply margins switch on independently. `bound` is "none"
+  // when the extensive margin is off; the intensive margin has one setting.
+  const [extensive, setExtensive] = useState(true);
+  const [intensive, setIntensive] = useState(true);
+  const effectiveBound = extensive ? bound : "none";
   const [area, setArea] = useState("uk");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -154,27 +159,48 @@ function Dashboard() {
                       ))}
                     </select>
                   </label>
-                  <label className="w-64 shrink-0">
+                  <div className="min-w-0">
                     <span className="mb-1 block text-xs font-medium text-slate-500">
-                      Labour supply assumption
+                      Labour supply
                     </span>
-                    <select
-                      value={bound}
-                      onChange={(event) => setBound(event.target.value)}
-                      className={SELECT_CLASS}
-                    >
-                      <option value="none">None — static only</option>
-                      <option value="central">
-                        Central (elasticity = {(data.assumptions || {}).price_elasticity_central})
-                      </option>
-                      <option value="low">
-                        Low (elasticity = {(data.assumptions || {}).price_elasticity_low})
-                      </option>
-                      <option value="high">
-                        High (elasticity = {(data.assumptions || {}).price_elasticity_high})
-                      </option>
-                    </select>
-                  </label>
+                    <div className="flex h-10 items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 text-sm">
+                      <label className="flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          checked={extensive}
+                          onChange={(event) => setExtensive(event.target.checked)}
+                        />
+                        Extensive margin
+                      </label>
+                      {extensive ? (
+                        <select
+                          value={bound}
+                          onChange={(event) => setBound(event.target.value)}
+                          className="h-7 rounded-md border border-slate-200 bg-white px-1 text-sm"
+                          aria-label="Extensive margin elasticity"
+                        >
+                          <option value="central">
+                            Central (elasticity = {(data.assumptions || {}).price_elasticity_central})
+                          </option>
+                          <option value="low">
+                            Low (elasticity = {(data.assumptions || {}).price_elasticity_low})
+                          </option>
+                          <option value="high">
+                            High (elasticity = {(data.assumptions || {}).price_elasticity_high})
+                          </option>
+                        </select>
+                      ) : null}
+                      <label className="flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          checked={intensive}
+                          onChange={(event) => setIntensive(event.target.checked)}
+                        />
+                        Intensive margin (hours elasticity ={" "}
+                        {(data.assumptions || {}).hours_price_elasticity})
+                      </label>
+                    </div>
+                  </div>
                   <label className="w-36 shrink-0">
                     <span className="mb-1 block text-xs font-medium text-slate-500">
                       Area
@@ -215,9 +241,15 @@ function Dashboard() {
                 </div>
 
                 {reformView === "budget" ? (
-                  <CostTab data={data} year={year} bound={bound} area={area} />
+                  <CostTab data={data} year={year} bound={effectiveBound} intensive={intensive} area={area} />
                 ) : (
-                  <DistributionTab data={data} year={year} bound={bound} area={area} />
+                  <DistributionTab
+                    data={data}
+                    year={year}
+                    bound={effectiveBound}
+                    intensive={intensive}
+                    area={area}
+                  />
                 )}
               </div>
             )}

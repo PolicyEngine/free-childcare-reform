@@ -144,8 +144,8 @@ export default function MethodologyTab({ data, year }) {
             non-eligible child still needs care. The elasticity bounds are the handle on
             uncertainty: the central childcare price elasticity of{" "}
             {assumptions.price_elasticity_central} scales to {assumptions.price_elasticity_low}{" "}
-            and {assumptions.price_elasticity_high} for the low and high cases, and the same
-            multiplier is applied to both margins.
+            and {assumptions.price_elasticity_high} for the low and high cases. The two
+            margins are switched on independently on the Reform tab.
           </li>
           <li>
             <strong>The intensive margin is modelled separately.</strong> Parents in the

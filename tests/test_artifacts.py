@@ -118,7 +118,13 @@ def test_the_results_carry_the_shape_the_dashboard_expects(results):
             assert isinstance(leg_block["static_cost_bn"], (int, float)), (year, leg)
             for key in (
                 "household_effects",
+                "household_effects_england",
                 "household_effects_by_bound",
+                "household_effects_by_bound_england",
+                "household_effects_by_bound_with_hours",
+                "household_effects_by_bound_with_hours_england",
+                "household_effects_hours",
+                "household_effects_hours_england",
                 "labour_supply",
                 "hours_response",
             ):
@@ -405,3 +411,36 @@ def test_the_dynamic_cost_is_the_static_cost_less_both_margins(results):
             < combined["central"]["earnings_gbp"]
             < combined["high"]["earnings_gbp"]
         ), year
+
+
+def test_each_margin_combination_is_its_own_household_block(results):
+    """Switching a margin off must return the figures published without it.
+
+    The participation-only block and the participation-plus-hours block must
+    differ where the hours response is non-zero, and the hours-only block must
+    differ from static; otherwise the dashboard's toggles would be showing one
+    set of numbers under several labels.
+    """
+    for year in results["years"]:
+        for leg in ("subsidy", "combined"):
+            block = results["by_year"][str(year)]["legs"][leg]
+            static = block["household_effects"]["families_with_under_5s"]["average_gain_gbp"]
+            hours_only = block["household_effects_hours"]["families_with_under_5s"][
+                "average_gain_gbp"
+            ]
+            assert hours_only > static, (year, leg)
+            for bound in ("low", "central", "high"):
+                participation = block["household_effects_by_bound"][bound][
+                    "families_with_under_5s"
+                ]["average_gain_gbp"]
+                both = block["household_effects_by_bound_with_hours"][bound][
+                    "families_with_under_5s"
+                ]["average_gain_gbp"]
+                assert both > participation, (year, leg, bound)
+                # Hours are read at one setting, so the two blocks differ by the
+                # same hours-only increment on every bound.
+                assert both - participation == pytest.approx(hours_only - static, abs=2.0), (
+                    year,
+                    leg,
+                    bound,
+                )
