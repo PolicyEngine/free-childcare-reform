@@ -34,14 +34,14 @@ function Stat({ label, value, sub, footnote }) {
   );
 }
 
-// What each labour supply assumption actually is, in the reader's view.
+// What each labour supply assumption is, in the reader's view.
 const BOUND_NOTES = {
   central: (a) =>
-    `Central: the OBR participation elasticities as published, matching a childcare price elasticity of ${a.price_elasticity_central}.`,
+    `Central: OBR elasticities as published (price elasticity ${a.price_elasticity_central}).`,
   low: (a) =>
-    `Low: OBR elasticities scaled by ${a.elasticity_scale_low?.toFixed(2)}×, the ratio of a ${a.price_elasticity_low} price elasticity to the central ${a.price_elasticity_central}.`,
+    `Low: OBR elasticities × ${a.elasticity_scale_low?.toFixed(2)} (price elasticity ${a.price_elasticity_low}).`,
   high: (a) =>
-    `High: OBR elasticities scaled by ${a.elasticity_scale_high?.toFixed(2)}×, the ratio of a ${a.price_elasticity_high} price elasticity to the central ${a.price_elasticity_central}.`,
+    `High: OBR elasticities × ${a.elasticity_scale_high?.toFixed(2)} (price elasticity ${a.price_elasticity_high}).`,
 };
 
 const LEG_LABELS = {
@@ -167,16 +167,12 @@ export default function CostTab({ data, year, bound, intensive, area }) {
           title={`Budget impact, ${formatFiscalYear(data.years[0])} to ${formatFiscalYear(data.years[data.years.length - 1])}`}
           description={
             <>
-              Each leg costed against the current system, on the PolicyEngine UK Enhanced
-              FRS. <strong>The legs cover different countries.</strong> The free
-              entitlements are England-only in law and in the model; Tax-Free Childcare and
-              the subsidy replacing it are UK-wide. There is no UK figure for free hours
-              because early years childcare is devolved: the other nations run their own
-              schemes, which this brief does not reform. policyengine-uk models Scottish
-              eligibility but not an entitlement amount, and has nothing for Wales or
-              Northern Ireland, so there is no devolved entitlement to reform or cost. An
-              England spending increase would generate Barnett consequentials, which the
-              devolved administrations may spend as they choose; they are not costed here.
+              Each leg is costed against the current system on the PolicyEngine UK Enhanced
+              FRS. <strong>The legs cover different countries:</strong> the free
+              entitlements are England-only, in law and in the model; Tax-Free Childcare
+              and the subsidy replacing it are UK-wide. There is no UK free-hours figure
+              because early years is devolved and the model carries no devolved entitlement
+              amounts, and the Barnett consequentials of England spending are not costed.
             </>
           }
         />
@@ -213,14 +209,14 @@ export default function CostTab({ data, year, bound, intensive, area }) {
               value={formatSignedBn(-combinedOffset)}
               sub={[
                 hasExtensive
-                  ? `${response.net_entrants >= 0 ? "+" : "−"}${formatCount(Math.abs(response.net_entrants))} net entrants${isEngland ? " in England" : ` among ${result.labour_supply[bound].responding_adults_m.toFixed(1)}m eligible parents`} (${formatSignedBn(-response.net_revenue_gbp / 1e9)}). Small: the legs pull against each other — free hours remove a work condition, the subsidy cuts the price of working — so this is their net.`
+                  ? `${response.net_entrants >= 0 ? "+" : "−"}${formatCount(Math.abs(response.net_entrants))} net entrants${isEngland ? " in England" : ` among ${result.labour_supply[bound].responding_adults_m.toFixed(1)}m eligible parents`} (${formatSignedBn(-response.net_revenue_gbp / 1e9)}), the net of the two legs pulling in opposite directions.`
                   : null,
                 hasIntensive
                   ? `${formatCount(hoursResponse.ftes)} FTEs of extra hours from ${formatCount(hoursResponse.workers_with_price_change)} parents in work (${formatSignedBn(-hoursResponse.net_revenue_gbp / 1e9)}).`
                   : null,
                 `${offsetShare.toFixed(1)}% of the static cost.`,
                 hasExtensive && hasIntensive
-                  ? "The hours elasticity already contains a participation effect, so the two margins overlap rather than add."
+                  ? "The two margins overlap rather than add."
                   : null,
               ]
                 .filter(Boolean)
@@ -228,7 +224,7 @@ export default function CostTab({ data, year, bound, intensive, area }) {
               footnote={
                 <>
                   {hasExtensive ? BOUND_NOTES[bound]?.(assumptions) : null}{" "}
-                  {hasIntensive ? `Hours: elasticity ${assumptions.hours_price_elasticity}, one setting.` : null}{" "}
+                  {hasIntensive ? `Hours elasticity ${assumptions.hours_price_elasticity}, one setting.` : null}{" "}
                   {A(src.obr_labour_supply, "OBR participation elasticities")}
                   {src.akgunduz_plantenga ? (
                     <>
@@ -263,16 +259,13 @@ export default function CostTab({ data, year, bound, intensive, area }) {
                   <li>Today: 15 hours for 3-4 year olds; 30 where parents work and earn under £100,000.</li>
                   <li>
                     After: <strong>15 hours for every child</strong> from 9 months to school
-                    age, no work or income test.
+                    age, with no work or income test.
                   </li>
                   <li>
                     Plus <strong>a further 15 hours</strong> where parents work and earn
                     under £100,000.
                   </li>
-                  <li>
-                    So a non-working family gains 15 hours; a working family under £100,000
-                    keeps the 30 it has.
-                  </li>
+                  <li>A non-working family gains 15 hours; a working family under £100,000 keeps its 30.</li>
                 </ul>
               </dd>
             </div>
@@ -283,39 +276,34 @@ export default function CostTab({ data, year, bound, intensive, area }) {
               <dd className="mt-2 text-sm leading-6 text-slate-600">
                 <ul className="list-disc space-y-1 pl-5">
                   <li>
-                    Today: Tax-Free Childcare tops up 25% of what a parent pays into an
-                    account, capped at £2,000 a child, with a work test and a £100,000 cliff.
+                    Today: Tax-Free Childcare tops up 25% of what a parent pays in, capped at
+                    £2,000 a child, with a work test and a £100,000 cliff.
                   </li>
                   <li>
-                    After: <strong>75% of childcare costs</strong>, uncapped, no work test,
-                    no cliff — so it reaches above £100,000 too.
+                    After: <strong>75% of childcare costs</strong>, with no cap, work test
+                    or cliff.
                   </li>
                   <li>
-                    Not universal, despite the name. The costing keeps Tax-Free
-                    Childcare&apos;s take-up rate and its qualifying-child, provider and
-                    UK-connection rules. What the reform removes is the work test and the
-                    cliff.
+                    Not universal: the costing keeps Tax-Free Childcare&apos;s take-up rate
+                    and its qualifying-child, provider and UK-connection rules.
                   </li>
                   {extendedTakeUp ? (
                     <li>
-                      Take-up is a dataset input, not estimated for this reform. On the
-                      extended entitlement&apos;s flag instead of Tax-Free Childcare&apos;s
-                      — the argument being that the reform drops TFC&apos;s restrictions —
-                      this leg would cost{" "}
+                      Take-up is a dataset input. Read from the extended entitlement&apos;s
+                      flag instead, this leg would cost{" "}
                       <strong>{formatBn(extendedStatic("subsidy"))}</strong> static rather
                       than {formatBn(staticCost("subsidy"))}
                       {hasExtensive
                         ? `, with ${formatCount(extendedResponse("subsidy").net_entrants)} net entrants rather than ${formatCount(legResponse(result, "subsidy").net_entrants)}`
                         : ""}
-                      . It is lower because, in this data, the extended flag is the lower
-                      of the two ({(extendedTakeUp.take_up_rate_among_qualifying * 100).toFixed(0)}%
+                      , because that flag has the lower take-up rate in this data (
+                      {(extendedTakeUp.take_up_rate_among_qualifying * 100).toFixed(0)}%
                       against {(result.subsidy_take_up.baseline_take_up_rate * 100).toFixed(0)}%).
                     </li>
                   ) : null}
                   <li>
-                    Families on Universal Credit keep the{" "}
-                    <strong>85% childcare element</strong> instead, unchanged, rather than
-                    stacking the two.
+                    Families on Universal Credit keep the <strong>85% childcare element</strong>{" "}
+                    unchanged rather than stacking the two.
                   </li>
                 </ul>
               </dd>
@@ -329,11 +317,11 @@ export default function CostTab({ data, year, bound, intensive, area }) {
           title="Cost by year and by leg"
           description={
             <>
-              Each leg on its own, against the current system. They are deliberately not
-              added together: free hours displace paid care, so running both at once costs
-              less than the sum of the two. The assumption is that{" "}
+              Each leg on its own, against the current system. They are not added
+              together: free hours displace paid care, so running both at once costs less
+              than the sum of the two. The assumption is that{" "}
               {A(src.ifs_free_childcare, "90% of a new free offer")} replaces care a family
-              was already buying, but displacement is capped at what they actually spend,
+              was already buying, but displacement is capped at what they spend,
               and that cap binds — most newly-eligible families are not working and buy
               little paid care, so modelled childcare spending falls by only about 12% of
               the value of the new free hours.
@@ -391,14 +379,14 @@ export default function CostTab({ data, year, bound, intensive, area }) {
                   {A(src.brewer_hours, "Brewer et al.")} (+0.600 hours a week on a mean of
                   14.319, against a 100% price fall), applied to each parent&apos;s change in
                   out-of-pocket cost after the subsidy, displaced free hours and the UC
-                  childcare support actually received, at a constant wage. Revenue comes from
+                  childcare support realised, at a constant wage. Revenue comes from
                   rerunning the model with the higher earnings. One setting; it does not move
                   with the extensive-margin elasticity.
                 </li>
               ) : null}
               {hasIntensive ? (
                 <li>
-                  <strong>Read the hours figure with care.</strong> The +0.600 is measured over
+                  <strong>The hours figure overlaps the participation figure.</strong> The +0.600 is measured over
                   all mothers, zeros included, so it already contains people moving into work
                   — the paper&apos;s own employment effect accounts for most of it. Adding it to
                   the participation response counts that channel twice, and the treatment
@@ -414,18 +402,23 @@ export default function CostTab({ data, year, bound, intensive, area }) {
                 <dd className="mt-2 text-sm leading-6 text-slate-600">
                   <ul className="list-disc space-y-1 pl-5">
                     <li>
-                      Today a parent of a child under 3 gets nothing unless they work.
+                      Today, working parents each earning under £100,000 get 30 hours from 9
+                      months; a non-working family gets nothing until the child is 3 (15
+                      hours at 3-4), except 2-year-olds in families on out-of-work benefits
+                      or UC under £15,400, who get 15 hours.
                     </li>
                     <li>
-                      Under the reform they get 15 hours either way, so the gain to work
-                      falls for exactly the families the policy targets.
+                      Under the reform a non-working family gets 15 hours in or out of work,
+                      so its gain to work is unchanged. The gain to work falls for working
+                      parents on the 30-hour offer, who would now keep 15 hours if they
+                      stopped working: these are the leavers.
                     </li>
                     <li>
-                      Working parents under £100,000 already get 30 hours, so their
-                      position is unchanged.
+                      The in-work entitlement of parents each earning under £100,000 is
+                      unchanged under this leg.
                     </li>
                     <li>
-                      On the free-hours leg alone:{" "}
+                      Free-hours leg alone:{" "}
                       <strong>{formatCount(legResponse(result, 'free_hours').entrants)}</strong> entrants
                       against <strong>{formatCount(legResponse(result, 'free_hours').leavers)}</strong>{" "}
                       leavers, a net revenue effect of{" "}
@@ -445,10 +438,10 @@ export default function CostTab({ data, year, bound, intensive, area }) {
                   <ul className="list-disc space-y-1 pl-5">
                     <li>
                       The 75% subsidy cuts the price of the care that working requires, so
-                      the gain to work rises for parents who would be paying for childcare.
+                      the gain to work rises for parents who would pay for childcare.
                     </li>
                     <li>
-                      This is the channel that produces the subsidy leg&apos;s{" "}
+                      This channel produces the subsidy leg&apos;s{" "}
                       <strong>
                         {formatCount(legResponse(result, 'subsidy').net_entrants)}
                       </strong>{" "}
