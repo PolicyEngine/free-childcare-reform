@@ -10,11 +10,11 @@
   "policyengine_uk_version": "2.94.0",
   "policyengine_version": "5.3.0",
   "provenance": {
-    "analysis_commit": "f052ad56a29d76e46cad374c01db9bd551201563",
+    "analysis_commit": "8a97cd0152b6fc6e0d7c2b649312ee6e830e5796",
     "working_tree_dirty": false,
     "source_digest": "b7e3225e8452812e70fcb80b741ff68c1834d9c7f9bbd4bf0f1afcd5c7458404",
     "python_version": "3.13.15",
-    "generated_at": "2026-09-02T11:54:46+00:00"
+    "generated_at": "2026-09-02T12:07:49+00:00"
   },
   "reform_definition": {
     "free_hours": "15 hours a week of free childcare for every child from 9 months to school age, plus a further 15 hours where parents work and earn under \u00a3100,000 \u2014 replacing 30 hours for working parents under \u00a3100,000 and 15 hours for 3-4 year olds.",
