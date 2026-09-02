@@ -328,33 +328,37 @@ export default function CostTab({ data, year, bound, area }) {
             <h2 className="text-lg font-semibold tracking-tight text-slate-900">
               Labour supply response
             </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Two margins. On the <strong>extensive margin</strong>,{" "}
-              {A(src.obr_labour_supply, "the OBR's participation elasticities")} — which
-              vary by gender, partner employment, age of youngest child and earnings
-              quintile — are applied to the percentage change in each person&apos;s gain to
-              work, giving an expected change in their probability of working rather than a
-              drawn outcome. On the <strong>intensive margin</strong>, parents already in
-              work and paying for childcare change their hours with the price of it: a
-              childcare price elasticity of hours of{" "}
-              <strong>{assumptions.hours_price_elasticity}</strong>, derived from{" "}
-              {A(src.brewer_hours, "Brewer et al.")} (+0.600 hours a week on a mean of
-              14.319, against a 100% price fall), applied to each parent&apos;s own change in
-              out-of-pocket cost after the subsidy, displaced free hours and the Universal
-              Credit childcare support the family actually receives, at a constant wage. The revenue on the extra hours comes from rerunning the model with the
-              higher earnings, not from an assumed tax rate. The low and high assumptions
-              scale both margins by the same factor.
-            </p>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Read the hours figure with care. The +0.600 is measured over all mothers,
-              with zeros for those not working, so it is a total-hours effect that already
-              includes people moving into work; the paper&apos;s own employment effect
-              accounts for most of it. Adding it to the participation response below counts
-              that channel twice, and the estimated treatment was 12.5 extra free hours a
-              week, not a price fall of 100%. On the extensive margin, two forces pull
-              against each other, and the reported figure is the net of them, which is why
-              it is small.
-            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
+              <li>
+                <strong>Extensive margin.</strong>{" "}
+                {A(src.obr_labour_supply, "The OBR's participation elasticities")} — by
+                gender, partner employment, age of youngest child and earnings quintile —
+                applied to each person&apos;s percentage change in the gain to work, as an
+                expected change in their probability of working.
+              </li>
+              <li>
+                <strong>Intensive margin.</strong> Parents in work and paying for childcare
+                change their hours with its price: a hours elasticity of{" "}
+                <strong>{assumptions.hours_price_elasticity}</strong> from{" "}
+                {A(src.brewer_hours, "Brewer et al.")} (+0.600 hours a week on a mean of
+                14.319, against a 100% price fall), applied to each parent&apos;s change in
+                out-of-pocket cost after the subsidy, displaced free hours and the UC
+                childcare support actually received, at a constant wage. Revenue comes from
+                rerunning the model with the higher earnings.
+              </li>
+              <li>
+                <strong>Read the hours figure with care.</strong> The +0.600 is measured over
+                all mothers, zeros included, so it already contains people moving into work
+                — the paper&apos;s own employment effect accounts for most of it. Adding it to
+                the participation response counts that channel twice, and the treatment
+                was 12.5 extra free hours a week, not a 100% price fall.
+              </li>
+              <li>
+                Low and high scale both margins by the same factor. On the extensive margin
+                two forces pull against each other, and the figure is their net, which is
+                why it is small.
+              </li>
+            </ul>
             <dl className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl bg-slate-50 p-4">
                 <dt className="text-sm font-semibold text-slate-900">
