@@ -10,11 +10,11 @@
   "policyengine_uk_version": "2.94.0",
   "policyengine_version": "5.3.0",
   "provenance": {
-    "analysis_commit": "85b0c9d4f42038fa5a357c94dcf85e1adaac5e4c",
-    "working_tree_dirty": true,
-    "source_digest": "7574957edfdc4136a9df88fbeb24039b6e44febbb1f9eac344328186f1438ddc",
+    "analysis_commit": "f052ad56a29d76e46cad374c01db9bd551201563",
+    "working_tree_dirty": false,
+    "source_digest": "b7e3225e8452812e70fcb80b741ff68c1834d9c7f9bbd4bf0f1afcd5c7458404",
     "python_version": "3.13.15",
-    "generated_at": "2026-09-02T11:37:58+00:00"
+    "generated_at": "2026-09-02T11:54:46+00:00"
   },
   "reform_definition": {
     "free_hours": "15 hours a week of free childcare for every child from 9 months to school age, plus a further 15 hours where parents work and earn under \u00a3100,000 \u2014 replacing 30 hours for working parents under \u00a3100,000 and 15 hours for 3-4 year olds.",
@@ -85,7 +85,7 @@
       "date": "2017 costing",
       "cost_bn": "33-55 gross, 1.7-6.1 net",
       "geography": "UK",
-      "note": "A far larger offer \u2014 40 hours a week, 48 weeks a year, from 6 months \u2014 cited only as an upper bound. The net range is small because WBG puts tax and benefit recoupment at 89-95% of gross. Figures are all from the 2017 costing, so gross and net come from one design and one vintage. A 2020 Budget representation updates the gross range to \u00a338-57bn and is available at wbg.org.uk/wp-content/uploads/2020/01/Budget-Representation-to-HM-Treasury-Feb-2020.pdf; an earlier version of this note wrongly said it was unreachable, having only checked a dead path. It is not used because pairing its gross range with the 2017 net range mixes vintages.",
+      "note": "40 hours a week, 48 weeks a year, from 6 months \u2014 an upper bound. The net range is small because WBG puts tax and benefit recoupment at 89-95% of gross. Gross and net are both from the 2017 costing; the 2020 Budget representation's \u00a338-57bn gross range is not used, as pairing it with the 2017 net range would mix vintages.",
       "url": "https://www.wbg.org.uk/publication/costing-funding-childcare/"
     }
   ],
@@ -546,7 +546,7 @@
           "geography": "England",
           "period": "2025-26",
           "kind": "Fee base check",
-          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements, leaving about \u00a35.1bn that parents pay providers. Both terms are the CMA's, deliberately: the entitlements row above uses the IFS's \u00a38.7bn for the same quantity, and mixing the two sources inside one subtraction would make the residual an artefact of the mismatch. On the IFS figure the residual would be \u00a35.3bn and the gap 1.20x rather than 1.25x. That gross figure is the comparator. An earlier version of this check used \u00a33.75bn, netting TFC and the UC childcare element off the residual \u2014 but childcare_expenses is the total fee and both of those are computed from it, so subtracting them double-counts the support and overstated the gap as 1.70x rather than 1.25x. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
+          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements, leaving about \u00a35.1bn that parents pay providers. Both terms are the CMA's: the entitlements row above uses the IFS's \u00a38.7bn for the same quantity, and mixing the two sources inside one subtraction would make the residual an artefact of the mismatch. On the IFS figure the residual would be \u00a35.3bn and the gap 1.20x rather than 1.25x. That gross figure is the comparator. An earlier version of this check used \u00a33.75bn, netting TFC and the UC childcare element off the residual \u2014 but childcare_expenses is the total fee and both of those are computed from it, so subtracting them double-counts the support and overstated the gap as 1.70x rather than 1.25x. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
           "url": "https://assets.publishing.service.gov.uk/media/6a43cd6d065c5aec12a4e3ef/_Statement_of_scope_1_July.pdf",
           "model_bn": 6.361,
           "model_measured_at": 2027,
@@ -10531,7 +10531,7 @@
           "geography": "England",
           "period": "2025-26",
           "kind": "Fee base check",
-          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements, leaving about \u00a35.1bn that parents pay providers. Both terms are the CMA's, deliberately: the entitlements row above uses the IFS's \u00a38.7bn for the same quantity, and mixing the two sources inside one subtraction would make the residual an artefact of the mismatch. On the IFS figure the residual would be \u00a35.3bn and the gap 1.20x rather than 1.25x. That gross figure is the comparator. An earlier version of this check used \u00a33.75bn, netting TFC and the UC childcare element off the residual \u2014 but childcare_expenses is the total fee and both of those are computed from it, so subtracting them double-counts the support and overstated the gap as 1.70x rather than 1.25x. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
+          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements, leaving about \u00a35.1bn that parents pay providers. Both terms are the CMA's: the entitlements row above uses the IFS's \u00a38.7bn for the same quantity, and mixing the two sources inside one subtraction would make the residual an artefact of the mismatch. On the IFS figure the residual would be \u00a35.3bn and the gap 1.20x rather than 1.25x. That gross figure is the comparator. An earlier version of this check used \u00a33.75bn, netting TFC and the UC childcare element off the residual \u2014 but childcare_expenses is the total fee and both of those are computed from it, so subtracting them double-counts the support and overstated the gap as 1.70x rather than 1.25x. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
           "url": "https://assets.publishing.service.gov.uk/media/6a43cd6d065c5aec12a4e3ef/_Statement_of_scope_1_July.pdf",
           "model_bn": 6.514,
           "model_measured_at": 2028,
@@ -20516,7 +20516,7 @@
           "geography": "England",
           "period": "2025-26",
           "kind": "Fee base check",
-          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements, leaving about \u00a35.1bn that parents pay providers. Both terms are the CMA's, deliberately: the entitlements row above uses the IFS's \u00a38.7bn for the same quantity, and mixing the two sources inside one subtraction would make the residual an artefact of the mismatch. On the IFS figure the residual would be \u00a35.3bn and the gap 1.20x rather than 1.25x. That gross figure is the comparator. An earlier version of this check used \u00a33.75bn, netting TFC and the UC childcare element off the residual \u2014 but childcare_expenses is the total fee and both of those are computed from it, so subtracting them double-counts the support and overstated the gap as 1.70x rather than 1.25x. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
+          "note": "Derived, not published: the CMA estimates England's early years sector income at about \u00a314bn in 2025-26, of which \u00a38.9bn is funded entitlements, leaving about \u00a35.1bn that parents pay providers. Both terms are the CMA's: the entitlements row above uses the IFS's \u00a38.7bn for the same quantity, and mixing the two sources inside one subtraction would make the residual an artefact of the mismatch. On the IFS figure the residual would be \u00a35.3bn and the gap 1.20x rather than 1.25x. That gross figure is the comparator. An earlier version of this check used \u00a33.75bn, netting TFC and the UC childcare element off the residual \u2014 but childcare_expenses is the total fee and both of those are computed from it, so subtracting them double-counts the support and overstated the gap as 1.70x rather than 1.25x. The CMA flags substantial uncertainty in the \u00a314bn, and the residual on top of it is arithmetic rather than a published figure. Compared here against England under-5s only, which is what the benchmark covers; the model's full UK all-ages aggregate is shown separately below.",
           "url": "https://assets.publishing.service.gov.uk/media/6a43cd6d065c5aec12a4e3ef/_Statement_of_scope_1_July.pdf",
           "model_bn": 6.674,
           "model_measured_at": 2029,
