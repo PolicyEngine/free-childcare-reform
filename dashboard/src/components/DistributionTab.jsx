@@ -107,7 +107,7 @@ export default function DistributionTab({ data, year, bound, area }) {
               the government pays a provider, not what a family would have paid on the open
               market.{" "}
               {bound && bound !== "none"
-                ? "These figures include the labour supply response at the assumption chosen above: each person's expected change in net income from entering or leaving work is added to their household's gain. It falls mostly on the bottom quintile, where the entrants are."
+                ? "These figures include the labour supply response at the assumption chosen above, on both margins: each person's expected change in net income from entering or leaving work, and the net gain from parents in work adding hours as childcare gets cheaper, are added to their household's gain. The participation part falls mostly on the bottom quintile, where the entrants are; the hours part on working families paying for childcare, which sit higher up."
                 : "These figures are static. Choosing a labour supply assumption above adds each person's expected gain from entering or leaving work."}
             </>
           }

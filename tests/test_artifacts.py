@@ -103,9 +103,12 @@ def test_the_results_carry_the_shape_the_dashboard_expects(results):
             for field in (
                 "static_cost_bn",
                 "labour_supply_offset_bn",
+                "hours_offset_bn",
+                "total_offset_bn",
                 "dynamic_cost_bn",
                 "net_entrants",
                 "net_ftes",
+                "hours_ftes",
             ):
                 assert isinstance(dynamic[field], (int, float)), (year, bound, field)
 
@@ -113,7 +116,12 @@ def test_the_results_carry_the_shape_the_dashboard_expects(results):
             leg_block = block["legs"][leg]
             assert isinstance(leg_block, dict), (year, leg)
             assert isinstance(leg_block["static_cost_bn"], (int, float)), (year, leg)
-            for key in ("household_effects", "household_effects_by_bound", "labour_supply"):
+            for key in (
+                "household_effects",
+                "household_effects_by_bound",
+                "labour_supply",
+                "hours_response",
+            ):
                 assert isinstance(leg_block[key], dict), (year, leg, key)
             for bound in ("low", "central", "high"):
                 effects = leg_block["household_effects_by_bound"][bound]
@@ -349,3 +357,51 @@ def test_the_extended_take_up_scenario_is_a_real_rerun(results):
                     "wales",
                     "northern_ireland",
                 }
+
+
+def test_the_dynamic_cost_is_the_static_cost_less_both_margins(results):
+    """Both margins are in the total, each is a real quantity, and they reconcile.
+
+    The hours margin is checked to be a rerun rather than a scaling: its
+    revenue must be below its earnings (tax and withdrawn benefits come off),
+    and above zero where earnings rise. Its England share must reconcile to
+    the UK total the same way the participation margin does.
+    """
+    for year in results["years"]:
+        block = results["by_year"][str(year)]
+        for leg in ("free_hours", "subsidy", "combined"):
+            leg_block = block["legs"][leg]
+            for bound in ("low", "central", "high"):
+                hours = leg_block["hours_response"][bound]
+                participation = leg_block["labour_supply"][bound]
+                dynamic = leg_block["dynamic_cost"][bound]
+                assert hours["elasticity"] < 0, (year, leg, bound)
+                assert 0 <= hours["workers_with_price_change"] <= hours["workers_in_scope"]
+                if hours["earnings_gbp"] > 0:
+                    assert 0 < hours["net_revenue_gbp"] < hours["earnings_gbp"], (
+                        year,
+                        leg,
+                        bound,
+                    )
+                by_country = hours["by_country"]
+                assert set(by_country) == {"england", "scotland", "wales", "northern_ireland"}
+                assert sum(c["net_revenue_gbp"] for c in by_country.values()) == pytest.approx(
+                    hours["net_revenue_gbp"], abs=1.0
+                ), (year, leg, bound)
+                assert dynamic["hours_offset_bn"] == pytest.approx(
+                    hours["net_revenue_gbp"] / 1e9, abs=1e-4
+                )
+                assert dynamic["total_offset_bn"] == pytest.approx(
+                    (participation["net_revenue_gbp"] + hours["net_revenue_gbp"]) / 1e9,
+                    abs=1e-4,
+                )
+                assert dynamic["dynamic_cost_bn"] == pytest.approx(
+                    dynamic["static_cost_bn"] - dynamic["total_offset_bn"], abs=1e-3
+                ), (year, leg, bound)
+        # Low, central and high scale the same way on the hours margin.
+        combined = block["legs"]["combined"]["hours_response"]
+        assert (
+            combined["low"]["earnings_gbp"]
+            < combined["central"]["earnings_gbp"]
+            < combined["high"]["earnings_gbp"]
+        ), year
