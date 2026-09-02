@@ -87,9 +87,11 @@ PRICE_ELASTICITY_HIGH = -0.30
 # an intensive effect for those in work. The paper's own +3.5pp employment
 # effect at typical part-time hours accounts for most of it, so this
 # component overlaps with the participation response reported alongside it
-# and the two should not be read as additive. Second, the treatment was 12.5
-# extra free hours a week in term time, not a 100% price fall, so as a
-# per-unit-price elasticity this is a floor (treatment: file page 8).
+# and the two should not be read as additive. Second, the +0.600 is the
+# effect of full-time eligibility (school hours, 30-35 a week) relative to the
+# part-time offer (12.5-15 a week) — a move of roughly 15-20 free hours a
+# week in term time, not a 100% price fall — so as a per-unit-price
+# elasticity this is a floor (treatment: file pages 8-9).
 HOURS_PRICE_ELASTICITY = -0.042
 
 # Scale applied to the OBR participation elasticities for the low and high
@@ -466,8 +468,9 @@ BREWER_HOURS = Source(
     "weekly hours by 0.600 (s.e. 0.264), measured over all mothers with zeros for "
     "non-workers, against the Table 1 (file page 17) sample mean of 14.319 hours. "
     "The -0.042 hours elasticity used here is that +4.19% taken against a 100% "
-    "price fall; the treatment was 12.5 extra free hours a week (file page 8), not "
-    "a 100% price fall. It is a total-hours effect that contains the participation "
+    "price fall; the treatment was full-time eligibility (30-35 hours a week) "
+    "relative to the part-time offer (12.5-15), file pages 8-9, not a 100% price "
+    "fall. It is a total-hours effect that contains the participation "
     "channel, so it overlaps with the extensive-margin result.",
     "https://ifs.org.uk/sites/default/files/output_url_files/WP202009-Does-more-free-childcare-help-parents-work-more.pdf#page=41",
 )
