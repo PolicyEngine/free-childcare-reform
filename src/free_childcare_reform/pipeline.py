@@ -34,6 +34,7 @@ from policyengine_uk.data import UKSingleYearDataset
 from policyengine_uk.utils.scenario import Scenario
 
 from . import reforms, sources
+from .hours_response import hours_response
 from .labour_supply import (
     childcare_cost_when_working,
     participation_response,
@@ -563,6 +564,38 @@ def _build(dataset, scenario=None, childcare_expenses=None, year=None):
     return sim
 
 
+def _build_with_earnings(dataset, scenario, childcare_expenses, year, employment_income):
+    """A reform simulation with employment income replaced, for the hours response."""
+    sim = _build(dataset, scenario=scenario, childcare_expenses=childcare_expenses, year=year)
+    # reset_calculations clears set inputs along with cached results, so it
+    # has to come first; the other order leaves the earnings unchanged.
+    sim.reset_calculations()
+    sim.set_input("employment_income", year, employment_income)
+    return sim
+
+
+def _dynamic_cost(static_cost_bn: float, participation: dict, hours: dict) -> dict:
+    """Static cost less the revenue from both labour supply margins.
+
+    ``labour_supply_offset_bn`` keeps its meaning — the participation margin
+    alone — and the hours margin and the total are added beside it, so a
+    reader of an older file and a newer one is not comparing two different
+    things under one name.
+    """
+    participation_bn = participation["net_revenue_gbp"] / 1e9
+    hours_bn = hours["net_revenue_gbp"] / 1e9
+    return {
+        "static_cost_bn": static_cost_bn,
+        "labour_supply_offset_bn": round(participation_bn, 4),
+        "hours_offset_bn": round(hours_bn, 4),
+        "total_offset_bn": round(participation_bn + hours_bn, 4),
+        "dynamic_cost_bn": round(static_cost_bn - participation_bn - hours_bn, 3),
+        "net_entrants": round(participation["net_entrants"]),
+        "net_ftes": round(participation["net_ftes"]),
+        "hours_ftes": round(hours["ftes"]),
+    }
+
+
 def _subsidy_by_country(baseline, reform_sim, year: int) -> dict:
     """The subsidy leg split by country.
 
@@ -915,12 +948,77 @@ def run_year(dataset, year: int) -> dict:
     # Combined is included: it is the default view, so leaving it out meant the
     # household figures silently fell back to static on the selection most
     # readers see first.
+    # Intensive margin: parents in work change their hours with the price of
+    # childcare. The exchequer effect comes from rerunning each leg with the
+    # changed earnings, so each leg needs a builder that reproduces it.
+    print(f"  {year}: intensive-margin hours response ...")
+    leg_builders = {
+        "free_hours": lambda earnings: _build_with_earnings(
+            dataset, free_hours_scenario(PARAMETER_YEARS), displaced_expenses, year, earnings
+        ),
+        "subsidy": lambda earnings: _build_with_earnings(
+            dataset, subsidy_scenario(), None, year, earnings
+        ),
+        "combined": lambda earnings: _build_with_earnings(
+            dataset,
+            free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(),
+            displaced_expenses,
+            year,
+            earnings,
+        ),
+    }
+
+    # The free-hours leg on its own is simulated without the displacement
+    # adjustment (nothing in that leg is a share of spending, so its cost does
+    # not need it), but the price a working parent faces does fall by the paid
+    # care the new hours displace. The hours response therefore measures that
+    # leg on a run that carries the displaced expenses — the same run the
+    # earnings rerun is built from, so the only difference between the two is
+    # the earnings.
+    free_hours_displaced = _build(
+        dataset,
+        scenario=free_hours_scenario(PARAMETER_YEARS),
+        childcare_expenses=displaced_expenses,
+        year=year,
+    )
+
+    def _hours_against(name: str, reform_sim) -> dict:
+        if name == "free_hours":
+            reform_sim = free_hours_displaced
+        return {
+            bound: hours_response(
+                baseline,
+                reform_sim,
+                year,
+                _childcare_cost_per_person(baseline, year),
+                _childcare_cost_per_person(reform_sim, year),
+                leg_builders[name],
+                elasticity_scale=scale,
+            )
+            for bound, scale in [
+                ("central", sources.ELASTICITY_SCALE_CENTRAL),
+                ("low", sources.ELASTICITY_SCALE_LOW),
+                ("high", sources.ELASTICITY_SCALE_HIGH),
+            ]
+        }
+
+    hours_full = _hours_against("combined", combined)
+    hours = {
+        bound: {k: v for k, v in r.items() if k != "expected_net_income_change_per_person"}
+        for bound, r in hours_full.items()
+    }
+
     for name, sim in (
         ("free_hours", free_hours),
         ("subsidy", subsidy),
         ("combined", combined),
     ):
         leg_responses = responses_full if name == "combined" else _responses_against(sim)
+        leg_hours = hours_full if name == "combined" else _hours_against(name, sim)
+        legs[name]["hours_response"] = {
+            bound: {k: v for k, v in r.items() if k != "expected_net_income_change_per_person"}
+            for bound, r in leg_hours.items()
+        }
         legs[name]["labour_supply"] = {
             bound: {
                 key: value
@@ -930,35 +1028,23 @@ def run_year(dataset, year: int) -> dict:
             for bound, response in leg_responses.items()
         }
         # The distribution on the same behavioural assumption as the cost.
-        legs[name]["household_effects_by_bound"] = {
-            bound: _household_effects(
-                baseline,
-                sim,
-                year,
-                response["expected_net_income_change_per_person"],
-            )
+        # Both margins laid over the static distribution, so the household
+        # view moves with the same assumption as the cost.
+        behavioural_income = {
+            bound: response["expected_net_income_change_per_person"]
+            + leg_hours[bound]["expected_net_income_change_per_person"]
             for bound, response in leg_responses.items()
+        }
+        legs[name]["household_effects_by_bound"] = {
+            bound: _household_effects(baseline, sim, year, extra)
+            for bound, extra in behavioural_income.items()
         }
         legs[name]["household_effects_by_bound_england"] = {
-            bound: _household_effects(
-                baseline,
-                sim,
-                year,
-                response["expected_net_income_change_per_person"],
-                country="england",
-            )
-            for bound, response in leg_responses.items()
+            bound: _household_effects(baseline, sim, year, extra, country="england")
+            for bound, extra in behavioural_income.items()
         }
         legs[name]["dynamic_cost"] = {
-            bound: {
-                "static_cost_bn": legs[name]["static_cost_bn"],
-                "labour_supply_offset_bn": round(response["net_revenue_gbp"] / 1e9, 4),
-                "dynamic_cost_bn": round(
-                    legs[name]["static_cost_bn"] - response["net_revenue_gbp"] / 1e9, 3
-                ),
-                "net_entrants": round(response["net_entrants"]),
-                "net_ftes": round(response["net_ftes"]),
-            }
+            bound: _dynamic_cost(legs[name]["static_cost_bn"], response, leg_hours[bound])
             for bound, response in leg_responses.items()
         }
 
@@ -1015,17 +1101,11 @@ def run_year(dataset, year: int) -> dict:
     static_cost = legs["combined"]["static_cost_bn"]
     dynamic = {}
     for bound, response in responses.items():
-        offset_bn = response["net_revenue_gbp"] / 1e9
-        dynamic[bound] = {
-            "static_cost_bn": static_cost,
-            "labour_supply_offset_bn": round(offset_bn, 3),
-            "dynamic_cost_bn": round(static_cost - offset_bn, 3),
-            "offset_share_of_static_cost": round(offset_bn / static_cost, 4)
-            if static_cost
-            else 0.0,
-            "net_entrants": round(response["net_entrants"]),
-            "net_ftes": round(response["net_ftes"]),
-        }
+        dynamic[bound] = _dynamic_cost(static_cost, response, hours[bound])
+        offset_bn = dynamic[bound]["total_offset_bn"]
+        dynamic[bound]["offset_share_of_static_cost"] = (
+            round(offset_bn / static_cost, 4) if static_cost else 0.0
+        )
 
     return {
         "year": year,
@@ -1040,6 +1120,7 @@ def run_year(dataset, year: int) -> dict:
         ),
         "legs": legs,
         "labour_supply": responses,
+        "hours_response": hours,
         "fee_base_sensitivity": fee_base_sensitivity,
         "dynamic_cost": dynamic,
         "model_parameters": _model_parameters(baseline, year),

@@ -77,12 +77,16 @@ export default function CostTab({ data, year, bound, area }) {
   // would otherwise be applied to an England denominator.
   const legResponse = (block, leg) =>
     isEngland ? block.legs[leg].labour_supply[bound].by_country.england : block.legs[leg].labour_supply[bound];
+  // The intensive margin — parents in work changing their hours — on the same view.
+  const legHours = (block, leg) =>
+    isEngland ? block.legs[leg].hours_response[bound].by_country.england : block.legs[leg].hours_response[bound];
+  const legOffset = (block, leg) =>
+    isStatic ? 0 : (legResponse(block, leg).net_revenue_gbp + legHours(block, leg).net_revenue_gbp) / 1e9;
   const legCost = (block, leg) => {
     const staticCost = isEngland
       ? block.legs[leg].static_cost_by_country_bn.england
       : block.legs[leg].static_cost_bn;
-    if (isStatic) return staticCost;
-    return staticCost - legResponse(block, leg).net_revenue_gbp / 1e9;
+    return staticCost - legOffset(block, leg);
   };
   const cost = (leg) => legCost(result, leg);
   // The same leg with the subsidy's take-up read from the extended
@@ -92,10 +96,11 @@ export default function CostTab({ data, year, bound, area }) {
     const block = extendedTakeUp.legs[leg].labour_supply[bound];
     return isEngland ? block.by_country.england : block;
   };
-  const extendedLegCost = (leg) => {
+  // Static only: the extended-flag scenario carries the participation margin
+  // but not the hours margin, so its dynamic cost would not be comparable.
+  const extendedStatic = (leg) => {
     const block = extendedTakeUp.legs[leg];
-    const staticCost = isEngland ? block.static_cost_by_country_bn.england : block.static_cost_bn;
-    return isStatic ? staticCost : staticCost - extendedResponse(leg).net_revenue_gbp / 1e9;
+    return isEngland ? block.static_cost_by_country_bn.england : block.static_cost_bn;
   };
   const staticCost = (leg) =>
     isEngland ? legs[leg].static_cost_by_country_bn.england : legs[leg].static_cost_bn;
@@ -107,7 +112,12 @@ export default function CostTab({ data, year, bound, area }) {
   // The combined cost and offset on the selected area, so the share below is
   // computed on its own denominator rather than the UK one.
   const combinedStatic = staticCost("combined");
-  const combinedOffset = isStatic ? 0 : response.net_revenue_gbp / 1e9;
+  const hoursResponse = isStatic
+    ? null
+    : isEngland
+      ? result.hours_response[bound].by_country.england
+      : result.hours_response[bound];
+  const combinedOffset = isStatic ? 0 : (response.net_revenue_gbp + hoursResponse.net_revenue_gbp) / 1e9;
   const offsetShare = combinedStatic ? Math.abs(combinedOffset / combinedStatic) * 100 : 0;
 
   const yearRows = data.years.map((y) => {
@@ -146,7 +156,7 @@ export default function CostTab({ data, year, bound, area }) {
             sub={
               isStatic
                 ? "15 hours for every child from 9 months, plus 15 more where parents work and earn under £100,000."
-                : `Static ${formatBn(staticCost('free_hours'))}, plus ${formatSignedBn(--legResponse(result, 'free_hours').net_revenue_gbp / 1e9)} of labour supply on ${formatCount(legResponse(result, 'free_hours').net_entrants)} net entrants. Unconditional hours remove a reason to work, so this leg costs more.`
+                : `Static ${formatBn(staticCost('free_hours'))}, plus ${formatSignedBn(-legResponse(result, 'free_hours').net_revenue_gbp / 1e9)} from ${formatCount(legResponse(result, 'free_hours').net_entrants)} net entrants and ${formatSignedBn(-legHours(result, 'free_hours').net_revenue_gbp / 1e9)} from ${formatCount(legHours(result, 'free_hours').ftes)} FTEs of extra hours where displaced paid care cuts the price. Unconditional hours remove a reason to work, so participation lowers; hours rise.`
             }
           />
           <Stat
@@ -157,14 +167,14 @@ export default function CostTab({ data, year, bound, area }) {
                 ? `Tax-Free Childcare is UK-wide, so this leg splits: the rest is ${formatBn(byCountry.scotland)} Scotland, ${formatBn(byCountry.wales)} Wales and ${formatBn(byCountry.northern_ireland)} Northern Ireland.`
                 : isStatic
                   ? `Replacing Tax-Free Childcare. On the published fee base this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`
-                  : `Static ${formatBn(staticCost('subsidy'))}, plus ${formatSignedBn(--legResponse(result, 'subsidy').net_revenue_gbp / 1e9)} of labour supply on ${formatCount(legResponse(result, 'subsidy').net_entrants)} net entrants. Cheaper childcare makes work pay, so this leg costs less.`
+                  : `Static ${formatBn(staticCost('subsidy'))}, plus ${formatSignedBn(-legResponse(result, 'subsidy').net_revenue_gbp / 1e9)} from ${formatCount(legResponse(result, 'subsidy').net_entrants)} net entrants and ${formatSignedBn(-legHours(result, 'subsidy').net_revenue_gbp / 1e9)} from ${formatCount(legHours(result, 'subsidy').ftes)} FTEs of extra hours. Cheaper childcare makes work pay, so this leg costs less.`
             }
           />
           {isStatic ? (
             <Stat
               label="Behavioural response"
               value="None"
-              sub="Static costing: nobody changes their hours or whether they work. Choose a response above to add an extensive-margin labour supply effect."
+              sub="Static costing: nobody changes their hours or whether they work. Choose a response above to add labour supply effects on both margins."
             />
           ) : (
             <Stat
@@ -172,7 +182,7 @@ export default function CostTab({ data, year, bound, area }) {
               value={formatSignedBn(-combinedOffset)}
               sub={`${(isEngland ? response.net_entrants : dynamic.net_entrants) >= 0 ? "+" : "−"}${formatCount(
                 Math.abs(isEngland ? response.net_entrants : dynamic.net_entrants),
-              )} net entrants${isEngland ? " in England" : ` among ${result.labour_supply[bound].responding_adults_m.toFixed(1)}m eligible parents`}. The legs pull against each other — free hours remove a work condition, the subsidy cuts the price of working — so this is not their sum, and the net sign depends on which dominates. At ${offsetShare.toFixed(2)}% of the static cost, small on every assumption.`}
+              )} net entrants${isEngland ? " in England" : ` among ${result.labour_supply[bound].responding_adults_m.toFixed(1)}m eligible parents`} (${formatSignedBn(-response.net_revenue_gbp / 1e9)}), plus ${formatCount(hoursResponse.ftes)} FTEs of extra hours from ${formatCount(hoursResponse.workers_with_price_change)} parents in work (${formatSignedBn(-hoursResponse.net_revenue_gbp / 1e9)}). Participation is small: the legs pull against each other. Hours dominate, at ${offsetShare.toFixed(1)}% of the static cost together — but the hours elasticity already contains a participation effect, so the two overlap.`}
               footnote={
                 <>
                   {BOUND_NOTES[bound]?.(assumptions)}{" "}
@@ -249,12 +259,11 @@ export default function CostTab({ data, year, bound, area }) {
                       extended entitlement&apos;s flag instead of Tax-Free Childcare&apos;s
                       — the argument being that the reform drops TFC&apos;s restrictions —
                       this leg would cost{" "}
-                      <strong>{formatBn(extendedLegCost("subsidy"))}</strong>
+                      <strong>{formatBn(extendedStatic("subsidy"))}</strong> static rather
+                      than {formatBn(staticCost("subsidy"))}
                       {isStatic
                         ? ""
-                        : ` on ${formatCount(extendedResponse("subsidy").net_entrants)} net entrants`}{" "}
-                      rather than {formatBn(cost("subsidy"))}
-                      {isStatic ? "" : ` on ${formatCount(legResponse(result, "subsidy").net_entrants)}`}
+                        : `, with ${formatCount(extendedResponse("subsidy").net_entrants)} net entrants rather than ${formatCount(legResponse(result, "subsidy").net_entrants)}`}
                       . It is lower because, in this data, the extended flag is the lower
                       of the two ({(extendedTakeUp.take_up_rate_among_qualifying * 100).toFixed(0)}%
                       against {(result.subsidy_take_up.baseline_take_up_rate * 100).toFixed(0)}%).
@@ -320,20 +329,31 @@ export default function CostTab({ data, year, bound, area }) {
               Labour supply response
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              This is an <strong>extensive-margin</strong> model:{" "}
+              Two margins. On the <strong>extensive margin</strong>,{" "}
               {A(src.obr_labour_supply, "the OBR's participation elasticities")} — which
               vary by gender, partner employment, age of youngest child and earnings
               quintile — are applied to the percentage change in each person&apos;s gain to
               work, giving an expected change in their probability of working rather than a
-              drawn outcome. The <strong>intensive margin</strong> is not modelled at all:
-              no one already in work changes their hours, and{" "}
-              {A(src.bettendorf_jongen_muller, "Dutch evidence")} suggests hours move about
-              twice as much as employment, so what follows is a floor on the total response
-              rather than the whole of it.
+              drawn outcome. On the <strong>intensive margin</strong>, parents already in
+              work and paying for childcare change their hours with the price of it: a
+              childcare price elasticity of hours of{" "}
+              <strong>{assumptions.hours_price_elasticity}</strong>, derived from{" "}
+              {A(src.brewer_hours, "Brewer et al.")} (+0.600 hours a week on a mean of
+              14.319, against a 100% price fall), applied to each parent&apos;s own change in
+              out-of-pocket cost after the subsidy and displaced free hours, at a constant
+              wage. The revenue on the extra hours comes from rerunning the model with the
+              higher earnings, not from an assumed tax rate. The low and high assumptions
+              scale both margins by the same factor.
             </p>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Two forces pull against each other, and the reported figure is the net of
-              them, which is why it is small.
+              Read the hours figure with care. The +0.600 is measured over all mothers,
+              with zeros for those not working, so it is a total-hours effect that already
+              includes people moving into work; the paper&apos;s own employment effect
+              accounts for most of it. Adding it to the participation response below counts
+              that channel twice, and the estimated treatment was 12.5 extra free hours a
+              week, not a price fall of 100%. On the extensive margin, two forces pull
+              against each other, and the reported figure is the net of them, which is why
+              it is small.
             </p>
             <dl className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl bg-slate-50 p-4">

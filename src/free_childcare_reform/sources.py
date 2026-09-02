@@ -72,6 +72,25 @@ PRICE_ELASTICITY_CENTRAL = -0.15
 PRICE_ELASTICITY_LOW = -0.05
 PRICE_ELASTICITY_HIGH = -0.30
 
+# Childcare price elasticity of hours worked, for parents already in work.
+#
+# Derived from Brewer, Cattan, Crawford and Rabe (IFS WP20/09): full-time
+# eligibility raised mothers' usual weekly hours by +0.600 (Table A.3, panel
+# B, column 1, s.e. 0.264) against a sample mean of 14.319 hours (Table 1),
+# a +4.19% change, taken against a 100% fall in the childcare price:
+# 0.0419 / -1 = -0.042. Proposed for this analysis by Max Mosley.
+#
+# Two caveats that travel with the number. First, the +0.600 is measured on
+# all mothers with zeros for non-workers, and 14.319 is that same all-mothers
+# mean, so it is a total-hours effect — extensive and intensive together, not
+# an intensive effect for those in work. The paper's own +3.5pp employment
+# effect at typical part-time hours accounts for most of it, so this
+# component overlaps with the participation response reported alongside it
+# and the two should not be read as additive. Second, the treatment was 12.5
+# extra free hours a week in term time, not a 100% price fall, so as a
+# per-unit-price elasticity this is a floor.
+HOURS_PRICE_ELASTICITY = -0.042
+
 # Scale applied to the OBR participation elasticities for the low and high
 # bounds of the gain-to-work model. Set to the ratio of the low and high price
 # elasticities to the central one, so the two methods' uncertainty bands are
@@ -446,6 +465,17 @@ BETTENDORF_JONGEN_MULLER = Source(
     "https://home.treasury.gov/system/files/136/The-Economics-of-Childcare-Supply-09-14-final.pdf",
 )
 
+BREWER_HOURS = Source(
+    "Brewer, Cattan, Crawford and Rabe — Does more free childcare help parents work more? (IFS WP20/09)",
+    "England. Table A.3: full-time eligibility raised mothers' usual weekly hours "
+    "by 0.600 (s.e. 0.264), measured over all mothers with zeros for non-workers, "
+    "against a Table 1 sample mean of 14.319 hours. The -0.042 hours elasticity "
+    "used here is that +4.19% taken against a 100% price fall. It is a total-hours "
+    "effect that contains the participation channel, so it overlaps with the "
+    "extensive-margin result.",
+    "https://ifs.org.uk/sites/default/files/output_url_files/WP202009-Does-more-free-childcare-help-parents-work-more.pdf",
+)
+
 
 def as_json(model_parameters: dict[str, Any]) -> dict:
     """Registry as emitted to the results JSON.
@@ -465,6 +495,7 @@ def as_json(model_parameters: dict[str, Any]) -> dict:
             "elasticity_scale_low": round(ELASTICITY_SCALE_LOW, 4),
             "elasticity_scale_high": round(ELASTICITY_SCALE_HIGH, 4),
             "participation_change_bound": PARTICIPATION_CHANGE_BOUND,
+            "hours_price_elasticity": HOURS_PRICE_ELASTICITY,
             "restrict_to_youngest_child_eligible": RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE,
             "margin": "extensive (participation) only; the intensive margin is not modelled",
             "incidence": (
@@ -475,6 +506,7 @@ def as_json(model_parameters: dict[str, Any]) -> dict:
         "comparable_costings": COMPARABLE_COSTINGS,
         "sources": {
             "ifs_free_childcare": asdict(IFS_FREE_CHILDCARE),
+            "brewer_hours": asdict(BREWER_HOURS),
             "akgunduz_plantenga": asdict(AKGUNDUZ_PLANTENGA),
             "baker_gruber_milligan": asdict(BAKER_GRUBER_MILLIGAN),
             "dfe_30_hours_evaluation": asdict(DFE_30_HOURS_EVALUATION),
