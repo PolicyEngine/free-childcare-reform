@@ -312,3 +312,40 @@ def test_the_scope_scenarios_are_ordered_and_distinct(results):
             < scenarios["uc_families_and_full_take_up_bn"]
         ), year
         assert scenarios["as_coded_bn"] < scenarios["uc_families_included_bn"], year
+
+
+def test_the_extended_take_up_scenario_is_a_real_rerun(results):
+    """The subsidy on the extended entitlement's flag, not a scaling of the coded leg.
+
+    A rerun changes who is supported, so its labour supply response is not the
+    coded response scaled by the take-up ratio; a scaling would reproduce it
+    exactly. And on this data the extended flag is the lower of the two, so the
+    leg must come out below the coded one — the direction the issue records.
+    """
+    for year in results["years"]:
+        block = results["by_year"][str(year)]
+        extended = block["subsidy_take_up"]["extended_entitlement_flag"]
+        assert extended["flag"] == "would_claim_extended_childcare"
+        rate = extended["take_up_rate_among_qualifying"]
+        # Both rates are among benefit units with a qualifying child, so the
+        # ratio below is like for like.
+        assert 0 < rate < block["subsidy_take_up"]["baseline_take_up_rate"] < 1, year
+        for leg in ("subsidy", "combined"):
+            coded = block["legs"][leg]
+            alt = extended["legs"][leg]
+            assert alt["static_cost_bn"] < coded["static_cost_bn"], (year, leg)
+            countries = alt["static_cost_by_country_bn"]
+            assert (
+                abs(sum(v for k, v in countries.items() if k != "uk") - countries["uk"]) < 0.002
+            ), (year, leg)
+            for bound in ("low", "central", "high"):
+                coded_response = coded["labour_supply"][bound]["net_entrants"]
+                alt_response = alt["labour_supply"][bound]["net_entrants"]
+                scaled = coded_response * rate / block["subsidy_take_up"]["baseline_take_up_rate"]
+                assert abs(alt_response - scaled) > 1, (year, leg, bound)
+                assert set(alt["labour_supply"][bound]["by_country"]) == {
+                    "england",
+                    "scotland",
+                    "wales",
+                    "northern_ireland",
+                }

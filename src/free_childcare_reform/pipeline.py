@@ -33,7 +33,7 @@ from policyengine_uk import Microsimulation
 from policyengine_uk.data import UKSingleYearDataset
 from policyengine_uk.utils.scenario import Scenario
 
-from . import sources
+from . import reforms, sources
 from .labour_supply import (
     childcare_cost_when_working,
     participation_response,
@@ -665,15 +665,10 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
         "at_full_take_up_bn": round(
             (float(full.calculate("tax_free_childcare", year).sum()) - baseline_spend) / 1e9, 4
         ),
-        "baseline_take_up_rate": round(
-            float(
-                MicroSeries(
-                    claims.astype(float),
-                    weights=np.asarray(full.calculate("benunit_weight", year).values, float),
-                ).mean()
-            ),
-            4,
-        ),
+        # Among benefit units with a TFC-qualifying child, the same mask as the
+        # extended-flag rate below, so the two are like for like. Over every
+        # benefit unit the figure was 0.87 and read as a different population.
+        "baseline_take_up_rate": _take_up_among_qualifying(baseline, year, claims),
         "note": (
             "Both figures are the subsidy leg on its own, against the "
             "baseline fee base — not the combined run, where free hours "
@@ -684,6 +679,71 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
             "provider and UK-connection rules and its exclusion of Universal "
             "Credit and tax-credit families; it removes the work test and the "
             "£100,000 cliff."
+        ),
+    }
+
+
+def _take_up_among_qualifying(baseline, year: int, claims: np.ndarray) -> float:
+    """Weighted share of benefit units with a TFC-qualifying child carrying a take-up flag."""
+    qualifying = (
+        np.asarray(
+            baseline.calculate("tax_free_childcare_qualifying_child", year, map_to="benunit").values
+        )
+        > 0
+    )
+    weights = np.asarray(baseline.calculate("benunit_weight", year).values, float)
+    return round(
+        float(MicroSeries(claims[qualifying].astype(float), weights=weights[qualifying]).mean()),
+        4,
+    )
+
+
+def _extended_take_up_scenario(
+    dataset, baseline, year: int, displaced_expenses, baseline_spending: dict, responses_against
+) -> dict:
+    """The subsidy leg and both legs with take-up on the extended entitlement's flag.
+
+    Same scope as the coded subsidy in every other respect. The labour supply
+    response is rerun rather than scaled, since take-up changes who is
+    supported and so the gain to work, not just the total.
+    """
+    flag = reforms.SUBSIDY_TAKE_UP_FLAG_EXTENDED
+    subsidy = _build(dataset, scenario=subsidy_scenario(take_up_flag=flag))
+    combined = _build(
+        dataset,
+        scenario=free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(take_up_flag=flag),
+        childcare_expenses=displaced_expenses,
+        year=year,
+    )
+    claims = np.asarray(baseline.calculate(flag, year))
+    legs = {}
+    for name, sim in (("subsidy", subsidy), ("combined", combined)):
+        responses = responses_against(sim)
+        legs[name] = {
+            "static_cost_bn": round(
+                _spending(sim, year)["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 3
+            ),
+            "static_cost_by_country_bn": _cost_by_country(baseline, sim, year),
+            "labour_supply": {
+                bound: {
+                    "net_entrants": round(response["net_entrants"]),
+                    "net_ftes": round(response["net_ftes"]),
+                    "net_revenue_gbp": round(response["net_revenue_gbp"], 4),
+                    "by_country": response["by_country"],
+                }
+                for bound, response in responses.items()
+            },
+        }
+    return {
+        "flag": flag,
+        "take_up_rate_among_qualifying": _take_up_among_qualifying(baseline, year, claims),
+        "legs": legs,
+        "note": (
+            "The subsidy defined for would_claim_extended_childcare instead of "
+            "would_claim_tfc, everything else as coded. Both flags are dataset "
+            "inputs, uncorrelated with each other, and neither is estimated for "
+            "this reform. On this data the extended flag is the lower of the two, "
+            "so the switch reduces the leg and its response."
         ),
     }
 
@@ -833,6 +893,16 @@ def run_year(dataset, year: int) -> dict:
             ]
         }
 
+    # The subsidy on the extended entitlement's take-up flag instead of
+    # Tax-Free Childcare's (issue #5). Costed as a switch rather than adopted,
+    # because on this data it moves the leg the opposite way from the argument
+    # for it; see reforms.SUBSIDY_TAKE_UP_FLAG.
+    print(f"  {year}: subsidy on the extended entitlement's take-up flag ...")
+    subsidy_take_up = _subsidy_take_up_scenario(dataset, baseline, year)
+    subsidy_take_up["extended_entitlement_flag"] = _extended_take_up_scenario(
+        dataset, baseline, year, displaced_expenses, baseline_spending, _responses_against
+    )
+
     responses_full = _responses_against(combined)
     responses = {
         bound: {
@@ -961,7 +1031,7 @@ def run_year(dataset, year: int) -> dict:
         "year": year,
         "baseline_spending": baseline_spending,
         "baseline_programmes": _baseline_programmes(baseline, year),
-        "subsidy_take_up": _subsidy_take_up_scenario(dataset, baseline, year),
+        "subsidy_take_up": subsidy_take_up,
         "scope_scenarios": _scope_scenarios(dataset, baseline, free_hours, year, baseline_spending),
         "subsidy_by_country": _subsidy_by_country(baseline, subsidy, year),
         "uc_childcare_fiscal_cost": uc_childcare,

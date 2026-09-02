@@ -76,6 +76,16 @@ SUBSIDY_RATE = 0.75
 # default: the reform brief keeps the UC childcare element, and stacking would
 # subsidise childcare above cost.
 SUBSIDY_INCLUDES_UC_FAMILIES = False
+# Which take-up flag the subsidy inherits. Both are Enhanced FRS inputs and
+# neither is estimated for this reform. The coded case keeps Tax-Free
+# Childcare's, on the argument that the subsidy is administered through the
+# same account. The alternative — the extended (30-hour) entitlement's flag,
+# proposed on the grounds that the reform drops TFC's restrictions — is costed
+# alongside it. On the pinned data the TFC flag is the higher of the two
+# (0.89 against 0.80 among families with a qualifying child), so the switch
+# lowers the leg rather than raising it.
+SUBSIDY_TAKE_UP_FLAG = "would_claim_tfc"
+SUBSIDY_TAKE_UP_FLAG_EXTENDED = "would_claim_extended_childcare"
 
 
 def _universal_excludes_targeted():
@@ -153,13 +163,13 @@ def _no_stacking_modifier(simulation) -> None:
     simulation.reset_calculations()
 
 
-def _subsidy_variables(rate: float, include_uc_families: bool):
+def _subsidy_variables(rate: float, include_uc_families: bool, take_up_flag: str):
     class tax_free_childcare_eligible(Variable):
         value_type = bool
         entity = BenUnit
         label = "eligibility for the universal childcare subsidy"
         definition_period = YEAR
-        defined_for = "would_claim_tfc"
+        defined_for = take_up_flag
 
         def formula(benunit, period, parameters):
             has_qualifying_child = np.asarray(
@@ -199,9 +209,14 @@ def _subsidy_variables(rate: float, include_uc_families: bool):
 def subsidy_scenario(
     rate: float = SUBSIDY_RATE,
     include_uc_families: bool = SUBSIDY_INCLUDES_UC_FAMILIES,
+    take_up_flag: str = SUBSIDY_TAKE_UP_FLAG,
 ) -> Scenario:
-    """Replace Tax-Free Childcare with a flat ``rate`` subsidy of childcare costs."""
-    eligible_variable, amount_variable = _subsidy_variables(rate, include_uc_families)
+    """Replace Tax-Free Childcare with a flat ``rate`` subsidy of childcare costs.
+
+    ``take_up_flag`` names the benefit-unit take-up input the subsidy is
+    defined for; see ``SUBSIDY_TAKE_UP_FLAG``.
+    """
+    eligible_variable, amount_variable = _subsidy_variables(rate, include_uc_families, take_up_flag)
 
     def modifier(simulation) -> None:
         simulation.tax_benefit_system.update_variable(eligible_variable)

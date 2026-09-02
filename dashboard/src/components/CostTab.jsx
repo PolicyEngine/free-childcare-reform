@@ -85,6 +85,18 @@ export default function CostTab({ data, year, bound, area }) {
     return staticCost - legResponse(block, leg).net_revenue_gbp / 1e9;
   };
   const cost = (leg) => legCost(result, leg);
+  // The same leg with the subsidy's take-up read from the extended
+  // entitlement's flag, so the size of that choice shows on the same view.
+  const extendedTakeUp = result.subsidy_take_up?.extended_entitlement_flag;
+  const extendedResponse = (leg) => {
+    const block = extendedTakeUp.legs[leg].labour_supply[bound];
+    return isEngland ? block.by_country.england : block;
+  };
+  const extendedLegCost = (leg) => {
+    const block = extendedTakeUp.legs[leg];
+    const staticCost = isEngland ? block.static_cost_by_country_bn.england : block.static_cost_bn;
+    return isStatic ? staticCost : staticCost - extendedResponse(leg).net_revenue_gbp / 1e9;
+  };
   const staticCost = (leg) =>
     isEngland ? legs[leg].static_cost_by_country_bn.england : legs[leg].static_cost_bn;
   const response = isStatic
@@ -231,6 +243,23 @@ export default function CostTab({ data, year, bound, area }) {
                     UK-connection rules. What the reform removes is the work test and the
                     cliff.
                   </li>
+                  {extendedTakeUp ? (
+                    <li>
+                      Take-up is a dataset input, not estimated for this reform. On the
+                      extended entitlement&apos;s flag instead of Tax-Free Childcare&apos;s
+                      — the argument being that the reform drops TFC&apos;s restrictions —
+                      this leg would cost{" "}
+                      <strong>{formatBn(extendedLegCost("subsidy"))}</strong>
+                      {isStatic
+                        ? ""
+                        : ` on ${formatCount(extendedResponse("subsidy").net_entrants)} net entrants`}{" "}
+                      rather than {formatBn(cost("subsidy"))}
+                      {isStatic ? "" : ` on ${formatCount(legResponse(result, "subsidy").net_entrants)}`}
+                      . It is lower because, in this data, the extended flag is the lower
+                      of the two ({(extendedTakeUp.take_up_rate_among_qualifying * 100).toFixed(0)}%
+                      against {(result.subsidy_take_up.baseline_take_up_rate * 100).toFixed(0)}%).
+                    </li>
+                  ) : null}
                   <li>
                     Families on Universal Credit keep the{" "}
                     <strong>85% childcare element</strong> instead, unchanged, rather than

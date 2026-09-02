@@ -10,11 +10,11 @@
   "policyengine_uk_version": "2.94.0",
   "policyengine_version": "5.3.0",
   "provenance": {
-    "analysis_commit": "f7f71b120b0e2134fde0b89a0d72d574777e5220",
-    "working_tree_dirty": false,
-    "source_digest": "c6fa821ac981e87f16215374e318873a60e9c20452e181aae7b6081d15e35882",
+    "analysis_commit": "3beface973778ee7065dcca747ffec407bb5e184",
+    "working_tree_dirty": true,
+    "source_digest": "f6ee97f2337d29fd95b5c5b42329215bb6d05c150fed3cde60bfce7704767b1e",
     "python_version": "3.13.15",
-    "generated_at": "2026-09-01T12:10:52+00:00"
+    "generated_at": "2026-09-02T10:39:55+00:00"
   },
   "reform_definition": {
     "free_hours": "15 hours a week of free childcare for every child from 9 months to school age, plus a further 15 hours where parents work and earn under \u00a3100,000 \u2014 replacing 30 hours for working parents under \u00a3100,000 and 15 hours for 3-4 year olds.",
@@ -232,8 +232,225 @@
       "subsidy_take_up": {
         "as_coded_bn": 4.8389,
         "at_full_take_up_bn": 5.2783,
-        "baseline_take_up_rate": 0.8739,
-        "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
+        "baseline_take_up_rate": 0.8932,
+        "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff.",
+        "extended_entitlement_flag": {
+          "flag": "would_claim_extended_childcare",
+          "take_up_rate_among_qualifying": 0.8042,
+          "legs": {
+            "subsidy": {
+              "static_cost_bn": 4.313,
+              "static_cost_by_country_bn": {
+                "england": 3.7675,
+                "northern_ireland": 0.1419,
+                "scotland": 0.2418,
+                "wales": 0.1616,
+                "uk": 4.3128
+              },
+              "labour_supply": {
+                "central": {
+                  "net_entrants": 9181,
+                  "net_ftes": 3950,
+                  "net_revenue_gbp": 30459189.3096,
+                  "by_country": {
+                    "england": {
+                      "entrants": 8583.7024,
+                      "leavers": 379.7526,
+                      "net_entrants": 8203.9499,
+                      "net_revenue_gbp": 20478279.5948
+                    },
+                    "northern_ireland": {
+                      "entrants": 291.8419,
+                      "leavers": 13.8469,
+                      "net_entrants": 277.995,
+                      "net_revenue_gbp": 1345782.7832
+                    },
+                    "scotland": {
+                      "entrants": 910.6151,
+                      "leavers": 1084.1527,
+                      "net_entrants": -173.5376,
+                      "net_revenue_gbp": 3117638.7134
+                    },
+                    "wales": {
+                      "entrants": 873.118,
+                      "leavers": 0.8434,
+                      "net_entrants": 872.2746,
+                      "net_revenue_gbp": 5517488.2182
+                    }
+                  }
+                },
+                "low": {
+                  "net_entrants": 3047,
+                  "net_ftes": 1306,
+                  "net_revenue_gbp": 10061565.465,
+                  "by_country": {
+                    "england": {
+                      "entrants": 2861.2341,
+                      "leavers": 139.5777,
+                      "net_entrants": 2721.6565,
+                      "net_revenue_gbp": 6734595.5601
+                    },
+                    "northern_ireland": {
+                      "entrants": 97.2806,
+                      "leavers": 4.6156,
+                      "net_entrants": 92.665,
+                      "net_revenue_gbp": 448594.2611
+                    },
+                    "scotland": {
+                      "entrants": 303.5384,
+                      "leavers": 361.3842,
+                      "net_entrants": -57.8459,
+                      "net_revenue_gbp": 1039212.9045
+                    },
+                    "wales": {
+                      "entrants": 291.0393,
+                      "leavers": 0.2811,
+                      "net_entrants": 290.7582,
+                      "net_revenue_gbp": 1839162.7394
+                    }
+                  }
+                },
+                "high": {
+                  "net_entrants": 18472,
+                  "net_ftes": 7989,
+                  "net_revenue_gbp": 61562926.9806,
+                  "by_country": {
+                    "england": {
+                      "entrants": 17166.9865,
+                      "leavers": 648.4434,
+                      "net_entrants": 16518.5431,
+                      "net_revenue_gbp": 41601107.5511
+                    },
+                    "northern_ireland": {
+                      "entrants": 583.6838,
+                      "leavers": 27.6938,
+                      "net_entrants": 555.99,
+                      "net_revenue_gbp": 2691565.5663
+                    },
+                    "scotland": {
+                      "entrants": 1821.2302,
+                      "leavers": 2168.3054,
+                      "net_entrants": -347.0753,
+                      "net_revenue_gbp": 6235277.4267
+                    },
+                    "wales": {
+                      "entrants": 1746.236,
+                      "leavers": 1.6868,
+                      "net_entrants": 1744.5492,
+                      "net_revenue_gbp": 11034976.4364
+                    }
+                  }
+                }
+              }
+            },
+            "combined": {
+              "static_cost_bn": 6.138,
+              "static_cost_by_country_bn": {
+                "england": 5.5927,
+                "northern_ireland": 0.1419,
+                "scotland": 0.2418,
+                "wales": 0.1616,
+                "uk": 6.138
+              },
+              "labour_supply": {
+                "central": {
+                  "net_entrants": 855,
+                  "net_ftes": -1298,
+                  "net_revenue_gbp": 11333897.1278,
+                  "by_country": {
+                    "england": {
+                      "entrants": 7824.7974,
+                      "leavers": 8062.1713,
+                      "net_entrants": -237.3739,
+                      "net_revenue_gbp": 564486.3345
+                    },
+                    "northern_ireland": {
+                      "entrants": 308.1809,
+                      "leavers": 13.8469,
+                      "net_entrants": 294.3341,
+                      "net_revenue_gbp": 1429329.8276
+                    },
+                    "scotland": {
+                      "entrants": 959.6626,
+                      "leavers": 1084.1527,
+                      "net_entrants": -124.4901,
+                      "net_revenue_gbp": 3516694.713
+                    },
+                    "wales": {
+                      "entrants": 922.9257,
+                      "leavers": 0.8434,
+                      "net_entrants": 922.0823,
+                      "net_revenue_gbp": 5823386.2528
+                    }
+                  }
+                },
+                "low": {
+                  "net_entrants": 272,
+                  "net_ftes": -443,
+                  "net_revenue_gbp": 3686468.0711,
+                  "by_country": {
+                    "england": {
+                      "entrants": 2608.2658,
+                      "leavers": 2700.3839,
+                      "net_entrants": -92.1181,
+                      "net_revenue_gbp": 96664.4733
+                    },
+                    "northern_ireland": {
+                      "entrants": 102.727,
+                      "leavers": 4.6156,
+                      "net_entrants": 98.1114,
+                      "net_revenue_gbp": 476443.2759
+                    },
+                    "scotland": {
+                      "entrants": 319.8875,
+                      "leavers": 361.3842,
+                      "net_entrants": -41.4967,
+                      "net_revenue_gbp": 1172231.571
+                    },
+                    "wales": {
+                      "entrants": 307.6419,
+                      "leavers": 0.2811,
+                      "net_entrants": 307.3608,
+                      "net_revenue_gbp": 1941128.7509
+                    }
+                  }
+                },
+                "high": {
+                  "net_entrants": 2058,
+                  "net_ftes": -2355,
+                  "net_revenue_gbp": 24277233.4012,
+                  "by_country": {
+                    "england": {
+                      "entrants": 15648.6808,
+                      "leavers": 15772.87,
+                      "net_entrants": -124.1892,
+                      "net_revenue_gbp": 2747836.5359
+                    },
+                    "northern_ireland": {
+                      "entrants": 616.3619,
+                      "leavers": 27.6938,
+                      "net_entrants": 588.6681,
+                      "net_revenue_gbp": 2858659.6552
+                    },
+                    "scotland": {
+                      "entrants": 1919.3253,
+                      "leavers": 2168.3054,
+                      "net_entrants": -248.9802,
+                      "net_revenue_gbp": 7033389.4259
+                    },
+                    "wales": {
+                      "entrants": 1843.9093,
+                      "leavers": 1.6868,
+                      "net_entrants": 1842.2225,
+                      "net_revenue_gbp": 11637347.7842
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "note": "The subsidy defined for would_claim_extended_childcare instead of would_claim_tfc, everything else as coded. Both flags are dataset inputs, uncorrelated with each other, and neither is estimated for this reform. On this data the extended flag is the lower of the two, so the switch reduces the leg and its response."
+        }
       },
       "scope_scenarios": {
         "as_coded_bn": 6.6376,
@@ -5276,8 +5493,225 @@
       "subsidy_take_up": {
         "as_coded_bn": 4.9561,
         "at_full_take_up_bn": 5.406,
-        "baseline_take_up_rate": 0.8739,
-        "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
+        "baseline_take_up_rate": 0.8932,
+        "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff.",
+        "extended_entitlement_flag": {
+          "flag": "would_claim_extended_childcare",
+          "take_up_rate_among_qualifying": 0.8042,
+          "legs": {
+            "subsidy": {
+              "static_cost_bn": 4.418,
+              "static_cost_by_country_bn": {
+                "england": 3.8587,
+                "northern_ireland": 0.1454,
+                "scotland": 0.2479,
+                "wales": 0.1655,
+                "uk": 4.4175
+              },
+              "labour_supply": {
+                "central": {
+                  "net_entrants": 9256,
+                  "net_ftes": 3986,
+                  "net_revenue_gbp": 30536795.3564,
+                  "by_country": {
+                    "england": {
+                      "entrants": 8646.6038,
+                      "leavers": 387.2266,
+                      "net_entrants": 8259.3771,
+                      "net_revenue_gbp": 20358950.8606
+                    },
+                    "northern_ireland": {
+                      "entrants": 294.0383,
+                      "leavers": 13.947,
+                      "net_entrants": 280.0913,
+                      "net_revenue_gbp": 1382215.0514
+                    },
+                    "scotland": {
+                      "entrants": 920.6929,
+                      "leavers": 1084.1889,
+                      "net_entrants": -163.4961,
+                      "net_revenue_gbp": 3163281.3894
+                    },
+                    "wales": {
+                      "entrants": 880.4185,
+                      "leavers": 0.851,
+                      "net_entrants": 879.5675,
+                      "net_revenue_gbp": 5632348.055
+                    }
+                  }
+                },
+                "low": {
+                  "net_entrants": 3071,
+                  "net_ftes": 1317,
+                  "net_revenue_gbp": 10073715.1634,
+                  "by_country": {
+                    "england": {
+                      "entrants": 2882.2013,
+                      "leavers": 143.6115,
+                      "net_entrants": 2738.5897,
+                      "net_revenue_gbp": 6681100.3315
+                    },
+                    "northern_ireland": {
+                      "entrants": 98.0128,
+                      "leavers": 4.649,
+                      "net_entrants": 93.3638,
+                      "net_revenue_gbp": 460738.3505
+                    },
+                    "scotland": {
+                      "entrants": 306.8976,
+                      "leavers": 361.3963,
+                      "net_entrants": -54.4987,
+                      "net_revenue_gbp": 1054427.1298
+                    },
+                    "wales": {
+                      "entrants": 293.4728,
+                      "leavers": 0.2837,
+                      "net_entrants": 293.1892,
+                      "net_revenue_gbp": 1877449.3517
+                    }
+                  }
+                },
+                "high": {
+                  "net_entrants": 18624,
+                  "net_ftes": 8062,
+                  "net_revenue_gbp": 61740703.0244,
+                  "by_country": {
+                    "england": {
+                      "entrants": 17292.7669,
+                      "leavers": 660.6606,
+                      "net_entrants": 16632.1063,
+                      "net_revenue_gbp": 41385014.0328
+                    },
+                    "northern_ireland": {
+                      "entrants": 588.0766,
+                      "leavers": 27.8941,
+                      "net_entrants": 560.1826,
+                      "net_revenue_gbp": 2764430.1029
+                    },
+                    "scotland": {
+                      "entrants": 1841.3857,
+                      "leavers": 2168.3778,
+                      "net_entrants": -326.9921,
+                      "net_revenue_gbp": 6326562.7787
+                    },
+                    "wales": {
+                      "entrants": 1760.837,
+                      "leavers": 1.702,
+                      "net_entrants": 1759.135,
+                      "net_revenue_gbp": 11264696.11
+                    }
+                  }
+                }
+              }
+            },
+            "combined": {
+              "static_cost_bn": 6.285,
+              "static_cost_by_country_bn": {
+                "england": 5.7258,
+                "northern_ireland": 0.1454,
+                "scotland": 0.2479,
+                "wales": 0.1655,
+                "uk": 6.2846
+              },
+              "labour_supply": {
+                "central": {
+                  "net_entrants": 875,
+                  "net_ftes": -1298,
+                  "net_revenue_gbp": 10962245.5031,
+                  "by_country": {
+                    "england": {
+                      "entrants": 7882.8978,
+                      "leavers": 8120.8659,
+                      "net_entrants": -237.9682,
+                      "net_revenue_gbp": -29753.6068
+                    },
+                    "northern_ireland": {
+                      "entrants": 310.5526,
+                      "leavers": 13.947,
+                      "net_entrants": 296.6056,
+                      "net_revenue_gbp": 1468296.0735
+                    },
+                    "scotland": {
+                      "entrants": 970.5403,
+                      "leavers": 1084.1889,
+                      "net_entrants": -113.6486,
+                      "net_revenue_gbp": 3576690.1018
+                    },
+                    "wales": {
+                      "entrants": 930.9064,
+                      "leavers": 0.851,
+                      "net_entrants": 930.0554,
+                      "net_revenue_gbp": 5947012.9346
+                    }
+                  }
+                },
+                "low": {
+                  "net_entrants": 277,
+                  "net_ftes": -444,
+                  "net_revenue_gbp": 3548865.2123,
+                  "by_country": {
+                    "england": {
+                      "entrants": 2627.6326,
+                      "leavers": 2721.4913,
+                      "net_entrants": -93.8587,
+                      "net_revenue_gbp": -115134.491
+                    },
+                    "northern_ireland": {
+                      "entrants": 103.5175,
+                      "leavers": 4.649,
+                      "net_entrants": 98.8685,
+                      "net_revenue_gbp": 489432.0245
+                    },
+                    "scotland": {
+                      "entrants": 323.5134,
+                      "leavers": 361.3963,
+                      "net_entrants": -37.8829,
+                      "net_revenue_gbp": 1192230.0339
+                    },
+                    "wales": {
+                      "entrants": 310.3021,
+                      "leavers": 0.2837,
+                      "net_entrants": 310.0185,
+                      "net_revenue_gbp": 1982337.6449
+                    }
+                  }
+                },
+                "high": {
+                  "net_entrants": 2093,
+                  "net_ftes": -2359,
+                  "net_revenue_gbp": 23425300.0418,
+                  "by_country": {
+                    "england": {
+                      "entrants": 15764.8502,
+                      "leavers": 15895.4261,
+                      "net_entrants": -130.576,
+                      "net_revenue_gbp": 1455222.4115
+                    },
+                    "northern_ireland": {
+                      "entrants": 621.1052,
+                      "leavers": 27.8941,
+                      "net_entrants": 593.2111,
+                      "net_revenue_gbp": 2936592.147
+                    },
+                    "scotland": {
+                      "entrants": 1941.0806,
+                      "leavers": 2168.3778,
+                      "net_entrants": -227.2973,
+                      "net_revenue_gbp": 7153380.2037
+                    },
+                    "wales": {
+                      "entrants": 1859.0185,
+                      "leavers": 1.702,
+                      "net_entrants": 1857.3166,
+                      "net_revenue_gbp": 11880105.2796
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "note": "The subsidy defined for would_claim_extended_childcare instead of would_claim_tfc, everything else as coded. Both flags are dataset inputs, uncorrelated with each other, and neither is estimated for this reform. On this data the extended flag is the lower of the two, so the switch reduces the leg and its response."
+        }
       },
       "scope_scenarios": {
         "as_coded_bn": 6.7982,
@@ -10320,8 +10754,225 @@
       "subsidy_take_up": {
         "as_coded_bn": 5.0884,
         "at_full_take_up_bn": 5.5734,
-        "baseline_take_up_rate": 0.8739,
-        "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff."
+        "baseline_take_up_rate": 0.8932,
+        "note": "Both figures are the subsidy leg on its own, against the baseline fee base \u2014 not the combined run, where free hours displace some paid care first. They are comparable with each other and with the subsidy leg's static cost, and not with the combined total. Neither models new childcare use. The coded scope keeps Tax-Free Childcare's take-up, qualifying-child, provider and UK-connection rules and its exclusion of Universal Credit and tax-credit families; it removes the work test and the \u00a3100,000 cliff.",
+        "extended_entitlement_flag": {
+          "flag": "would_claim_extended_childcare",
+          "take_up_rate_among_qualifying": 0.8042,
+          "legs": {
+            "subsidy": {
+              "static_cost_bn": 4.56,
+              "static_cost_by_country_bn": {
+                "england": 3.9828,
+                "northern_ireland": 0.1489,
+                "scotland": 0.2593,
+                "wales": 0.1695,
+                "uk": 4.5605
+              },
+              "labour_supply": {
+                "central": {
+                  "net_entrants": 9564,
+                  "net_ftes": 4236,
+                  "net_revenue_gbp": 30696796.8969,
+                  "by_country": {
+                    "england": {
+                      "entrants": 8749.1687,
+                      "leavers": 378.811,
+                      "net_entrants": 8370.3576,
+                      "net_revenue_gbp": 19633004.437
+                    },
+                    "northern_ireland": {
+                      "entrants": 298.3978,
+                      "leavers": 14.0529,
+                      "net_entrants": 284.3448,
+                      "net_revenue_gbp": 1429868.0577
+                    },
+                    "scotland": {
+                      "entrants": 917.4929,
+                      "leavers": 898.8746,
+                      "net_entrants": 18.6182,
+                      "net_revenue_gbp": 3867816.3507
+                    },
+                    "wales": {
+                      "entrants": 891.6423,
+                      "leavers": 0.8595,
+                      "net_entrants": 890.7828,
+                      "net_revenue_gbp": 5766108.0515
+                    }
+                  }
+                },
+                "low": {
+                  "net_entrants": 3172,
+                  "net_ftes": 1399,
+                  "net_revenue_gbp": 10109801.0179,
+                  "by_country": {
+                    "england": {
+                      "entrants": 2916.3896,
+                      "leavers": 142.7413,
+                      "net_entrants": 2773.6483,
+                      "net_revenue_gbp": 6421870.198
+                    },
+                    "northern_ireland": {
+                      "entrants": 99.4659,
+                      "leavers": 4.6843,
+                      "net_entrants": 94.7816,
+                      "net_revenue_gbp": 476622.6859
+                    },
+                    "scotland": {
+                      "entrants": 305.831,
+                      "leavers": 299.6249,
+                      "net_entrants": 6.2061,
+                      "net_revenue_gbp": 1289272.1169
+                    },
+                    "wales": {
+                      "entrants": 297.2141,
+                      "leavers": 0.2865,
+                      "net_entrants": 296.9276,
+                      "net_revenue_gbp": 1922036.0172
+                    }
+                  }
+                },
+                "high": {
+                  "net_entrants": 19223,
+                  "net_ftes": 8547,
+                  "net_revenue_gbp": 62073450.4016,
+                  "by_country": {
+                    "england": {
+                      "entrants": 17497.8851,
+                      "leavers": 662.3269,
+                      "net_entrants": 16835.5581,
+                      "net_revenue_gbp": 39945865.4818
+                    },
+                    "northern_ireland": {
+                      "entrants": 596.7955,
+                      "leavers": 28.1059,
+                      "net_entrants": 568.6896,
+                      "net_revenue_gbp": 2859736.1154
+                    },
+                    "scotland": {
+                      "entrants": 1834.9857,
+                      "leavers": 1797.7492,
+                      "net_entrants": 37.2365,
+                      "net_revenue_gbp": 7735632.7014
+                    },
+                    "wales": {
+                      "entrants": 1783.2846,
+                      "leavers": 1.719,
+                      "net_entrants": 1781.5656,
+                      "net_revenue_gbp": 11532216.103
+                    }
+                  }
+                }
+              }
+            },
+            "combined": {
+              "static_cost_bn": 6.475,
+              "static_cost_by_country_bn": {
+                "england": 5.8972,
+                "northern_ireland": 0.1489,
+                "scotland": 0.2593,
+                "wales": 0.1695,
+                "uk": 6.4749
+              },
+              "labour_supply": {
+                "central": {
+                  "net_entrants": 1136,
+                  "net_ftes": -1066,
+                  "net_revenue_gbp": 10685085.5503,
+                  "by_country": {
+                    "england": {
+                      "entrants": 7932.7541,
+                      "leavers": 8107.434,
+                      "net_entrants": -174.68,
+                      "net_revenue_gbp": -1216014.7588
+                    },
+                    "northern_ireland": {
+                      "entrants": 314.9417,
+                      "leavers": 14.0529,
+                      "net_entrants": 300.8888,
+                      "net_revenue_gbp": 1518992.5745
+                    },
+                    "scotland": {
+                      "entrants": 967.1059,
+                      "leavers": 898.8746,
+                      "net_entrants": 68.2313,
+                      "net_revenue_gbp": 4293405.124
+                    },
+                    "wales": {
+                      "entrants": 942.1265,
+                      "leavers": 0.8595,
+                      "net_entrants": 941.2671,
+                      "net_revenue_gbp": 6088702.6106
+                    }
+                  }
+                },
+                "low": {
+                  "net_entrants": 362,
+                  "net_ftes": -369,
+                  "net_revenue_gbp": 3439230.5691,
+                  "by_country": {
+                    "england": {
+                      "entrants": 2644.2514,
+                      "leavers": 2718.9489,
+                      "net_entrants": -74.6976,
+                      "net_revenue_gbp": -527802.8673
+                    },
+                    "northern_ireland": {
+                      "entrants": 104.9806,
+                      "leavers": 4.6843,
+                      "net_entrants": 100.2963,
+                      "net_revenue_gbp": 506330.8582
+                    },
+                    "scotland": {
+                      "entrants": 322.3686,
+                      "leavers": 299.6249,
+                      "net_entrants": 22.7438,
+                      "net_revenue_gbp": 1431135.0413
+                    },
+                    "wales": {
+                      "entrants": 314.0422,
+                      "leavers": 0.2865,
+                      "net_entrants": 313.7557,
+                      "net_revenue_gbp": 2029567.5369
+                    }
+                  }
+                },
+                "high": {
+                  "net_entrants": 2588,
+                  "net_ftes": -1914,
+                  "net_revenue_gbp": 22759878.7619,
+                  "by_country": {
+                    "england": {
+                      "entrants": 15864.5554,
+                      "leavers": 15894.1802,
+                      "net_entrants": -29.6248,
+                      "net_revenue_gbp": -1026350.3385
+                    },
+                    "northern_ireland": {
+                      "entrants": 629.8834,
+                      "leavers": 28.1059,
+                      "net_entrants": 601.7775,
+                      "net_revenue_gbp": 3037985.149
+                    },
+                    "scotland": {
+                      "entrants": 1934.2118,
+                      "leavers": 1797.7492,
+                      "net_entrants": 136.4626,
+                      "net_revenue_gbp": 8586810.248
+                    },
+                    "wales": {
+                      "entrants": 1881.1868,
+                      "leavers": 1.719,
+                      "net_entrants": 1879.4678,
+                      "net_revenue_gbp": 12161433.7033
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "note": "The subsidy defined for would_claim_extended_childcare instead of would_claim_tfc, everything else as coded. Both flags are dataset inputs, uncorrelated with each other, and neither is estimated for this reform. On this data the extended flag is the lower of the two, so the switch reduces the leg and its response."
+        }
       },
       "scope_scenarios": {
         "as_coded_bn": 6.9767,
