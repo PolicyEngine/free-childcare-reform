@@ -10,20 +10,20 @@ const NAV_LINKS = [
   { label: "Research", href: "https://policyengine.org/uk/research" },
   { label: "Model", href: "https://policyengine.org/uk/model" },
   { label: "API", href: "https://policyengine.org/uk/api" },
-  { label: "About", href: "https://policyengine.org/uk/about" },
   { label: "Donate", href: "https://policyengine.org/uk/donate" },
 ];
 
 export default function PolicyEngineHeader() {
   return (
     <nav
+      aria-label="PolicyEngine site header"
       className="relative z-[1] w-full"
       style={{
         background:
           "linear-gradient(to right, var(--pe-color-primary-800, #234E52), var(--pe-color-primary-600, #2C7A7B))",
       }}
     >
-      <div className="mx-auto flex h-[58px] max-w-[1400px] items-center gap-8 px-6 md:px-8">
+      <div className="mx-auto flex h-[58px] max-w-[1400px] items-center gap-4 px-4 sm:gap-8 sm:px-6 md:px-8">
         <a
           href="https://policyengine.org/uk"
           aria-label="PolicyEngine UK home"
@@ -37,12 +37,12 @@ export default function PolicyEngineHeader() {
           />
         </a>
 
-        <div className="flex items-center gap-6 md:gap-8">
+        <div className="flex min-w-0 items-center gap-3.5 overflow-x-auto sm:gap-6 md:gap-8">
           {NAV_LINKS.map((link) => (
             <a
               key={link.label}
               href={link.href}
-              className="text-[15px] font-medium text-white no-underline transition-opacity hover:opacity-80"
+              className="whitespace-nowrap text-[13px] font-medium text-white no-underline transition-opacity hover:opacity-80 sm:text-[15px]"
             >
               {link.label}
             </a>
