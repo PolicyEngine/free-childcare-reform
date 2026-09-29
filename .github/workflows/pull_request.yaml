@@ -58,15 +58,22 @@ jobs:
       - name: Build
         working-directory: dashboard
         run: bun run build
-      - name: Assert the page shell is in the built HTML
+      - name: Assert the PolicyEngine site shell is in the built HTML
         working-directory: dashboard
         run: |
           html=.next/server/app/index.html
-          # The page is the analysis and nothing else: no site nav, no brand
-          # bar, no footer. Only the title and intro are server-rendered — the
-          # tabs mount once the results JSON loads — so those are what a
-          # static check can assert. A broken layout fails here.
-          for needle in "Two childcare reforms: free hours and a 75% subsidy" "75% subsidy of childcare costs"; do
+          # The dashboard is proxied under policyengine.org, which does not
+          # inject its shell into a multizone child, so this app renders the
+          # site header and footer itself and app-v2's app-zone-shell-audit
+          # fails the route if they are missing. Assert them here, at PR time,
+          # rather than finding out from the nightly production audit. The
+          # analysis title and intro go with them: only those are
+          # server-rendered — the tabs mount once the results JSON loads — so
+          # a broken layout fails here either way.
+          for needle in "PolicyEngine" ">Research<" ">Model<" ">API<" ">Donate<" \
+            "About us" "Developer tools" "Privacy policy" "Terms and conditions" \
+            "Two childcare reforms: free hours and a 75% subsidy" \
+            "75% subsidy of childcare costs"; do
             grep -qF -- "$needle" "$html" || { echo "MISSING from built HTML: $needle"; exit 1; }
           done
-          echo "Title and tabs present."
+          echo "Site shell present (brand, nav labels, footer links), and the analysis title."
