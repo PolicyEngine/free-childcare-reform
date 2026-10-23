@@ -29,6 +29,13 @@ export default function MethodologyTab({ data, year }) {
     );
 
   const fundingRates = params.childcare_funding_rate_gbp_per_hour || {};
+  // Realised displacement: the fall in modelled childcare spending in the
+  // combined run, as a share of the free-hours leg's static cost (UK).
+  const realisedDisplacementPct =
+    ((result.baseline_spending.childcare_expenses_bn -
+      result.legs.combined.spending.childcare_expenses_bn) /
+      result.legs.free_hours.static_cost_bn) *
+    100;
 
   return (
     <div className="space-y-10">
@@ -76,7 +83,8 @@ export default function MethodologyTab({ data, year }) {
             {A(src.ifs_free_childcare, "the IFS evaluation")} finds only about 54 additional
             hours of care outside the family for every 570 offered. Displacement is also
             capped at what a family spends, and that cap binds: realised
-            displacement is about 20% of the value of the new free hours.
+            displacement is about {realisedDisplacementPct.toFixed(0)}% of the value of
+            the new free hours.
           </li>
           <li>
             Free hours are valued at the DfE funding rate — what government pays a
@@ -118,7 +126,9 @@ export default function MethodologyTab({ data, year }) {
             £194 of annual earnings for entering part-time work rather than roughly
             £21,600 on the Enhanced FRS; and no imputation of what an entrant would{" "}
             <em>pay</em> for childcare, which would leave about three quarters of eligible
-            non-workers with a subsidy applied to zero. The second is still imputed here.
+            non-workers with a subsidy applied to zero. The local wage imputation is kept
+            for its donor pool — working adults whose youngest child is the same age — and
+            the entrant childcare cost is imputed here.
           </li>
           <li>
             Elasticities are the OBR&apos;s, by gender, partner employment, age of youngest
@@ -131,11 +141,13 @@ export default function MethodologyTab({ data, year }) {
             high part-time, high participation countries.
           </li>
           <li>
-            The participation response is a floor. It leaves out parents whose youngest
-            child is under 1, though the reform pays some of those children universal
-            hours, and only parents whose <em>youngest</em> child is eligible respond, as{" "}
-            {A(src.ifs_free_childcare, "the IFS")} finds no effect where a younger child
-            still needs care.
+            The participation response leaves out parents whose youngest child is under
+            1, though the reform pays some of those children universal hours. The
+            direction of that omission is not measured: working parents of those children
+            on the 30-hour offer face the same lower gain to work as the free-hours
+            leg&apos;s leavers. Only parents whose <em>youngest</em> child is eligible
+            respond, following {A(src.ifs_free_childcare, "the IFS")} finding of no effect
+            where a younger child still needs care.
           </li>
           <li>
             The price elasticity of {assumptions.price_elasticity_central} scales to{" "}

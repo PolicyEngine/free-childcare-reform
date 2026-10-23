@@ -37,6 +37,7 @@ export default function BaselineTab({ data, year }) {
     ? sensitivity.model_england_under_5_bn / sensitivity.benchmark_england_under_5_bn
     : null;
   const costings = data.comparable_costings || [];
+  const universal = programmes.find((row) => row.programme === "universal");
   const [open, setOpen] = useState(null);
 
   return (
@@ -170,16 +171,25 @@ export default function BaselineTab({ data, year }) {
         </div>
         {sensitivity ? (
           <p className="mt-4 text-sm leading-6 text-slate-600">
-            <strong>The childcare fee base is the largest uncertainty.</strong> For
-            England&apos;s under-5s the model has{" "}
+            <strong>The childcare fee base is a large uncertainty for the subsidy leg.</strong>{" "}
+            For England&apos;s under-5s the model has{" "}
             {formatBn(sensitivity.model_england_under_5_bn)} of childcare fees against a
-            published estimate of {formatBn(sensitivity.benchmark_england_under_5_bn)},
-            about {feeBaseRatio.toFixed(2)}× as much. Scaling the model&apos;s under-5 fees
-            to that estimate would take the subsidy leg from{" "}
+            residual derived from CMA figures of{" "}
+            {formatBn(sensitivity.benchmark_england_under_5_bn)}, about{" "}
+            {feeBaseRatio.toFixed(2)}× as much. Scaling the model&apos;s under-5 fees to that
+            figure would take the subsidy leg from{" "}
             {formatBn(result.legs.subsidy.static_cost_bn)} to{" "}
             {formatBn(sensitivity.subsidy_cost_bn)}; free hours are unaffected. The CMA
             figure is a residual of a sector-income estimate and contains other provider
-            income, so this is one accounting scenario, not a bound.
+            income, so this is one accounting scenario, not a bound. For the free-hours
+            leg, two uncertainties are comparable: the split of new hours between age 0
+            and age 1, which may move once Microcosm&apos;s fix to how it draws under-2s
+            (a12885f9) is released, and the gap between the model and official figures for
+            the universal entitlement
+            {universal
+              ? ` (${formatBn(universal.model_spending_bn)} modelled against ${formatBn(universal.official_spending_bn)} official spending; ${count(universal.model_caseload)} against ${count(universal.official_caseload)} children)`
+              : ""}
+            .
           </p>
         ) : null}
       </section>

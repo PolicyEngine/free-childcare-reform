@@ -150,6 +150,13 @@ export default function CostTab({ data, year, bound, intensive, area }) {
     return parts.join(" and ");
   };
   const offsetShare = combinedStatic ? Math.abs(combinedOffset / combinedStatic) * 100 : 0;
+  // Realised displacement: the fall in modelled childcare spending in the
+  // combined run, as a share of the free-hours leg's static cost (UK).
+  const realisedDisplacementPct =
+    ((result.baseline_spending.childcare_expenses_bn -
+      legs.combined.spending.childcare_expenses_bn) /
+      legs.free_hours.static_cost_bn) *
+    100;
 
   const yearRows = data.years.map((y) => {
     const block = data.by_year[String(y)];
@@ -193,8 +200,8 @@ export default function CostTab({ data, year, bound, intensive, area }) {
               isEngland
                 ? `Tax-Free Childcare is UK-wide, so this leg splits: the rest is ${formatBn(byCountry.scotland)} Scotland, ${formatBn(byCountry.wales)} Wales and ${formatBn(byCountry.northern_ireland)} Northern Ireland.`
                 : isStatic
-                  ? `Replacing Tax-Free Childcare. On the published fee base this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`
-                  : `Static ${formatBn(staticCost('subsidy'))}, plus ${legParts('subsidy')}. Cheaper childcare makes work pay, so this leg costs less.`
+                  ? `Replacing Tax-Free Childcare. On the CMA-derived fee base (a residual, not a published figure) this is ${formatBn(feeBase.subsidy_cost_bn)} — see Baseline.`
+                  : `Static ${formatBn(staticCost('subsidy'))}, plus ${legParts('subsidy')}. Cheaper childcare raises the gain to work, so this leg costs less.`
             }
           />
           {isStatic ? (
@@ -322,9 +329,9 @@ export default function CostTab({ data, year, bound, intensive, area }) {
               than the sum of the two. The assumption is that{" "}
               {A(src.ifs_free_childcare, "90% of a new free offer")} replaces care a family
               was already buying, but displacement is capped at what they spend,
-              and that cap binds — most newly-eligible families are not working and buy
-              little paid care, so modelled childcare spending falls by only about 12% of
-              the value of the new free hours.
+              and that cap binds — many newly-eligible families are not working and buy
+              little paid care, so modelled childcare spending falls by about{" "}
+              {realisedDisplacementPct.toFixed(0)}% of the value of the new free hours.
             </>
           }
         />

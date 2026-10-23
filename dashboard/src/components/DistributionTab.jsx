@@ -82,15 +82,30 @@ export default function DistributionTab({ data, year, bound, intensive, area }) 
   const hasIntensive = Boolean(intensive);
   // Each combination of the two margins is a separate block in the results,
   // so switching one off returns exactly the figures published without it.
-  const effects = hasExtensive
-    ? leg[`household_effects_by_bound${hasIntensive ? "_with_hours" : ""}${suffix}`][bound]
-    : hasIntensive
-      ? leg[`household_effects_hours${suffix}`]
-      : leg[`household_effects${suffix}`];
+  const selectEffects = (block) =>
+    hasExtensive
+      ? block[`household_effects_by_bound${hasIntensive ? "_with_hours" : ""}${suffix}`][bound]
+      : hasIntensive
+        ? block[`household_effects_hours${suffix}`]
+        : block[`household_effects${suffix}`];
+  const effects = selectEffects(leg);
   const measure = MEASURES.find((m) => m.id === measureId);
   const population = POPULATIONS.find((p) => p.id === populationId);
   const rows = effects[populationId] || [];
   const headline = effects.families_with_under_5s;
+  // The free-hours leg's reach by quintile among families with a child under 5,
+  // stated only on that breakdown and only when the bottom quintile has the
+  // highest share gaining in the data shown.
+  const freeHoursRows =
+    populationId === "by_income_quintile_families_with_under_5s"
+      ? selectEffects(result.legs.free_hours)[populationId] || []
+      : [];
+  const freeHoursBottom = freeHoursRows.find((row) => row.group === "Q1");
+  const freeHoursBottomLeads =
+    Boolean(freeHoursBottom) &&
+    freeHoursRows.every(
+      (row) => row === freeHoursBottom || row.share_gaining < freeHoursBottom.share_gaining,
+    );
   const all = effects.all_households;
 
   return (
@@ -108,7 +123,7 @@ export default function DistributionTab({ data, year, bound, intensive, area }) 
               hours are valued at the DfE funding rate, which is what government pays a
               provider rather than the market price.{" "}
               {hasExtensive || hasIntensive
-                ? `Figures include the labour supply response chosen above: ${hasExtensive ? "each person's expected change in net income from entering or leaving work" : ""}${hasExtensive && hasIntensive ? ", and " : ""}${hasIntensive ? "the net gain from parents in work adding hours" : ""}.${hasExtensive ? " The participation part falls mostly on the bottom quintile." : ""}${hasIntensive ? " The hours part falls on working families paying for childcare, higher up." : ""}`
+                ? `Figures include the labour supply response chosen above: ${hasExtensive ? "each person's expected change in net income from entering or leaving work" : ""}${hasExtensive && hasIntensive ? ", and " : ""}${hasIntensive ? "the net gain from parents in work adding hours" : ""}.`
                 : "These figures are static. Choosing a labour supply assumption above adds each person's expected gain from entering or leaving work."}
             </>
           }
@@ -215,7 +230,7 @@ export default function DistributionTab({ data, year, bound, intensive, area }) 
           </ResponsiveContainer>
           <p className="mt-4 text-sm leading-6 text-slate-500">
             {population?.grouping === "quintile"
-            ? "Q1 is the lowest-income fifth of households. From the subsidy, lower quintiles gain less in cash because families on Universal Credit already receive 85% of childcare costs through the UC childcare element, which this reform keeps unchanged, and because lower-income households use fewer paid childcare hours to begin with. The free hours reach a larger share of families in the bottom quintile than in any other. As a share of net income the picture is different — switch the measure above."
+            ? `Q1 is the lowest-income fifth of households. From the subsidy, lower quintiles gain less in cash because families on Universal Credit already receive 85% of childcare costs through the UC childcare element, which this reform keeps unchanged, and because lower-income households use fewer paid childcare hours to begin with.${freeHoursBottomLeads ? ` The free hours reach a larger share of families with a child under 5 in the bottom quintile (${formatPct(freeHoursBottom.share_gaining * 100, 1)}) than in any other.` : ""} As a share of net income the picture is different — switch the measure above.`
 : null}
           </p>
         </div>
