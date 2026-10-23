@@ -11,7 +11,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         prog="free-childcare-reform",
         description=(
-            "Cost a universal free childcare reform on the PolicyEngine UK Enhanced FRS, "
+            "Cost a universal free childcare reform on PolicyEngine UK Microcosm, "
             "statically and with a labour supply response on both the participation and "
             "hours margins."
         ),

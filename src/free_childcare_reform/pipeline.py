@@ -30,8 +30,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from microdf import MicroSeries
-from policyengine_uk import Microsimulation
-from policyengine_uk.data import UKSingleYearDataset
+from policyengine.tax_benefit_models.uk import managed_microsimulation
 from policyengine_uk.utils.scenario import Scenario
 
 from . import reforms, sources
@@ -51,28 +50,39 @@ from .reforms import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-# The PolicyEngine UK Enhanced FRS, downloaded from the private release at a
-# pinned revision for reproducibility.
-DATASET = "enhanced_frs_2024_25.h5"
-PRIVATE_REPO = "policyengine/policyengine-uk-data-private"
-DATASET_REVISION = "7b0a06f0f08bec4bdb81c5d0fdb4057fe4e7fd1a"
+# Microcosm UK 2024-25, the national release of 23 October 2026 (a133f37a),
+# pinned by the commit of its immutable cut tag and checked against the sha256
+# in its release manifest. Its manifest pins policyengine-uk 2.147.2.
+DATASET = "microcosm_uk_2024_25.h5"
+DATASET_LABEL = "Microcosm UK 2024-25 (national release a133f37a, 23 October 2026)"
+PRIVATE_REPO = "policyengine/populace-uk-private"
+DATASET_REVISION = "c3a751d911ac82e482d298dda0b6f2c949f4ed4d"
+DATASET_SHA256 = "64f83900ca3a1242fb017585234844ce89f743d32e41cd2b6558057777f914aa"
 YEARS = [2027, 2028, 2029]
 # The parameter changes need to be in force from before the first costed year.
 PARAMETER_YEARS = [2026, 2027, 2028, 2029, 2030]
 
 
-def _dataset() -> UKSingleYearDataset:
-    from huggingface_hub import hf_hub_download
+def _dataset() -> str:
+    from huggingface_hub import get_token, hf_hub_download
 
-    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_TOKEN")
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_TOKEN") or get_token()
     path = hf_hub_download(
         repo_id=PRIVATE_REPO,
         filename=DATASET,
-        repo_type="model",
+        repo_type="dataset",
         revision=DATASET_REVISION,
         token=token,
     )
-    return UKSingleYearDataset(path)
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    if digest.hexdigest() != DATASET_SHA256:
+        raise ValueError(
+            f"{DATASET}: sha256 {digest.hexdigest()} is not the pinned {DATASET_SHA256}"
+        )
+    return path
 
 
 def _label(level: str) -> str:
@@ -560,7 +570,9 @@ def _new_free_hours_value(baseline_sim, free_hours_sim, year: int) -> np.ndarray
 
 
 def _build(dataset, scenario=None, childcare_expenses=None, year=None):
-    sim = Microsimulation(dataset=dataset, scenario=scenario)
+    # policyengine.py builds the simulation; this module, not its bundle, pins
+    # the data, since no policyengine.py release registers this Microcosm.
+    sim = managed_microsimulation(dataset=dataset, allow_unmanaged=True, scenario=scenario)
     if childcare_expenses is not None:
         sim.set_input("childcare_expenses", year, childcare_expenses)
         sim.reset_calculations()
@@ -1176,7 +1188,7 @@ def run(args: argparse.Namespace) -> None:
     output = {
         "years": years,
         "currency": "GBP",
-        "dataset": "PolicyEngine UK Enhanced FRS (enhanced_frs_2024_25)",
+        "dataset": DATASET_LABEL,
         "dataset_revision": DATASET_REVISION,
         "policyengine_uk_version": importlib.metadata.version("policyengine-uk"),
         "policyengine_version": importlib.metadata.version("policyengine"),

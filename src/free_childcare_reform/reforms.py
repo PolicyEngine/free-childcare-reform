@@ -117,18 +117,17 @@ def _universal_excludes_targeted():
         defined_for = "would_claim_universal_childcare"
 
         def formula(person, period, parameters):
-            # policyengine-uk's own formula, with one term added. It cannot be
-            # delegated to, because overriding a variable and then reading it
-            # is circular.
+            # policyengine-uk's own formula (2.147+, reception term from the
+            # date of birth, universal stacking under the working-parent
+            # hours), with one term added. It cannot be delegated to, because
+            # overriding a variable and then reading it is circular.
             country = person.household("country", period)
             in_england = country == country.possible_values.ENGLAND
             age = person("age", period)
             p = parameters(period).gov.dfe.universal_childcare_entitlement
             meets_age_condition = (age >= p.age.min) & (age < p.age.max)
             not_compulsory_age = ~person("is_of_compulsory_school_age", period)
-            has_extended_childcare = person.benunit(
-                "extended_childcare_entitlement_eligible", period
-            )
+            before_school = person("early_years_term_share_before_school", period)
             # The added term. The targeted offer is benefit-unit eligibility on
             # a 2-year-old, so it only displaces the universal entitlement for
             # a child of that age.
@@ -139,7 +138,7 @@ def _universal_excludes_targeted():
                 in_england
                 & meets_age_condition
                 & not_compulsory_age
-                & ~has_extended_childcare
+                & (before_school > 0)
                 & ~(targeted & in_targeted_age)
             )
 
