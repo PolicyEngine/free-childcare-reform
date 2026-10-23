@@ -46,10 +46,11 @@ class Source:
 # There is no single well-supported number here: displacement is roughly
 # 70-90% measured on formal hours and 90-100% on total care hours. The choice
 # matters less than that range suggests, because displacement is separately
-# capped at what a family actually spends and that cap binds for most
+# capped at what a family actually spends and that cap binds for many
 # newly-eligible families, who are not working and buy little paid care.
-# Running the whole analysis at 71% instead of 90% moves the combined cost by
-# £0.03bn, or 0.4%, and moves neither leg on its own.
+# On Microcosm a133f37a, running at 71% instead of 90% raises the 2027-28
+# combined cost by £0.08bn, about 1%. Displacement applies only to the combined
+# run, so neither leg on its own moves.
 FREE_HOURS_ADDITIONALITY = 54 / 570  # ~0.095
 FREE_HOURS_DISPLACEMENT = 1 - FREE_HOURS_ADDITIONALITY  # ~0.905
 
