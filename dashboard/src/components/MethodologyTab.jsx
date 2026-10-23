@@ -39,25 +39,25 @@ export default function MethodologyTab({ data, year }) {
         />
         <Block title="The two legs">
           <li>
-            <strong>Free hours is a single parameter change.</strong> policyengine-uk
-            models the three DfE schemes as mutually exclusive rather than stacking, and
-            the universal entitlement already carries no work or income test — it is
-            limited to 3-4 year olds and switched off for families on the extended
-            (working-parent) scheme, which pays the full 30 hours. So the reform&apos;s
-            second tier is already what the extended scheme delivers, and the first is
-            delivered by widening the universal age floor from{" "}
+            <strong>Free hours is a parameter change, an age rule and one exclusion.</strong>{" "}
+            policyengine-uk stacks the universal hours under the working-parent hours: the
+            universal entitlement carries no work or income test and is limited to 3-4 year
+            olds, and the working-parent scheme pays the hours above it, up to 30. So the
+            reform&apos;s second tier is already what the working-parent scheme delivers,
+            and the first is delivered by widening the universal age floor from{" "}
             <strong>{params.baseline_universal_entitlement_age_min}</strong> to{" "}
-            <strong>{params.reform_universal_entitlement_age_min}</strong> years. One
-            exclusion is added: the widened entitlement would otherwise stack on the
-            disadvantaged two-year-old offer, giving those children 30 free hours where
-            the reform gives 15.
+            <strong>{params.reform_universal_entitlement_age_min}</strong> years, applied
+            from each child&apos;s date of birth: universal hours start the first term
+            after the child reaches that age, as the working-parent hours already do. One
+            exclusion is added: where a family claims the disadvantaged two-year-old
+            offer, the widened entitlement would otherwise stack on it, giving those
+            children 30 free hours where the reform gives 15.
           </li>
           <li>
             <strong>The subsidy is structural.</strong> Tax-Free Childcare pays{" "}
-            <code className="rounded bg-slate-100 px-1">rate / (1 - rate)</code> of
-            parental spend — a{" "}
-            {(params.baseline_tax_free_childcare_rate * 100).toFixed(0)}% rate giving a 25%
-            top-up — capped at £
+            {(params.baseline_tax_free_childcare_rate * 100).toFixed(0)}% of the gross
+            spend routed through the account — the statutory 25% top-up on what a parent
+            pays in — capped at £
             {params.baseline_tax_free_childcare_cap_gbp?.toLocaleString("en-GB")} a child,
             with a work test and a £
             {params.extended_entitlement_income_limit_gbp?.toLocaleString("en-GB")} cliff.
@@ -76,7 +76,7 @@ export default function MethodologyTab({ data, year }) {
             {A(src.ifs_free_childcare, "the IFS evaluation")} finds only about 54 additional
             hours of care outside the family for every 570 offered. Displacement is also
             capped at what a family spends, and that cap binds: realised
-            displacement is about 14.5% of the value of the new free hours.
+            displacement is about 20% of the value of the new free hours.
           </li>
           <li>
             Free hours are valued at the DfE funding rate — what government pays a
@@ -104,7 +104,8 @@ export default function MethodologyTab({ data, year }) {
             out-of-pocket childcare in work, and cost-contingent support out of work.
           </li>
           <li>
-            Two upstream defects are worked around and reported as{" "}
+            Two upstream gaps were worked around when this analysis was first built on
+            policyengine-uk 2.94 and reported as{" "}
             <a
               href="https://github.com/PolicyEngine/policyengine-uk/issues/1839"
               target="_blank"
@@ -113,10 +114,11 @@ export default function MethodologyTab({ data, year }) {
             >
               policyengine-uk#1839
             </a>
-            : a units error crediting a non-worker with about <strong>£194</strong> of
-            annual earnings for entering part-time work rather than roughly £21,600, and no
-            imputation of what an entrant would <em>pay</em> for childcare, leaving 85% of
-            eligible non-workers with a subsidy applied to zero.
+            : a units error, since fixed upstream, that credited a non-worker with about
+            £194 of annual earnings for entering part-time work rather than roughly
+            £21,600 on the Enhanced FRS; and no imputation of what an entrant would{" "}
+            <em>pay</em> for childcare, which would leave about three quarters of eligible
+            non-workers with a subsidy applied to zero. The second is still imputed here.
           </li>
           <li>
             Elasticities are the OBR&apos;s, by gender, partner employment, age of youngest
@@ -129,9 +131,9 @@ export default function MethodologyTab({ data, year }) {
             high part-time, high participation countries.
           </li>
           <li>
-            The participation response is a floor. Whole-year ages exclude the 9-to-12-month
-            cohort (including all of age 0 would add roughly 14% to the central response),
-            and only parents whose <em>youngest</em> child is eligible respond, as{" "}
+            The participation response is a floor. It leaves out parents whose youngest
+            child is under 1, though the reform pays some of those children universal
+            hours, and only parents whose <em>youngest</em> child is eligible respond, as{" "}
             {A(src.ifs_free_childcare, "the IFS")} finds no effect where a younger child
             still needs care.
           </li>
@@ -174,18 +176,11 @@ export default function MethodologyTab({ data, year }) {
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
           <ul className="list-inside list-disc space-y-2 text-sm leading-6 text-slate-600">
             <li>
-              <strong>The 9-month tier is modelled as starting at age 1.</strong> Family
-              Resources Survey ages are whole years, so the reform&apos;s 0.75 age floor
-              evaluates as &ldquo;age 1 or over&rdquo;, and no child recorded as age 0
-              receives the entitlement — verified as exactly zero children. The
-              9-to-12-month cohort the reform covers is therefore not costed here.
-              Measured directly, lowering the floor to zero raises the leg from £1.97bn to
-              £3.73bn, so the whole age-zero group is worth £1.76bn and a three-month
-              share is about <strong>£0.44bn, or 22% of the free-hours leg</strong>, which
-              is missing from the cost. Modelling it properly needs month-of-age and
-              term-start rules — eligibility begins the term after a child turns nine
-              months — not a different threshold. The labour supply response omits the
-              same children, so both sides are consistent.
+              <strong>The 9-month floor is applied from the date of birth.</strong> A
+              child gets universal hours from the first term after it reaches 9 months,
+              the same rule the model applies to the working-parent hours, rather than
+              from a whole-year age. The labour supply response still uses whole-year ages,
+              so it leaves out parents whose youngest child is aged 0.
             </li>
             <li>
               <strong>The participation elasticities are read at 2025.</strong> The
@@ -197,10 +192,11 @@ export default function MethodologyTab({ data, year }) {
               assumptions, not year-specific ones.
             </li>
             <li>
-              <strong>Take-up is held fixed at the baseline rates.</strong> The Enhanced
-              FRS does apply a take-up haircut — about 88% for Tax-Free Childcare, 81% for
-              the working-parent entitlement, 56% for universal and 59% for the
-              disadvantaged offer — so this is not a full-take-up costing. What is assumed
+              <strong>Take-up is held fixed at the baseline rates.</strong> The data
+              carries take-up flags — among English families with a child under 5, about
+              97% for Tax-Free Childcare, 86% for the working-parent entitlement, 86% for
+              universal and 64% for the disadvantaged offer — so this is not a full-take-up
+              costing. What is assumed
               is that those rates do not change under the reform.
             </li>
             <li>

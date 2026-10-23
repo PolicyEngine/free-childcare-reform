@@ -215,7 +215,7 @@ export default function DistributionTab({ data, year, bound, intensive, area }) 
           </ResponsiveContainer>
           <p className="mt-4 text-sm leading-6 text-slate-500">
             {population?.grouping === "quintile"
-            ? "Q1 is the lowest-income fifth of households. Lower quintiles gain less in cash because families on Universal Credit already receive 85% of childcare costs through the UC childcare element, which this reform keeps unchanged, and because low-income families use fewer paid childcare hours to begin with. As a share of net income the picture is different — switch the measure above."
+            ? "Q1 is the lowest-income fifth of households. From the subsidy, lower quintiles gain less in cash because families on Universal Credit already receive 85% of childcare costs through the UC childcare element, which this reform keeps unchanged, and because lower-income households use fewer paid childcare hours to begin with. The free hours reach a larger share of families in the bottom quintile than in any other. As a share of net income the picture is different — switch the measure above."
 : null}
           </p>
         </div>

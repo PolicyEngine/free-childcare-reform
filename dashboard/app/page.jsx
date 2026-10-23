@@ -293,7 +293,8 @@ function Dashboard() {
             <a href="https://pypi.org/project/policyengine/" target="_blank" rel="noreferrer">
               policyengine.py
             </a>{" "}
-            v{data?.policyengine_version} on the Enhanced FRS 2024-25.
+            v{data?.policyengine_version} and policyengine-uk v
+            {data?.policyengine_uk_version}, on {data?.dataset ?? "Microcosm UK 2024-25"}.
           </p>
         </footer>
       </main>

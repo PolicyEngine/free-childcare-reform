@@ -91,8 +91,8 @@ def _hourly_wage(sim, year: int):
     """Implied hourly wage, and who counts as a donor for imputation."""
     employment_income = np.asarray(sim.calculate("employment_income", year), float)
     hours = np.asarray(sim.calculate("hours_worked", year).values, float)
-    # hours_worked is ANNUAL in policyengine-uk (mean about 1,887 among
-    # workers), so this is already an hourly rate. See impute_entrant_earnings.
+    # hours_worked is ANNUAL in policyengine-uk (mean about 1,905 among
+    # workers on Microcosm a133f37a), so this is already an hourly rate. See impute_entrant_earnings.
     working = (employment_income > 0) & (hours > 0)
     wage = np.where(working, employment_income / np.where(hours > 0, hours, 1), 0.0)
     return employment_income, wage, working
@@ -120,30 +120,25 @@ def impute_entrant_earnings(
     """Annual earnings a non-worker would have on entering work.
 
     This replaces ``policyengine_uk.dynamics.participation.impute_wages_for_nonworkers``,
-    which has a units bug. ``hours_worked`` in policyengine-uk is **annual**
-    (mean about 1,887 among workers, implying a sensible £22.12 hourly wage),
-    but that function computes ``employment_income / (hours_worked * 52)``,
-    dividing by 52 a second time. The resulting hourly wage is about £0.43, and
-    a non-worker is imputed roughly £194 of annual earnings for entering
-    part-time work rather than about £21,600.
+    which had a units bug when this analysis was first built on
+    policyengine-uk 2.94 (policyengine-uk#1839, since fixed upstream).
+    ``hours_worked`` in policyengine-uk is **annual**, but that function
+    computed ``employment_income / (hours_worked * 52)``, dividing by 52 a
+    second time. On the Enhanced FRS 1.57.2 the resulting hourly wage was
+    about £0.43, and a non-worker was imputed roughly £194 of annual earnings
+    for entering part-time work rather than about £21,600.
 
-    The consequence is not subtle: entering work appears to pay almost nothing,
-    so the extensive-margin response collapses to near-zero entrants and the
-    exchequer appears to recover nothing from anyone who does move. Any
-    participation estimate built on the upstream helper is wrong in the same
-    direction. policyengine-uk is internally inconsistent about this —
-    ``dynamics/progression.py`` reads ``hours_worked / 52`` as weekly hours,
-    treating the variable as annual, which is the correct reading and the one
-    used here.
+    The consequence was not subtle: entering work appeared to pay almost
+    nothing, so the extensive-margin response collapsed to near-zero entrants
+    and the exchequer appeared to recover nothing from anyone who did move.
 
-    The donor pool also differs. Upstream draws donors from the person's
-    *elasticity group*, which is keyed off ``calculate_earnings_quintile`` —
-    and that function takes quintiles over the whole population including
-    children, so its bottom two quintiles are 100% non-earners and contain no
-    donors at all. Here a potential entrant is matched to working adults whose
-    youngest child is the same age, which is the relevant comparison group for
-    a childcare reform, using the weighted **median** wage so the 6% of workers
-    with implausibly low implied hourly wages do not drag it down. The result
+    The local version is kept because the donor pool differs. Upstream draws
+    donors by gender and ten-year age band. Here a potential entrant is
+    matched to working adults whose youngest child is the same age, which is
+    the relevant comparison group for a childcare reform, using the weighted
+    **median** wage so implausibly low implied hourly wages do not drag it
+    down — on Microcosm a133f37a, 27% of working adults have an implied
+    hourly wage below the minimum wage. The result
     is floored at the model's own minimum wage.
     """
     employment_income, wage, working = _hourly_wage(sim, year)
@@ -189,11 +184,12 @@ def potential_earnings_quintile(sim, year: int, entrant_earnings: np.ndarray) ->
     Table A1 is indexed on position in the earnings distribution rather than
     on equal shares of adults.
 
-    The change matters: net entrants move from about -5,600 to -10,400 in
-    2027-28. Scaling imputed entrant earnings to full-time equivalent before
-    placing them, as upstream does, would give about -14,600 instead. That
-    scaling is an unvalidated assumption upstream, so it is not adopted here,
-    and the difference is reported as a bound rather than resolved.
+    The change mattered: on the Enhanced FRS 1.57.2, net entrants moved from
+    about -5,600 to -10,400 in 2027-28, and scaling imputed entrant earnings
+    to full-time equivalent before placing them, as upstream does, would have
+    given about -14,600 instead. Those figures predate later corrections and
+    are not re-measured on Microcosm. The full-time scaling is an unvalidated
+    assumption upstream, so it is not adopted here.
 
     The local imputation of entrant earnings is kept: it is by age of youngest
     child, which is the margin this reform moves.
@@ -332,11 +328,11 @@ def responds_to_childcare(sim, year: int) -> np.ndarray:
     is whole years, so a benefit unit whose youngest child is under 1 is
     treated as having a child below the band and is excluded.
 
-    That matches the cost side, which has the same hole. FRS ages are whole
-    years, so the reform's 0.75 age floor evaluates as ``age >= 1`` and no
-    child recorded as age 0 receives the entitlement in the reform simulation
-    either — see ``reforms.py``. So this restriction is not excluding people
-    the model pays; both sides omit the 9-to-12-month cohort together.
+    The cost side no longer has that restriction: the reform pays universal
+    hours from the term after a child reaches 9 months, read from the date of
+    birth (see ``reforms.py``), so some age-0 children get them — £0.40bn of
+    new hours in 2027-28 on Microcosm a133f37a. The participation response
+    omits their parents, so it leaves out any response from that cohort.
     """
     if not sources.RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE:
         return np.ones(len(np.asarray(sim.calculate("age", year))), bool)
@@ -570,6 +566,9 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     revenue_from_entrants = float(
         MicroSeries(entry_probability * (imputed_wages - reform_gain), weights=weights).sum()
     )
+    # Can be negative: funded hours count in household net income, so a
+    # low-earning parent who leaves work gives up working-parent hours worth
+    # more to the exchequer than the tax on their earnings.
     revenue_lost_to_leavers = float(
         MicroSeries(exit_probability * (employment_income - reform_gain), weights=weights).sum()
     )
@@ -652,7 +651,7 @@ def _effective_subsidy_rate(sim, year: int, working: np.ndarray) -> float:
     working_benunits = pd.Series(working, index=person_benunit_ids).groupby(level=0).max()
     mask = working_benunits.reindex(benunit_ids).fillna(False).to_numpy().astype(bool)
     # The benefit-unit weight, not the household weight mapped onto benefit
-    # units: they differ on about 15,000 benefit units, and this rate is a
+    # units: they differ on about 28,000 benefit units, and this rate is a
     # benefit-unit quantity.
     weights = np.asarray(sim.calculate("benunit_weight", year).values, float)
     total = float(MicroSeries(expenses[mask], weights=weights[mask]).sum())
@@ -676,8 +675,8 @@ def childcare_cost_when_working(
     ``impute_wages_for_nonworkers`` imputes what a non-worker would *earn*, but
     nothing imputes what they would *pay for childcare*, and
     ``childcare_expenses`` is a fixed input recording what they actually spend
-    today — which for 85% of eligible non-workers is nothing, because they are
-    at home with the child. A subsidy applied to zero is worth zero, so the
+    today — which for about three quarters of eligible non-workers is nothing,
+    because they are at home with the child. A subsidy applied to zero is worth zero, so the
     channel by which cheaper childcare draws a parent into work is invisible
     for exactly the people who would move. Left uncorrected the gain-to-work
     model measures the reform's negative work-incentive effect in full and its

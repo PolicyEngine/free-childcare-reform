@@ -316,9 +316,9 @@ def _cost_by_country(baseline, reform_sim, year: int) -> dict:
 
     The `gov_spending` difference, grouped by household country — not a sum of
     childcare programme variables. An earlier version summed the four
-    programmes directly, which came to £6.667bn against the headline
-    £6.638bn: the £28.7m difference is the Universal Credit interaction, which
-    the programme sum cannot see. Two figures for one cost, differing by an
+    programmes directly, which on the Enhanced FRS came to £6.667bn against
+    the headline £6.638bn: the £28.7m difference is the Universal Credit
+    interaction, which the programme sum cannot see. Two figures for one cost, differing by an
     amount that is not rounding.
 
     `gov_spending` is household-level, so this needs no entity mapping and the
@@ -449,9 +449,9 @@ def _uc_childcare_fiscal_cost(dataset, baseline, year: int) -> dict:
     """What the UC childcare element actually costs, by abolishing it.
 
     `uc_childcare_element` is a component of the UC *maximum amount*, before
-    the earnings taper. Reporting its sum as spending gives £8.69bn against
-    DWP's £611m outturn — a 14x gap that is an artefact of comparing an
-    entitlement component with an outturn, not a model error.
+    the earnings taper. Reporting its sum as spending gives £2.19bn against
+    DWP's £611m outturn on Microcosm at 2024 — a 3.6x gap that is an artefact
+    of comparing an entitlement component with an outturn, not a model error.
 
     The comparable quantity is the counterfactual: set the coverage rate to
     zero and measure the change in government spending. Most of the face
@@ -724,7 +724,8 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
         ),
         # Among benefit units with a TFC-qualifying child, the same mask as the
         # extended-flag rate below, so the two are like for like. Over every
-        # benefit unit the figure was 0.87 and read as a different population.
+        # benefit unit the figure was 0.87 on the Enhanced FRS, and read as a
+        # different population.
         "baseline_take_up_rate": _take_up_among_qualifying(baseline, year, claims),
         "note": (
             "Both figures are the subsidy leg on its own, against the "

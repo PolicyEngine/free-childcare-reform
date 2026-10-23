@@ -2,7 +2,7 @@
 
 Everything PolicyEngine UK models — childcare entitlements, Tax-Free Childcare,
 the UC childcare element, childcare expenses, incomes, ages, weights — comes
-from the Enhanced FRS at run time. Everything else lives here with a value, a
+from the microdata (Microcosm UK 2024-25) at run time. Everything else lives here with a value, a
 description and a source URL, and is emitted verbatim into the results JSON so
 the dashboard renders no hardcoded numbers.
 """
@@ -108,9 +108,9 @@ ELASTICITY_SCALE_HIGH = PRICE_ELASTICITY_HIGH / PRICE_ELASTICITY_CENTRAL  # 2
 #
 # ASSUMPTION, not a published figure. There is no literature value for a
 # numerical guard of this kind; 0.5 is chosen as a round bound that admits
-# large but not implausible responses. It binds for 0.11% of the eligible
-# population on the 2027-28 run, so the results are not sensitive to it — but
-# it is a choice, not a citation.
+# large but not implausible responses. On the Enhanced FRS it bound for 0.11%
+# of the eligible population on the 2027-28 run; that share has not been
+# re-measured on Microcosm. It is a choice, not a citation.
 PARTICIPATION_CHANGE_BOUND = 0.5
 
 # Brewer et al. find no participation effect for mothers who also have a
@@ -129,12 +129,10 @@ RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE = True
 # how the results should be read, and both are flagged in the results JSON:
 #
 #  * Tax-Free Childcare. On the like-for-like comparison — same year, and
-#    children against children — the model pays £0.625bn at 2024 against
-#    HMRC's £632.2m, 0.99x, on 1,099,437 children against 1,085,020, 1.01x.
-#    The average award is £569 against £583.
-#
-#    This was 2.06x until Enhanced FRS 1.57.2 corrected the routed-spend proxy
-#    (policyengine-uk-data #473) and the calibration targets (#472, #474).
+#    children against children — the model pays £0.579bn at 2024 against
+#    HMRC's £632.2m, 0.92x, on 1,146,058 children against 1,085,020, 1.06x.
+#    The average award is £505 against £583. Microcosm calibrates on HMRC's
+#    later release instead, at 2025 (£599.8m and 1,151,515 children).
 #
 #    An earlier version of this file reported a 1.28x caseload gap and a 0.87x
 #    award and concluded the residual was a caseload problem. Both figures
@@ -166,7 +164,7 @@ RESTRICT_TO_YOUNGEST_CHILD_ELIGIBLE = True
 #    compared against the same slice of the model — not the £11.1bn UK,
 #    all-ages aggregate, which also contains school-age wraparound and holiday
 #    childcare (a separate market the CMA figure excludes) and the devolved
-#    nations. On the comparable basis the model is about 1.25x the benchmark.
+#    nations. On the comparable basis the model is about 1.40x the benchmark.
 #    There is no published aggregate at all for school-age childcare spend, so
 #    that part of the base is unbenchmarked in either direction.
 #
@@ -215,9 +213,9 @@ BENCHMARKS = [
         "comparison_year": 2024,
         "kind": "Like-for-like",
         "note": (
-            "Model £0.625bn against HMRC's £632.2m at 2024 — 0.99x — on "
-            "1,099,437 children against 1,085,020, 1.01x. The average award is "
-            "£569 against £583. That is the like-for-like comparison: same "
+            "Model £0.579bn against HMRC's £632.2m at 2024 — 0.92x — on "
+            "1,146,058 children against 1,085,020, 1.06x. The average award is "
+            "£505 against £583. That is the like-for-like comparison: same "
             "year, and children against children."
             "\n\n"
             "An earlier version of this file reported a 1.28x caseload gap and "
@@ -230,11 +228,11 @@ BENCHMARKS = [
             "ratio, and comparing across three years adds the caseload growth "
             "on top."
             "\n\n"
-            "The gap was 2.06x before the routed-spend correction in "
-            "policyengine-uk-data #473 and the calibration targets in #472 and "
-            "#474, all of which ship in Enhanced FRS 1.57.2. The release "
-            "check now measures 0.989x on spending and 1.013x on child "
-            "caseload."
+            "Microcosm UK 2024-25 calibrates Tax-Free Childcare on HMRC's "
+            "March 2026 release at 2025 — £599.8m of top-ups to 1,151,515 "
+            "children — and its build reports both within 0.2%. That is a "
+            "later release and a later year than this row, so the two checks "
+            "are not the same comparison."
         ),
         "url": "https://www.gov.uk/government/statistics/tax-free-childcare-statistics-june-2025",
     },
@@ -246,12 +244,12 @@ BENCHMARKS = [
         "official_label": "DWP £611m, Great Britain, 2024-25 (a modelled element split of a measured UC total)",
         "geography": "Great Britain",
         "period": "2024-25",
-        "kind": "Caseload gap",
+        "kind": "Independent check",
         "note": (
             "Measured by abolishing it: the change in government spending when "
             "the 85% coverage rate is set to zero, at 2024 to match the "
             "published year. Summing uc_childcare_element instead gives "
-            "£7.95bn, because it is a component of the UC maximum amount "
+            "£2.19bn, because it is a component of the UC maximum amount "
             "before the earnings taper — most of that face value never reaches "
             "a household."
             "\n\n"
@@ -262,13 +260,13 @@ BENCHMARKS = [
             "reached'. DWP's own caseload statistics do not reconcile with it "
             "either — 164,000 households at £400 a month implies about £790m."
             "\n\n"
-            "The gap that remains is caseload: the model has about 427,000 "
-            "benefit units gaining from the element against DWP's 164,000 to "
-            "177,000 households, while paying a lower average award. Nothing "
-            "in policyengine-uk-data targets UC elements and there is no "
-            "element-specific take-up variable, unlike the four childcare "
-            "schemes — see policyengine-uk-data#466. It does not affect this "
-            "reform, which leaves the element unchanged."
+            "On Microcosm the model costs the element at £0.67bn at 2024, with "
+            "about 181,000 benefit units gaining from it against DWP's 164,000 "
+            "to 177,000 households, at an average of £318 a month. Microcosm "
+            "calibrates the count of households receiving the element at 2025 "
+            "and carries an element-specific take-up flag "
+            "(would_claim_uc_childcare). It does not affect this reform, which "
+            "leaves the element unchanged."
         ),
         "url": "https://www.gov.uk/government/statistics/universal-credit-quarterly-statistics-29-april-2013-to-14-may-2026/universal-credit-childcare-element-statistics-to-may-2026",
     },
@@ -289,12 +287,12 @@ BENCHMARKS = [
             "uses the IFS's £8.7bn for the same quantity, and mixing the two "
             "sources inside one subtraction would make the residual an artefact "
             "of the mismatch. On the IFS figure the residual would be £5.3bn "
-            "and the gap 1.20x rather than 1.25x. "
+            "and the gap 1.34x rather than 1.40x. "
             "That gross figure is the comparator. An earlier version of this "
             "check used £3.75bn, netting TFC and the UC childcare element off "
             "the residual — but childcare_expenses is the total fee and both "
             "of those are computed from it, so subtracting them double-counts "
-            "the support and overstated the gap as 1.70x rather than 1.25x. "
+            "the support and would overstate the gap as 1.90x rather than 1.40x. "
             "The CMA flags substantial uncertainty in the £14bn, and the "
             "residual on top of it is arithmetic rather than a published "
             "figure. Compared here against England under-5s only, which is "
@@ -313,7 +311,7 @@ BENCHMARKS = [
         "kind": "Unbenchmarked",
         "note": (
             "The full base the 75% subsidy applies to, since the subsidy reaches "
-            "qualifying children up to 12. About two thirds is under-5s, a quarter "
+            "qualifying children up to 12. About three quarters is under-5s, a quarter "
             "school-age wraparound and holiday childcare, and the rest 12-plus. "
             "Only the under-5 England slice has a benchmark; no aggregate of "
             "school-age childcare spend is published by anyone, so that part is "
@@ -523,17 +521,18 @@ def as_json(model_parameters: dict[str, Any]) -> dict:
 # Per-programme baseline check: what the model pays and how many children it
 # covers, against the published figure for each scheme.
 #
-# The caseload targets are the ones policyengine-uk-data calibrates the
-# Enhanced FRS against, corrected in its #472 and #474 and shipping in release
-# 1.57.2. Citing them here keeps this analysis and the data build on the same
-# published figures rather than two sets that can drift apart.
+# These are independent checks, not the data build's own targets. Microcosm UK
+# 2024-25 calibrates the four schemes at 2025 on later releases — HMRC's March
+# 2026 Tax-Free Childcare statistics and DfE's 2026 census, including a
+# universal-only count — so a row here can differ from the calibration fit
+# without either being wrong.
 #
 # Every official figure predates the costed years, so each row carries the
 # model year it should be compared at and the ratio is taken there, not at
 # 2027. That matters most for the working-parent entitlement: comparing the
-# 2027 model against the January 2025 census gives 1.61x, but the scheme
-# expanded to 30 hours for under-threes in September 2025, so most of that is
-# the rollout rather than an error. At 2025 the same comparison is far closer.
+# 2027 model against the January 2025 census gives 1.75x, but the scheme
+# expanded to 30 hours for under-threes in September 2025, so part of that is
+# the rollout rather than an error. At 2024 the same comparison is closer, 1.39x.
 # The model's 2027 value is still reported, because that is the baseline the
 # reform is costed against — but it is labelled as such and not divided by an
 # older published figure.
@@ -545,19 +544,23 @@ BASELINE_PROGRAMMES = [
         "caseload_variable": "is_child_receiving_universal_childcare",
         "official_spending_bn": 1.7,
         "official_spending_label": "£1.7bn, England, 2024-25, from the dedicated schools grant early years block allocations",
-        "official_caseload": 416_537,
-        "official_caseload_label": "DfE, January 2024: 778,327 registered excluding reception, less 361,790 on the working-parent entitlement",
+        "official_caseload": 778_327,
+        "official_caseload_label": "DfE, January 2024: 778,327 registered excluding reception, working-parent children included",
         "period": "January 2024",
         "comparison_year": 2024,
         "geography": "England",
         "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
         "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2026",
         "note": (
-            "The comparator nets off the working-parent entitlement because "
-            "policyengine-uk models the two as mutually exclusive: "
-            "universal_childcare_entitlement_eligible ends with "
-            "& ~has_extended_childcare. The headline 1.13 million is not the "
-            "right figure to compare against."
+            "The comparator includes children on the working-parent "
+            "entitlement, because policyengine-uk stacks the two: a "
+            "working-parent child's first 15 hours are universal hours, and "
+            "the working-parent entitlement pays only the hours above them. "
+            "An earlier version of this row netted the 361,790 working-parent "
+            "children off, which matched an engine that treated the schemes "
+            "as alternatives. The model count is annual, so a child who "
+            "starts reception in September still counts for the summer term, "
+            "while the census is a January count that excludes reception."
         ),
     },
     {
@@ -575,14 +578,16 @@ BASELINE_PROGRAMMES = [
         "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
         "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2025",
         "note": (
-            "The census is January 2025 but the model is read at 2024, which is "
-            "the basis policyengine-uk-data calibrates on. January 2024 cannot "
+            "The model's spending here is the working-parent hours above the "
+            "universal and targeted hours each child already gets, not the "
+            "full 30. "
+            "The census is January 2025 but the model is read at 2024. January 2024 cannot "
             "serve this scheme — the two-year-old offer only began in April "
             "2024, so that census misses half of it — while the model's own "
             "2025 already contains the September 2025 expansion to 30 hours for "
             "under-threes, which the January 2025 census predates. Reading the "
-            "model at 2025 against this figure gives 1.61x, almost all of it "
-            "that expansion. The mixed basis is a known limitation rather than "
+            "model at 2025 against this figure gives 1.74x, against 1.39x at "
+            "2024, much of it that expansion. The mixed basis is a known limitation rather than "
             "a solved problem. DfE also warns that some two-year-olds eligible "
             "for both this and the disadvantaged offer were recorded here "
             "contrary to guidance, which moves children between this row and "
@@ -625,8 +630,8 @@ BASELINE_PROGRAMMES = [
             "Both sides annual. HMRC also publishes a point-in-time monthly "
             "count; comparing an annual model aggregate against that stock "
             "manufactures a gap that is not there. This is the only programme "
-            "here whose spending the Enhanced FRS is directly calibrated on, at "
-            "0.99x its target on release 1.57.2."
+            "here whose spending Microcosm is directly calibrated on, at 2025 "
+            "against HMRC's later £599.8m."
         ),
     },
 ]

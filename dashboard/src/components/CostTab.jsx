@@ -167,8 +167,8 @@ export default function CostTab({ data, year, bound, intensive, area }) {
           title={`Budget impact, ${formatFiscalYear(data.years[0])} to ${formatFiscalYear(data.years[data.years.length - 1])}`}
           description={
             <>
-              Each leg is costed against the current system on the PolicyEngine UK Enhanced
-              FRS. <strong>The legs cover different countries:</strong> the free
+              Each leg is costed against the current system on{" "}
+              {data.dataset ?? "Microcosm UK 2024-25"}. <strong>The legs cover different countries:</strong> the free
               entitlements are England-only, in law and in the model; Tax-Free Childcare
               and the subsidy replacing it are UK-wide. There is no UK free-hours figure
               because early years is devolved and the model carries no devolved entitlement

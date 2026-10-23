@@ -120,8 +120,9 @@ def test_the_known_gaps_are_flagged_rather_than_hidden(results):
     # Was an award gap; the like-for-like 2024 comparison closed it.
     assert kinds["Tax-Free Childcare"] == "Like-for-like"
     # It became comparable once measured as a counterfactual rather than by
-    # summing a maximum-amount component; what remains is a caseload gap.
-    assert kinds["Universal Credit childcare element"] == "Caseload gap"
+    # summing a maximum-amount component. The caseload gap it showed on the
+    # Enhanced FRS closed on Microcosm, which calibrates the element's caseload.
+    assert kinds["Universal Credit childcare element"] == "Independent check"
     assert kinds["Non-entitlement provider income, England, under-5s"] == "Fee base check"
     assert kinds["Childcare spending, all children, UK"] == "Unbenchmarked"
 
@@ -200,7 +201,7 @@ def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
 
     Dividing a 2027 model figure by a January 2025 census measures the gap
     between the two dates as much as the model: on the working-parent
-    entitlement that reads 1.61x, almost all of it the September 2025
+    entitlement that reads 1.75x, much of it the September 2025
     expansion to 30 hours for under-threes, which the census predates.
     """
     rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
@@ -228,27 +229,41 @@ def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
             assert row["spending_ratio"] == pytest.approx(expected), programme
 
 
-def test_the_baseline_agrees_with_the_data_builds_own_release_check(results):
-    """The four ratios must match what policyengine-uk-data checks its release on.
+def test_the_universal_comparator_counts_working_parent_children(results):
+    """policyengine-uk stacks universal hours under the working-parent hours.
 
-    Same published figures, same model years. If these drift apart, one of the
-    two is comparing against something the other is not, which is the failure
-    this whole analysis has hit twice.
+    A working-parent 3-4 year old's first 15 hours are universal hours, so
+    the model's universal caseload includes those children and the comparator
+    must too: all 778,327 registered excluding reception, not the 416,537 left
+    after netting off working-parent children, which matched an engine that
+    treated the two schemes as alternatives.
     """
     rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
-    # Release 1.57.2, from the push.yaml calibration log. The entitlements
-    # total row has no caseload: a child can hold more than one entitlement.
-    expected_caseload = {"universal": 0.93, "extended": 1.16, "targeted": 0.78, "tfc": 1.01}
-    for programme, ratio in expected_caseload.items():
-        assert rows[programme]["caseload_ratio"] == pytest.approx(ratio, abs=0.02), programme
-    assert rows["tfc"]["spending_ratio"] == pytest.approx(0.99, abs=0.02)
+    assert rows["universal"]["official_caseload"] == 778_327
+
+
+def test_tax_free_childcare_is_close_to_hmrc_on_both_measures(results):
+    """The one scheme here whose spending the data build calibrates on.
+
+    Microcosm calibrates it at 2025 on HMRC's March 2026 release; this row is
+    an independent check at 2024 on the 2024-25 outturn, so it need not match
+    the calibration fit. A gap beyond 10% on either measure would mean the two
+    have drifted apart, which is the failure this analysis has hit twice.
+    """
+    row = next(
+        row
+        for row in results["by_year"]["2027"]["baseline_programmes"]
+        if row["programme"] == "tfc"
+    )
+    assert 0.9 <= row["spending_ratio"] <= 1.1
+    assert 0.9 <= row["caseload_ratio"] <= 1.1
 
 
 def test_the_uc_childcare_element_is_measured_by_abolishing_it(results):
     """Summing the variable gives an entitlement component, not spending.
 
     `uc_childcare_element` is part of the UC maximum amount, before the
-    earnings taper. Its sum is £8.69bn against DWP's £611m outturn — a 14x
+    earnings taper. Its sum is £2.19bn against DWP's £611m outturn — a 3.6x
     gap that is an artefact of the comparison. The comparable figure is what
     abolishing it costs.
     """
@@ -327,18 +342,22 @@ def test_leavers_are_converted_to_ftes_at_their_own_hours(results):
     """Leavers give up observed hours, which are longer than an entrant's.
 
     Using the entrant assumption for both overstated the net full-time
-    equivalent. The free-hours leg produces only leavers, so its FTE loss must
-    exceed what the entrant-hours conversion would give.
+    equivalent. The free-hours leg produces mostly leavers, so its leaver FTE
+    loss must exceed what the entrant-hours conversion would give.
+
+    It is not leavers only. A parent whose youngest child is 2 and whose family
+    would qualify for, and claim, the disadvantaged 2-year-old offer out of
+    work, but not in work, gains the universal hours only in work, so the leg
+    raises their gain to work. That group is small next to the leavers.
     """
     from free_childcare_reform.labour_supply import FULL_TIME_HOURS, HOURS_FOR_NEW_ENTRANTS
 
     entrant_rate = HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS
     for year in YEARS:
         leg = results["by_year"][year]["legs"]["free_hours"]["labour_supply"]["central"]
-        # Effectively zero: the free-hours leg cannot raise the gain to work,
-        # so it produces leavers only.
-        assert leg["entrants"] < 1, year
-        naive = -leg["leavers"] * entrant_rate
-        assert leg["net_ftes"] < naive, (
+        assert leg["entrants"] < 0.1 * leg["leavers"], year
+        leaver_ftes = leg["entrants"] * entrant_rate - leg["net_ftes"]
+        naive = leg["leavers"] * entrant_rate
+        assert leaver_ftes > naive, (
             f"{year}: leaver FTEs should exceed the entrant-hours conversion"
         )

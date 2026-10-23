@@ -1,4 +1,4 @@
-"""The three reform legs, expressed against policyengine-uk 2.92.
+"""The reform legs, expressed against policyengine-uk 2.148.
 
 The reform has two independent parts, which the pipeline also runs separately
 so their costs can be attributed:
@@ -9,20 +9,26 @@ so their costs can be attributed:
    age, plus a further 15 hours for children whose parents work and earn under
    £100k.
 
-   In the model this is a single parameter change. The three DfE schemes are
-   modelled as mutually exclusive rather than stacking:
-   ``universal_childcare_entitlement_eligible`` already carries no work or
-   income test and ends with ``& ~has_extended_childcare``, while
-   ``extended_childcare_entitlement`` pays the full 30 hours to working
-   families under £100k. So the reform's second tier (30 hours for working
-   families under £100k) is already exactly what the extended scheme delivers,
+   In the model this is a parameter change plus one exclusion. policyengine-uk
+   stacks the universal hours under the working-parent hours rather than
+   treating the schemes as alternatives: ``universal_childcare_entitlement_eligible``
+   carries no work or income test, and ``extended_childcare_entitlement_per_child``
+   pays the working-parent total *less* the universal and targeted hours the
+   child already gets. So the reform's second tier (30 hours for working
+   families under £100k) is already what the working-parent scheme delivers,
    and the first tier is delivered by widening the universal scheme's age band
-   from 3 down to 9 months. No formula change is needed, and none is made.
+   from 3 down to 9 months. A working family's total is unchanged; its first 15
+   hours move from the working-parent line to the universal one. The universal
+   eligibility and amount formulas are overridden for two things: the 9-month
+   floor is applied from the date of birth, term by term, and the exclusion
+   described in ``_universal_excludes_targeted`` is added.
 
 2. **Childcare subsidy.** Replace Tax-Free Childcare with a 75% subsidy of
-   childcare costs for all. This *is* structural. TFC's formula is a top-up on
-   parental spend, ``expense * rate / (1 - rate)``, capped at £2,000 per child
-   and gated on both a work condition and a £100k adjusted-net-income cliff.
+   childcare costs for all. This *is* structural. TFC's formula pays 20% of
+   the gross spend routed through the account — ``expense * eligible_fraction
+   * tax_free_childcare_spend_routed_share * rate``, the statutory 25% top-up
+   on deposits — capped at £2,000 per child, and is gated on both a work
+   condition and a £100k adjusted-net-income cliff.
    A "75% subsidy of costs" is a different functional form, so
    ``tax_free_childcare`` and ``tax_free_childcare_eligible`` are replaced.
 
@@ -50,23 +56,22 @@ from policyengine_uk.model_api import (
     Variable,
     max_,
     min_,
+    where,
 )
+from policyengine_uk.utils.dates import add_months_to_yyyymmdd, birth_day, term_starts
 from policyengine_uk.utils.scenario import Scenario
 
 # 15 hours a week from 9 months, for every child, regardless of parental work
 # or income. 0.75 is the age floor in years the extended (working-parent)
 # scheme already uses, so the two tiers line up on the same age band.
 #
-# IN PRACTICE THIS IS AGE 1, NOT 9 MONTHS. FRS ages are whole years, so
-# `age >= 0.75` evaluates as `age >= 1` and no child recorded as age 0
-# receives the entitlement: verified as exactly zero on the pinned dataset.
-# The 9-to-12-month cohort the brief names is therefore not costed.
-#
-# Measured rather than extrapolated: lowering the floor to 0 raises the leg
-# from £1.9666bn to £3.7270bn, so the whole age-zero group is worth £1.7604bn
-# and a three-month share is about £0.4401bn — 22% of the leg. Modelling it
-# properly needs month-of-age and term-start rules, since eligibility begins
-# the term after a child turns nine months, not a different threshold here.
+# The floor is applied from the date of birth, not the whole-year age: a
+# child gets universal hours from the first term (1 January, 1 April or
+# 1 September) after it reaches 9 months, the same rule the engine uses for the
+# working-parent hours (extended_childcare_entitlement_term_share). See
+# _term_share_after_minimum_age. On Microcosm a133f37a in 2027-28 the leg's
+# new hours by age are £0.40bn at age 0, £1.95bn at age 1 and £1.09bn at age 2,
+# for about 155,000, 350,000 and 212,000 children.
 UNIVERSAL_ENTITLEMENT_AGE_MIN = 0.75
 # The subsidy that replaces Tax-Free Childcare: 75% of childcare costs, with no
 # work test, no £100k cliff and no per-child cap.
@@ -76,37 +81,43 @@ SUBSIDY_RATE = 0.75
 # default: the reform brief keeps the UC childcare element, and stacking would
 # subsidise childcare above cost.
 SUBSIDY_INCLUDES_UC_FAMILIES = False
-# Which take-up flag the subsidy inherits. Both are Enhanced FRS inputs and
+# Which take-up flag the subsidy inherits. Both are dataset inputs and
 # neither is estimated for this reform. The coded case keeps Tax-Free
 # Childcare's, on the argument that the subsidy is administered through the
 # same account. The alternative — the extended (30-hour) entitlement's flag,
 # proposed on the grounds that the reform drops TFC's restrictions — is costed
-# alongside it. On the pinned data the TFC flag is the higher of the two
-# (0.89 against 0.80 among families with a qualifying child), so the switch
-# lowers the leg rather than raising it.
+# alongside it. On Microcosm a133f37a the TFC flag is the higher of the two
+# (0.96 against 0.85 among benefit units with a qualifying child, 2027), so
+# the switch lowers the leg rather than raising it.
 SUBSIDY_TAKE_UP_FLAG = "would_claim_tfc"
 SUBSIDY_TAKE_UP_FLAG_EXTENDED = "would_claim_extended_childcare"
 
 
 def _universal_excludes_targeted():
-    """Stop the widened universal entitlement stacking on the 2-year-old offer.
+    """The universal eligibility and amount overrides for the free-hours leg.
 
-    policyengine-uk models the DfE schemes as mutually exclusive, but the
-    exclusions were written for a system where universal started at age 3:
-    `targeted_childcare_entitlement_eligible` excludes extended-eligible
-    families and nothing else, because a 2-year-old could not previously hold
-    the universal entitlement.
+    The amount applies the 9-month floor from the date of birth (see
+    ``_term_share_after_minimum_age``). The eligibility adds one exclusion:
+    the widened universal entitlement must not stack on the 2-year-old offer.
+
+    policyengine-uk stacks the universal hours under the working-parent
+    hours, but `targeted_childcare_entitlement_eligible` was written for a
+    system where universal started at age 3: a 2-year-old could not
+    previously hold both the universal and the targeted entitlement.
 
     Widening the age floor to 0.75 breaks that assumption. Without this, a
     non-working family on qualifying benefits with a 2-year-old draws 570
     hours from the targeted offer *and* 570 from the universal one — 30 free
-    hours a week where the reform gives 15. That is 35,252 children and
-    £0.18bn on the pinned dataset.
+    hours a week where the reform gives 15. On Microcosm a133f37a in 2027-28
+    that is 47,010 children and £0.19bn on the leg.
+
+    It applies only where the family claims the targeted offer: the engine's
+    targeted eligibility is legal eligibility, and a family that does not
+    claim it keeps the universal hours.
 
     The targeted offer is left in place and the universal entitlement steps
-    aside, rather than the other way round: the disadvantaged offer is funded
-    at the 2-year-old rate (£8.28 an hour against £5.88), so keeping it is
-    both the larger entitlement and the existing policy.
+    aside, rather than the other way round: both are 15 hours at the same
+    age-based funding rate, and the targeted offer is the existing policy.
     """
 
     class universal_childcare_entitlement_eligible(Variable):
@@ -124,7 +135,11 @@ def _universal_excludes_targeted():
             in_england = country == country.possible_values.ENGLAND
             age = person("age", period)
             p = parameters(period).gov.dfe.universal_childcare_entitlement
-            meets_age_condition = (age >= p.age.min) & (age < p.age.max)
+            # From the term after the child reaches the minimum age, read from
+            # the date of birth rather than the whole-year age.
+            meets_age_condition = (
+                _term_share_after_minimum_age(person, period, parameters) > 0
+            ) & (age < p.age.max)
             not_compulsory_age = ~person("is_of_compulsory_school_age", period)
             before_school = person("early_years_term_share_before_school", period)
             # The added term. The targeted offer is benefit-unit eligibility on
@@ -145,7 +160,53 @@ def _universal_excludes_targeted():
                 & ~(targeted & in_targeted_age)
             )
 
-    return universal_childcare_entitlement_eligible
+    class universal_childcare_entitlement(Variable):
+        value_type = float
+        entity = Person
+        label = "universal childcare entitlement amount per year"
+        definition_period = YEAR
+        unit = GBP
+        defined_for = "universal_childcare_entitlement_eligible"
+
+        def formula(person, period, parameters):
+            # policyengine-uk's own formula, with the hours paid only for the
+            # terms after the child reaches the minimum age. That share is 1
+            # from age 2 on, so only the newly covered under-2s are affected.
+            p = parameters(period).gov.dfe
+            age = person("age", period)
+            hours = p.universal_childcare_entitlement.hours
+            total_hours_used = person("max_free_entitlement_hours_used", period) * p.weeks_per_year
+            hours_to_use = min_(total_hours_used, hours)
+            before_school = person("early_years_term_share_before_school", period)
+            base_value = (
+                hours_to_use
+                * before_school
+                * _term_share_after_minimum_age(person, period, parameters)
+                * p.childcare_funding_rate.calc(age)
+            )
+            standalone_claim = person.benunit("would_claim_universal_childcare", period)
+            working_parent_total = person("extended_childcare_entitlement_total_per_child", period)
+            # base_value already covers only the terms after the minimum age,
+            # the same terms as the working-parent hours, so the engine's
+            # extra term-share factor is not applied again here.
+            participating_value = min_(base_value, working_parent_total)
+            return min_(base_value, where(standalone_claim, base_value, participating_value))
+
+    return universal_childcare_entitlement_eligible, universal_childcare_entitlement
+
+
+def _term_share_after_minimum_age(person, period, parameters):
+    """Share of the year's terms that begin after the child reaches the universal minimum age.
+
+    The same rule as the engine's working-parent start
+    (``extended_childcare_entitlement_term_share``): hours begin in the first
+    term (1 January, 1 April or 1 September) after the day the child reaches
+    the minimum age.
+    """
+    p = parameters(period).gov.dfe.universal_childcare_entitlement
+    reaches_minimum_age = add_months_to_yyyymmdd(birth_day(person, period), 12 * p.age.min)
+    starts = term_starts(period.start.year)
+    return sum(reaches_minimum_age < start for start in starts) / len(starts)
 
 
 def free_hours_scenario(years: list[int]) -> Scenario:
@@ -161,7 +222,8 @@ def free_hours_scenario(years: list[int]) -> Scenario:
 
 
 def _no_stacking_modifier(simulation) -> None:
-    simulation.tax_benefit_system.update_variable(_universal_excludes_targeted())
+    for variable in _universal_excludes_targeted():
+        simulation.tax_benefit_system.update_variable(variable)
     simulation.reset_calculations()
 
 
