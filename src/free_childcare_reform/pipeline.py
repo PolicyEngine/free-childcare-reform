@@ -559,14 +559,23 @@ def _childcare_expenses_slice(sim, year: int, england_only: bool, under_5: bool)
 
 
 def _new_free_hours_value(baseline_sim, free_hours_sim, year: int) -> np.ndarray:
-    """Person-level value of free hours the reform newly grants."""
-    baseline = np.asarray(
-        baseline_sim.calculate("universal_childcare_entitlement", year).values, float
-    )
-    reform = np.asarray(
-        free_hours_sim.calculate("universal_childcare_entitlement", year).values, float
-    )
-    return np.maximum(reform - baseline, 0)
+    """Person-level value of free hours the reform newly grants.
+
+    Summed over all three entitlements: since policyengine-uk 2.147 the
+    working-parent hours are a top-up over the universal and targeted hours, so
+    universal hours granted to a working-parent child lower its extended amount
+    by the same sum and are not new hours.
+    """
+    variables = [
+        "universal_childcare_entitlement",
+        "extended_childcare_entitlement_per_child",
+        "targeted_childcare_entitlement",
+    ]
+
+    def total(sim):
+        return sum(np.asarray(sim.calculate(v, year).values, float) for v in variables)
+
+    return np.maximum(total(free_hours_sim) - total(baseline_sim), 0)
 
 
 def _build(dataset, scenario=None, childcare_expenses=None, year=None):

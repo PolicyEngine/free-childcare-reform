@@ -114,7 +114,6 @@ def _universal_excludes_targeted():
         entity = Person
         label = "eligible for universal childcare entitlement"
         definition_period = YEAR
-        defined_for = "would_claim_universal_childcare"
 
         def formula(person, period, parameters):
             # policyengine-uk's own formula (2.147+, reception term from the
@@ -130,8 +129,12 @@ def _universal_excludes_targeted():
             before_school = person("early_years_term_share_before_school", period)
             # The added term. The targeted offer is benefit-unit eligibility on
             # a 2-year-old, so it only displaces the universal entitlement for
-            # a child of that age.
-            targeted = person.benunit("targeted_childcare_entitlement_eligible", period)
+            # a child of that age, and only where the family claims it: the
+            # engine's targeted eligibility is legal eligibility, and a family
+            # that does not claim the targeted offer keeps the universal hours.
+            targeted = person.benunit(
+                "targeted_childcare_entitlement_eligible", period
+            ) & person.benunit("would_claim_targeted_childcare", period)
             targeted_p = parameters(period).gov.dfe.targeted_childcare_entitlement
             in_targeted_age = targeted_p.age_eligibility.calc(age) > 0
             return (
