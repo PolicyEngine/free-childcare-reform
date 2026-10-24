@@ -65,12 +65,12 @@ def test_elasticity_bounds_order_the_response(results):
         assert low <= central <= high
 
 
-def test_quintiles_are_complete_and_gains_are_non_negative(results):
+def test_deciles_are_complete_and_gains_are_non_negative(results):
     for year in YEARS:
         effects = results["by_year"][year]["legs"]["combined"]["household_effects"]
-        for key in ["by_income_quintile", "by_income_quintile_families_with_under_5s"]:
+        for key in ["by_income_decile", "by_income_decile_families_with_under_5s"]:
             rows = effects[key]
-            assert [row["group"] for row in rows] == ["Q1", "Q2", "Q3", "Q4", "Q5"]
+            assert [row["group"] for row in rows] == [f"D{d}" for d in range(1, 11)]
             # Nobody loses: the reform only adds support.
             assert all(row["average_gain_gbp"] >= 0 for row in rows)
 
@@ -295,13 +295,13 @@ def test_household_effects_respond_to_the_labour_supply_assumption(results):
 
     The participation response is an expected value per person — a probability
     of entering or leaving work times the gain to work — so it allocates to
-    households and can be read by quintile. An earlier version of this
+    households and can be read by decile. An earlier version of this
     dashboard claimed it could not, and showed static figures under every
     assumption.
     """
     breakdowns = (
-        "by_income_quintile_families_with_under_5s",
-        "by_income_quintile",
+        "by_income_decile_families_with_under_5s",
+        "by_income_decile",
         "by_family_type_families_with_under_5s",
         "by_family_type",
     )

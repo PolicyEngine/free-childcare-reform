@@ -12,7 +12,7 @@ Costs, for 2027, 2028 and 2029, a reform that
 Each leg is costed on its own and then together, statically and with a
 labour supply response on both margins — participation, and hours among
 parents in work. Household effects are reported by
-income quintile. Results are written to JSON for the dashboard.
+income decile. Results are written to JSON for the dashboard.
 """
 
 from __future__ import annotations
@@ -151,13 +151,6 @@ def _childcare_cost_per_person(sim, year: int) -> np.ndarray:
     return _benunit_variable_per_person(sim, year, "childcare_expenses")
 
 
-def _quintile(sim, year: int, entity: str = "household") -> np.ndarray:
-    decile = np.asarray(sim.calculate("household_income_decile", year, map_to=entity).values, float)
-    # Quintiles fold PolicyEngine's published household income deciles. Deciles
-    # below 1 are the model's marker for households it does not rank.
-    return np.where(decile >= 1, np.clip(((decile - 1) // 2 + 1).astype(int), 1, 5), 0)
-
-
 def _household_effects(
     baseline_sim,
     reform_sim,
@@ -165,7 +158,7 @@ def _household_effects(
     extra_person_income: np.ndarray | None = None,
     country: str | None = None,
 ) -> dict:
-    """Change in household net income, by income quintile and by family type.
+    """Change in household net income, by income decile and by family type.
 
     ``extra_person_income`` is the expected net-income effect of the labour
     supply response, per person. It is added to the household's static gain so
@@ -189,7 +182,9 @@ def _household_effects(
         )
         reform_income = reform_income + by_household
     weights = np.asarray(baseline_sim.calculate("household_weight", year).values, float)
-    quintile = _quintile(baseline_sim, year)
+    # PolicyEngine's household income deciles. Deciles below 1 are the model's
+    # marker for households it does not rank.
+    decile = np.asarray(baseline_sim.calculate("household_income_decile", year).values, float)
     # family_type is a benefit-unit enum and youngest_child_age a benefit-unit
     # number, so neither maps straight to the household: policyengine-core would
     # try to average them. Both are read at person level, where the mapping is a
@@ -227,14 +222,14 @@ def _household_effects(
             "gain": reform_income - baseline_income,
             "baseline_income": baseline_income,
             "weight": weights,
-            "quintile": quintile,
+            "decile": np.where(decile >= 1, np.clip(decile, 1, 10), 0).astype(int),
             "family_type": [_label(f) for f in family_type],
             "has_young_child": has_young_child,
             "country": np.asarray(baseline_sim.calculate("country", year).values).astype(str),
         }
     )
     if country is not None:
-        # Quintiles are still the UK ranking: a country's own quintiles would
+        # Deciles are still the UK ranking: a country's own deciles would
         # not be comparable with the UK view, and the reform does not change
         # where a household sits in the national distribution.
         frame = frame[frame["country"] == country.upper()]
@@ -267,14 +262,12 @@ def _household_effects(
             ),
         }
 
-    ranked = frame[frame["quintile"] > 0]
-    by_quintile = [
-        {"group": f"Q{q}", **summarise(group)} for q, group in ranked.groupby("quintile")
-    ]
+    ranked = frame[frame["decile"] > 0]
+    by_decile = [{"group": f"D{d}", **summarise(group)} for d, group in ranked.groupby("decile")]
     families = frame[frame["has_young_child"]]
-    by_quintile_with_children = [
-        {"group": f"Q{q}", **summarise(group)}
-        for q, group in families[families["quintile"] > 0].groupby("quintile")
+    by_decile_with_children = [
+        {"group": f"D{d}", **summarise(group)}
+        for d, group in families[families["decile"] > 0].groupby("decile")
     ]
     # "Couple no children" survives the has_young_child filter for a handful of
     # weighted households — an artefact of family type and child presence being
@@ -299,8 +292,8 @@ def _household_effects(
         key=lambda row: row["group"],
     )
     return {
-        "by_income_quintile": by_quintile,
-        "by_income_quintile_families_with_under_5s": by_quintile_with_children,
+        "by_income_decile": by_decile,
+        "by_income_decile_families_with_under_5s": by_decile_with_children,
         "by_family_type_families_with_under_5s": by_family_type,
         "by_family_type": by_family_type_all,
         "all_households": {"group": "All", **summarise(frame)},
