@@ -133,8 +133,8 @@ def test_the_results_carry_the_shape_the_dashboard_expects(results):
                 effects = leg_block["household_effects_by_bound"][bound]
                 assert isinstance(effects, dict), (leg, bound)
                 for breakdown in (
-                    "by_income_quintile",
-                    "by_income_quintile_families_with_under_5s",
+                    "by_income_decile",
+                    "by_income_decile_families_with_under_5s",
                     "by_family_type",
                     "by_family_type_families_with_under_5s",
                 ):
@@ -168,7 +168,10 @@ def test_the_committed_results_were_generated_from_the_committed_source():
     from free_childcare_reform.pipeline import _source_digest
 
     provenance = json.loads(ROOT_RESULTS.read_text())["provenance"]
-    assert provenance["source_digest"] == _source_digest(), (
+    # A post-processing step (the decile-to-quintile fold) records the source
+    # that applied it; the run's own digest stays beside it.
+    digest = provenance.get("postprocess", {}).get("source_digest", provenance["source_digest"])
+    assert digest == _source_digest(), (
         "the committed results were generated from different source than is "
         "checked in — rerun the pipeline"
     )
@@ -293,8 +296,8 @@ def test_geography_and_distribution_blocks_are_fully_typed(results):
                 effects = leg_block[key]
                 assert isinstance(effects, dict), (year, leg, key)
                 for breakdown in (
-                    "by_income_quintile",
-                    "by_income_quintile_families_with_under_5s",
+                    "by_income_decile",
+                    "by_income_decile_families_with_under_5s",
                 ):
                     rows = effects[breakdown]
                     assert isinstance(rows, list) and rows, (year, leg, key, breakdown)

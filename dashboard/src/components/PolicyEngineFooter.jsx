@@ -24,7 +24,7 @@ export default function PolicyEngineFooter() {
           "linear-gradient(to right, var(--pe-color-primary-800, #234E52), var(--pe-color-primary-600, #2C7A7B))",
       }}
     >
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-6 py-8 md:px-8">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-6 py-3 md:flex-row md:items-center md:justify-between md:gap-6 md:px-8">
         <a
           href="https://policyengine.org/uk"
           aria-label="PolicyEngine UK home"
@@ -34,7 +34,7 @@ export default function PolicyEngineFooter() {
           <img
             src={`${BASE_PATH}/assets/logos/policyengine-white.svg`}
             alt="PolicyEngine"
-            className="h-6 w-auto"
+            className="h-5 w-auto"
           />
         </a>
         <nav
@@ -51,7 +51,7 @@ export default function PolicyEngineFooter() {
             </a>
           ))}
         </nav>
-        <p className="m-0 text-[13px] text-white/70">
+        <p className="m-0 text-[13px]" style={{ color: "rgba(255,255,255,0.75)" }}>
           &copy; {new Date().getFullYear()} PolicyEngine
         </p>
       </div>

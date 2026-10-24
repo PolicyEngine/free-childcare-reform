@@ -12,7 +12,7 @@ Costs, for 2027, 2028 and 2029, a reform that
 Each leg is costed on its own and then together, statically and with a
 labour supply response on both margins — participation, and hours among
 parents in work. Household effects are reported by
-income quintile. Results are written to JSON for the dashboard.
+income decile. Results are written to JSON for the dashboard.
 """
 
 from __future__ import annotations
@@ -30,49 +30,68 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from microdf import MicroSeries
-from policyengine_uk import Microsimulation
-from policyengine_uk.data import UKSingleYearDataset
+from policyengine.tax_benefit_models.uk import managed_microsimulation
 from policyengine_uk.utils.scenario import Scenario
 
 from . import reforms, sources
 from .hours_response import hours_response, realised_uc_childcare_support
 from .labour_supply import (
+    _excluded,
     childcare_cost_when_working,
     participation_response,
     prepare,
     responds_to_childcare,
 )
 from .reforms import (
+    NEW_HOURS_TAKE_UP,
+    NEW_HOURS_TAKE_UP_CASES,
     SUBSIDY_RATE,
     UNIVERSAL_ENTITLEMENT_AGE_MIN,
     displaced_childcare_expenses,
     free_hours_scenario,
+    new_hours_claim,
+    on_working_parent_hours,
     subsidy_scenario,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-# The PolicyEngine UK Enhanced FRS, downloaded from the private release at a
-# pinned revision for reproducibility.
-DATASET = "enhanced_frs_2024_25.h5"
-PRIVATE_REPO = "policyengine/policyengine-uk-data-private"
-DATASET_REVISION = "7b0a06f0f08bec4bdb81c5d0fdb4057fe4e7fd1a"
+RESULT_PATHS = (
+    REPO_ROOT / "data" / "free_childcare_reform_results.json",
+    REPO_ROOT / "dashboard" / "public" / "data" / "free_childcare_reform_results.json",
+)
+# Microcosm UK 2024-25, the national release of 23 October 2026 (a133f37a),
+# pinned by the commit of its immutable cut tag and checked against the sha256
+# in its release manifest. Its manifest pins policyengine-uk 2.147.2.
+DATASET = "microcosm_uk_2024_25.h5"
+DATASET_LABEL = "Microcosm UK 2024-25 (national release a133f37a, 23 October 2026)"
+PRIVATE_REPO = "policyengine/populace-uk-private"
+DATASET_REVISION = "c3a751d911ac82e482d298dda0b6f2c949f4ed4d"
+DATASET_SHA256 = "64f83900ca3a1242fb017585234844ce89f743d32e41cd2b6558057777f914aa"
 YEARS = [2027, 2028, 2029]
 # The parameter changes need to be in force from before the first costed year.
 PARAMETER_YEARS = [2026, 2027, 2028, 2029, 2030]
 
 
-def _dataset() -> UKSingleYearDataset:
-    from huggingface_hub import hf_hub_download
+def _dataset() -> str:
+    from huggingface_hub import get_token, hf_hub_download
 
-    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_TOKEN")
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_TOKEN") or get_token()
     path = hf_hub_download(
         repo_id=PRIVATE_REPO,
         filename=DATASET,
-        repo_type="model",
+        repo_type="dataset",
         revision=DATASET_REVISION,
         token=token,
     )
-    return UKSingleYearDataset(path)
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    if digest.hexdigest() != DATASET_SHA256:
+        raise ValueError(
+            f"{DATASET}: sha256 {digest.hexdigest()} is not the pinned {DATASET_SHA256}"
+        )
+    return path
 
 
 def _label(level: str) -> str:
@@ -136,13 +155,6 @@ def _childcare_cost_per_person(sim, year: int) -> np.ndarray:
     return _benunit_variable_per_person(sim, year, "childcare_expenses")
 
 
-def _quintile(sim, year: int, entity: str = "household") -> np.ndarray:
-    decile = np.asarray(sim.calculate("household_income_decile", year, map_to=entity).values, float)
-    # Quintiles fold PolicyEngine's published household income deciles. Deciles
-    # below 1 are the model's marker for households it does not rank.
-    return np.where(decile >= 1, np.clip(((decile - 1) // 2 + 1).astype(int), 1, 5), 0)
-
-
 def _household_effects(
     baseline_sim,
     reform_sim,
@@ -150,7 +162,7 @@ def _household_effects(
     extra_person_income: np.ndarray | None = None,
     country: str | None = None,
 ) -> dict:
-    """Change in household net income, by income quintile and by family type.
+    """Change in household net income, by income decile and by family type.
 
     ``extra_person_income`` is the expected net-income effect of the labour
     supply response, per person. It is added to the household's static gain so
@@ -174,7 +186,9 @@ def _household_effects(
         )
         reform_income = reform_income + by_household
     weights = np.asarray(baseline_sim.calculate("household_weight", year).values, float)
-    quintile = _quintile(baseline_sim, year)
+    # PolicyEngine's household income deciles. Deciles below 1 are the model's
+    # marker for households it does not rank.
+    decile = np.asarray(baseline_sim.calculate("household_income_decile", year).values, float)
     # family_type is a benefit-unit enum and youngest_child_age a benefit-unit
     # number, so neither maps straight to the household: policyengine-core would
     # try to average them. Both are read at person level, where the mapping is a
@@ -212,14 +226,14 @@ def _household_effects(
             "gain": reform_income - baseline_income,
             "baseline_income": baseline_income,
             "weight": weights,
-            "quintile": quintile,
+            "decile": np.where(decile >= 1, np.clip(decile, 1, 10), 0).astype(int),
             "family_type": [_label(f) for f in family_type],
             "has_young_child": has_young_child,
             "country": np.asarray(baseline_sim.calculate("country", year).values).astype(str),
         }
     )
     if country is not None:
-        # Quintiles are still the UK ranking: a country's own quintiles would
+        # Deciles are still the UK ranking: a country's own deciles would
         # not be comparable with the UK view, and the reform does not change
         # where a household sits in the national distribution.
         frame = frame[frame["country"] == country.upper()]
@@ -250,16 +264,21 @@ def _household_effects(
                 else 0.0,
                 4,
             ),
+            # The unrounded sums behind the ratios above, so groups can be
+            # combined exactly (see fold_deciles_to_quintiles).
+            "households": float(weight),
+            "total_gain_gbp": float((group["gain"] * group["weight"]).sum()),
+            "gainers_households": float(gaining["weight"].sum()),
+            "gainers_total_gain_gbp": float((gaining["gain"] * gaining["weight"]).sum()),
+            "baseline_income_gbp": float((group["baseline_income"] * group["weight"]).sum()),
         }
 
-    ranked = frame[frame["quintile"] > 0]
-    by_quintile = [
-        {"group": f"Q{q}", **summarise(group)} for q, group in ranked.groupby("quintile")
-    ]
+    ranked = frame[frame["decile"] > 0]
+    by_decile = [{"group": f"D{d}", **summarise(group)} for d, group in ranked.groupby("decile")]
     families = frame[frame["has_young_child"]]
-    by_quintile_with_children = [
-        {"group": f"Q{q}", **summarise(group)}
-        for q, group in families[families["quintile"] > 0].groupby("quintile")
+    by_decile_with_children = [
+        {"group": f"D{d}", **summarise(group)}
+        for d, group in families[families["decile"] > 0].groupby("decile")
     ]
     # "Couple no children" survives the has_young_child filter for a handful of
     # weighted households — an artefact of family type and child presence being
@@ -284,8 +303,8 @@ def _household_effects(
         key=lambda row: row["group"],
     )
     return {
-        "by_income_quintile": by_quintile,
-        "by_income_quintile_families_with_under_5s": by_quintile_with_children,
+        "by_income_decile": by_decile,
+        "by_income_decile_families_with_under_5s": by_decile_with_children,
         "by_family_type_families_with_under_5s": by_family_type,
         "by_family_type": by_family_type_all,
         "all_households": {"group": "All", **summarise(frame)},
@@ -306,9 +325,9 @@ def _cost_by_country(baseline, reform_sim, year: int) -> dict:
 
     The `gov_spending` difference, grouped by household country — not a sum of
     childcare programme variables. An earlier version summed the four
-    programmes directly, which came to £6.667bn against the headline
-    £6.638bn: the £28.7m difference is the Universal Credit interaction, which
-    the programme sum cannot see. Two figures for one cost, differing by an
+    programmes directly, which on the Enhanced FRS came to £6.667bn against
+    the headline £6.638bn: the £28.7m difference is the Universal Credit
+    interaction, which the programme sum cannot see. Two figures for one cost, differing by an
     amount that is not rounding.
 
     `gov_spending` is household-level, so this needs no entity mapping and the
@@ -348,7 +367,7 @@ def _spending(sim, year: int) -> dict:
     out["uc_childcare_element_maximum_bn"] = round(
         float(sim.calculate("uc_childcare_element", year).sum()) / 1e9, 4
     )
-    out["gov_spending_bn"] = round(float(sim.calculate("gov_spending", year).sum()) / 1e9, 3)
+    out["gov_spending_bn"] = round(float(sim.calculate("gov_spending", year).sum()) / 1e9, 4)
     out["childcare_expenses_bn"] = round(
         float(sim.calculate("childcare_expenses", year).sum()) / 1e9, 4
     )
@@ -439,9 +458,9 @@ def _uc_childcare_fiscal_cost(dataset, baseline, year: int) -> dict:
     """What the UC childcare element actually costs, by abolishing it.
 
     `uc_childcare_element` is a component of the UC *maximum amount*, before
-    the earnings taper. Reporting its sum as spending gives £8.69bn against
-    DWP's £611m outturn — a 14x gap that is an artefact of comparing an
-    entitlement component with an outturn, not a model error.
+    the earnings taper. Reporting its sum as spending gives £2.19bn against
+    DWP's £611m outturn on Microcosm at 2024 — a 3.6x gap that is an artefact
+    of comparing an entitlement component with an outturn, not a model error.
 
     The comparable quantity is the counterfactual: set the coverage rate to
     zero and measure the change in government spending. Most of the face
@@ -549,18 +568,29 @@ def _childcare_expenses_slice(sim, year: int, england_only: bool, under_5: bool)
 
 
 def _new_free_hours_value(baseline_sim, free_hours_sim, year: int) -> np.ndarray:
-    """Person-level value of free hours the reform newly grants."""
-    baseline = np.asarray(
-        baseline_sim.calculate("universal_childcare_entitlement", year).values, float
-    )
-    reform = np.asarray(
-        free_hours_sim.calculate("universal_childcare_entitlement", year).values, float
-    )
-    return np.maximum(reform - baseline, 0)
+    """Person-level value of free hours the reform newly grants.
+
+    Summed over all three entitlements: since policyengine-uk 2.147 the
+    working-parent hours are a top-up over the universal and targeted hours, so
+    universal hours granted to a working-parent child lower its extended amount
+    by the same sum and are not new hours.
+    """
+    variables = [
+        "universal_childcare_entitlement",
+        "extended_childcare_entitlement_per_child",
+        "targeted_childcare_entitlement",
+    ]
+
+    def total(sim):
+        return sum(np.asarray(sim.calculate(v, year).values, float) for v in variables)
+
+    return np.maximum(total(free_hours_sim) - total(baseline_sim), 0)
 
 
 def _build(dataset, scenario=None, childcare_expenses=None, year=None):
-    sim = Microsimulation(dataset=dataset, scenario=scenario)
+    # policyengine.py builds the simulation; this module, not its bundle, pins
+    # the data, since no policyengine.py release registers this Microcosm.
+    sim = managed_microsimulation(dataset=dataset, allow_unmanaged=True, scenario=scenario)
     if childcare_expenses is not None:
         sim.set_input("childcare_expenses", year, childcare_expenses)
         sim.reset_calculations()
@@ -592,7 +622,7 @@ def _dynamic_cost(static_cost_bn: float, participation: dict, hours: dict) -> di
         "labour_supply_offset_bn": round(participation_bn, 4),
         "hours_offset_bn": round(hours_bn, 4),
         "total_offset_bn": round(participation_bn + hours_bn, 4),
-        "dynamic_cost_bn": round(static_cost_bn - participation_bn - hours_bn, 3),
+        "dynamic_cost_bn": round(static_cost_bn - participation_bn - hours_bn, 4),
         "net_entrants": round(participation["net_entrants"]),
         "net_ftes": round(participation["net_ftes"]),
         "hours_ftes": round(hours["ftes"]),
@@ -627,7 +657,9 @@ def _subsidy_by_country(baseline, reform_sim, year: int) -> dict:
     return out
 
 
-def _scope_scenarios(dataset, baseline, free_hours, year: int, baseline_spending: dict) -> dict:
+def _scope_scenarios(
+    dataset, baseline, free_hours, year: int, baseline_spending: dict, free_hours_claim: dict
+) -> dict:
     """Combined-run totals for each scope dimension, separately and together.
 
     An earlier version of this analysis reported these as standalone legs
@@ -650,7 +682,7 @@ def _scope_scenarios(dataset, baseline, free_hours, year: int, baseline_spending
     def combined(include_uc: bool, full_take_up: bool) -> float:
         sim = _build(
             dataset,
-            scenario=free_hours_scenario(PARAMETER_YEARS)
+            scenario=free_hours_scenario(PARAMETER_YEARS, free_hours_claim)
             + subsidy_scenario(include_uc_families=include_uc),
             childcare_expenses=displaced,
             year=year,
@@ -703,7 +735,8 @@ def _subsidy_take_up_scenario(dataset, baseline, year: int) -> dict:
         ),
         # Among benefit units with a TFC-qualifying child, the same mask as the
         # extended-flag rate below, so the two are like for like. Over every
-        # benefit unit the figure was 0.87 and read as a different population.
+        # benefit unit the figure was 0.87 on the Enhanced FRS, and read as a
+        # different population.
         "baseline_take_up_rate": _take_up_among_qualifying(baseline, year, claims),
         "note": (
             "Both figures are the subsidy leg on its own, against the "
@@ -735,7 +768,13 @@ def _take_up_among_qualifying(baseline, year: int, claims: np.ndarray) -> float:
 
 
 def _extended_take_up_scenario(
-    dataset, baseline, year: int, displaced_expenses, baseline_spending: dict, responses_against
+    dataset,
+    baseline,
+    year: int,
+    displaced_expenses,
+    baseline_spending: dict,
+    responses_against,
+    free_hours_claim: dict,
 ) -> dict:
     """The subsidy leg and both legs with take-up on the extended entitlement's flag.
 
@@ -747,7 +786,8 @@ def _extended_take_up_scenario(
     subsidy = _build(dataset, scenario=subsidy_scenario(take_up_flag=flag))
     combined = _build(
         dataset,
-        scenario=free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(take_up_flag=flag),
+        scenario=free_hours_scenario(PARAMETER_YEARS, free_hours_claim)
+        + subsidy_scenario(take_up_flag=flag),
         childcare_expenses=displaced_expenses,
         year=year,
     )
@@ -757,7 +797,7 @@ def _extended_take_up_scenario(
         responses = responses_against(sim)
         legs[name] = {
             "static_cost_bn": round(
-                _spending(sim, year)["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 3
+                _spending(sim, year)["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 4
             ),
             "static_cost_by_country_bn": _cost_by_country(baseline, sim, year),
             "labour_supply": {
@@ -833,12 +873,164 @@ def _source_digest() -> str:
     return digest.hexdigest()
 
 
+def _free_hours_take_up_range(
+    dataset, baseline, year: int, baseline_spending: dict, central_leg: dict, responses_against
+) -> dict:
+    """The free-hours leg at each take-up case for the newly covered hours.
+
+    See ``reforms.NEW_HOURS_TAKE_UP``. Each case is its own run, with the
+    participation response rerun against it; the hours response is reported
+    for the central case only. The central figures repeat the leg's own.
+    """
+    age = np.asarray(baseline.calculate("age", year).values, float)
+    country = np.asarray(baseline.calculate("country", year, map_to="person").values).astype(str)
+    weights = np.asarray(baseline.calculate("person_weight", year).values, float)
+    newly_covered = (age < reforms.BASELINE_UNIVERSAL_MIN_AGE) & (country == "ENGLAND")
+    outside = newly_covered & ~on_working_parent_hours(baseline, year)
+    cases = {}
+    for case in NEW_HOURS_TAKE_UP_CASES:
+        claims = new_hours_claim(baseline, year, case)
+        rate = round(
+            float(MicroSeries(claims[outside].astype(float), weights=weights[outside]).mean()), 4
+        )
+        if case == NEW_HOURS_TAKE_UP:
+            static = central_leg["static_cost_bn"]
+            response = central_leg["labour_supply"]["central"]
+        else:
+            sim = _build(dataset, scenario=free_hours_scenario(PARAMETER_YEARS, {year: claims}))
+            static = round(
+                _spending(sim, year)["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 4
+            )
+            response = responses_against(sim)["central"]
+        cases[case] = {
+            "static_cost_bn": static,
+            "take_up_rate_outside_working_parent_hours": rate,
+            "net_entrants": round(response["net_entrants"]),
+            "labour_supply_offset_bn": round(response["net_revenue_gbp"] / 1e9, 4),
+            "participation_only_dynamic_cost_bn": round(
+                static - response["net_revenue_gbp"] / 1e9, 4
+            ),
+        }
+    return {
+        "central_case": NEW_HOURS_TAKE_UP,
+        "cases": cases,
+        "children_newly_covered_outside_working_parent_hours": round(float(weights[outside].sum())),
+        "note": (
+            "Take-up of the new under-3 hours in England by families outside the "
+            "working-parent hours. low: 60% of DfE's January 2026 take-up among "
+            "working families by age (46% at 9-11 months, 76% at 1, 92% at 2). "
+            "central: the 2-year-old offer's take-up flag. high: the dataset's "
+            "universal flag, which Microcosm nests under the working-parent flag. "
+            "Families on the working-parent hours keep the universal flag in "
+            "every case. The rate is over children under 3 in those families "
+            "and does not apply the usage draw, which also gates the hours."
+        ),
+    }
+
+
+def _implied_price_elasticity(baseline, subsidy, year: int, response: dict) -> dict:
+    """The subsidy leg's participation response read as a childcare price elasticity.
+
+    The central run applies the OBR participation elasticities unscaled;
+    PRICE_ELASTICITY_CENTRAL only sets the width of the low and high band.
+    This states what elasticity of employment with respect to the childcare
+    price the central response amounts to: the percentage change in employment
+    among responding parents in work, over the percentage change in the
+    childcare price a potential entrant faces.
+    """
+    responding = responds_to_childcare(baseline, year) & ~_excluded(baseline, year)
+    employment = np.asarray(baseline.calculate("employment_income", year), float)
+    weights = np.asarray(
+        baseline.calculate("household_weight", year, map_to="person").values, float
+    )
+    working = responding & (employment > 0)
+    not_working = responding & (employment == 0)
+    base_cost = childcare_cost_when_working(
+        baseline, year, responding, _childcare_cost_per_person(baseline, year)
+    )
+    reform_cost = childcare_cost_when_working(
+        subsidy, year, responding, _childcare_cost_per_person(subsidy, year)
+    )
+    base_total = float((base_cost * weights * not_working).sum())
+    price_change = (
+        float(((reform_cost - base_cost) * weights * not_working).sum()) / base_total
+        if base_total
+        else 0.0
+    )
+    employed = float((weights * working).sum())
+    employment_change = response["net_entrants"] / employed if employed else 0.0
+    return {
+        "subsidy_leg": round(employment_change / price_change, 4) if price_change else None,
+        "employment_change_pct": round(employment_change * 100, 4),
+        "entrant_price_change_pct": round(price_change * 100, 4),
+        "responding_parents_in_work": round(employed),
+        "note": (
+            "Percentage change in employment among responding parents in work, "
+            "over the percentage change in the out-of-pocket childcare price a "
+            "potential entrant faces, central run. The central run applies the "
+            "OBR participation elasticities unscaled; the price elasticities "
+            "-0.05, -0.15 and -0.30 only set the ratio of the low and high "
+            "bounds to it."
+        ),
+    }
+
+
+def _take_up_rates_under_5(baseline, year: int) -> dict:
+    """Weighted share of benefit units with a child under 5 carrying each take-up flag.
+
+    England only for the three DfE entitlements, the UK for Tax-Free
+    Childcare. Flags are dataset inputs; whether the family is eligible or
+    uses any hours is not applied.
+    """
+    age = np.asarray(baseline.calculate("age", year).values, float)
+    benunit_id = np.asarray(baseline.calculate("benunit_id", year, map_to="person").values)
+    ids, index = np.unique(benunit_id, return_inverse=True)
+    has_under_5 = np.bincount(index, weights=(age < 5)) > 0
+    bu_ids = np.asarray(baseline.calculate("benunit_id", year).values)
+    order = np.searchsorted(ids, bu_ids)
+    has_under_5 = has_under_5[order]
+    # country is a household variable and an enum, so it cannot be mapped to
+    # the benefit unit directly; read it from each benefit unit's first member.
+    person_country = np.asarray(baseline.calculate("country", year, map_to="person").values).astype(
+        str
+    )
+    first_member = np.unique(index, return_index=True)[1]
+    country = person_country[first_member][order]
+    weights = np.asarray(baseline.calculate("benunit_weight", year).values, float)
+    out = {}
+    for name, flag, england in (
+        ("tax_free_childcare", "would_claim_tfc", False),
+        ("working_parent", "would_claim_extended_childcare", True),
+        ("universal", "would_claim_universal_childcare", True),
+        ("targeted", "would_claim_targeted_childcare", True),
+    ):
+        mask = has_under_5 & ((country == "ENGLAND") if england else True)
+        flags = np.asarray(baseline.calculate(flag, year).values, float)
+        out[name] = {
+            "rate": round(float(MicroSeries(flags[mask], weights=weights[mask]).mean()), 4),
+            "flag": flag,
+            "population": (
+                "benefit units with a child under 5, "
+                + ("England" if england else "UK")
+                + "; flag only, before eligibility and usage"
+            ),
+        }
+    return out
+
+
 def run_year(dataset, year: int) -> dict:
     print(f"  {year}: baseline ...")
     baseline = _build(dataset)
 
+    # Take-up of the newly covered hours, fixed from the baseline so that the
+    # labour supply response cannot move it (see reforms.NEW_HOURS_TAKE_UP).
+    claim = {year: new_hours_claim(baseline, year, NEW_HOURS_TAKE_UP)}
+
+    def fh() -> Scenario:
+        return free_hours_scenario(PARAMETER_YEARS, claim)
+
     print(f"  {year}: leg 1 — 15 free hours for all from 9 months ...")
-    free_hours = _build(dataset, scenario=free_hours_scenario(PARAMETER_YEARS))
+    free_hours = _build(dataset, scenario=fh())
 
     print(f"  {year}: leg 2 — 75% childcare subsidy replacing Tax-Free Childcare ...")
     subsidy = _build(dataset, scenario=subsidy_scenario())
@@ -858,7 +1050,7 @@ def run_year(dataset, year: int) -> dict:
     )
     combined = _build(
         dataset,
-        scenario=free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(),
+        scenario=fh() + subsidy_scenario(),
         childcare_expenses=displaced_expenses,
         year=year,
     )
@@ -877,7 +1069,7 @@ def run_year(dataset, year: int) -> dict:
             "label": label,
             "spending": spending,
             "static_cost_bn": round(
-                spending["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 3
+                spending["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 4
             ),
             "static_cost_by_country_bn": _cost_by_country(baseline, sim, year),
             "household_effects": _household_effects(baseline, sim, year),
@@ -936,7 +1128,13 @@ def run_year(dataset, year: int) -> dict:
     print(f"  {year}: subsidy on the extended entitlement's take-up flag ...")
     subsidy_take_up = _subsidy_take_up_scenario(dataset, baseline, year)
     subsidy_take_up["extended_entitlement_flag"] = _extended_take_up_scenario(
-        dataset, baseline, year, displaced_expenses, baseline_spending, _responses_against
+        dataset,
+        baseline,
+        year,
+        displaced_expenses,
+        baseline_spending,
+        _responses_against,
+        claim,
     )
 
     responses_full = _responses_against(combined)
@@ -957,14 +1155,14 @@ def run_year(dataset, year: int) -> dict:
     print(f"  {year}: intensive-margin hours response ...")
     leg_builders = {
         "free_hours": lambda earnings: _build_with_earnings(
-            dataset, free_hours_scenario(PARAMETER_YEARS), displaced_expenses, year, earnings
+            dataset, fh(), displaced_expenses, year, earnings
         ),
         "subsidy": lambda earnings: _build_with_earnings(
             dataset, subsidy_scenario(), None, year, earnings
         ),
         "combined": lambda earnings: _build_with_earnings(
             dataset,
-            free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(),
+            fh() + subsidy_scenario(),
             displaced_expenses,
             year,
             earnings,
@@ -980,7 +1178,7 @@ def run_year(dataset, year: int) -> dict:
     # the earnings.
     free_hours_displaced = _build(
         dataset,
-        scenario=free_hours_scenario(PARAMETER_YEARS),
+        scenario=fh(),
         childcare_expenses=displaced_expenses,
         year=year,
     )
@@ -993,9 +1191,9 @@ def run_year(dataset, year: int) -> dict:
         baseline, _build(dataset, scenario=no_uc_childcare), year
     )
     leg_scenarios = {
-        "free_hours": (free_hours_scenario(PARAMETER_YEARS), displaced_expenses),
+        "free_hours": (fh(), displaced_expenses),
         "subsidy": (subsidy_scenario(), None),
-        "combined": (free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(), displaced_expenses),
+        "combined": (fh() + subsidy_scenario(), displaced_expenses),
     }
 
     def _hours_against(name: str, reform_sim) -> dict:
@@ -1116,9 +1314,9 @@ def run_year(dataset, year: int) -> dict:
         "under_5_slice_ratio": round(slice_ratio, 3),
         "rebased_childcare_expenses_bn": round(rebased_base, 3),
         "ratio": round(fee_base_ratio, 3),
-        "subsidy_cost_bn": round(legs["subsidy"]["static_cost_bn"] * fee_base_ratio, 3),
+        "subsidy_cost_bn": round(legs["subsidy"]["static_cost_bn"] * fee_base_ratio, 4),
         "combined_cost_bn": round(
-            legs["free_hours"]["static_cost_bn"] + subsidy_only_cost * fee_base_ratio, 3
+            legs["free_hours"]["static_cost_bn"] + subsidy_only_cost * fee_base_ratio, 4
         ),
         "note": (
             "Only the under-5 slice is rebased, on the England benchmark of "
@@ -1135,6 +1333,33 @@ def run_year(dataset, year: int) -> dict:
         ),
     }
 
+    print(f"  {year}: free-hours leg at low and high take-up of the new hours ...")
+    free_hours_take_up = _free_hours_take_up_range(
+        dataset, baseline, year, baseline_spending, legs["free_hours"], _responses_against
+    )
+
+    print(f"  {year}: subsidy leg at current claiming behaviour ...")
+    routed = _build(dataset, scenario=subsidy_scenario(routed_share=True))
+    subsidy_range = {
+        "current_behaviour_bn": round(
+            _spending(routed, year)["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 4
+        ),
+        "cma_fee_base_bn": fee_base_sensitivity["subsidy_cost_bn"],
+        "as_coded_bn": legs["subsidy"]["static_cost_bn"],
+        "note": (
+            "Static costs of the subsidy leg on its own. current_behaviour pays "
+            "75% only on the share of spend families route through a Tax-Free "
+            "Childcare account today (tax_free_childcare_spend_routed_share); "
+            "cma_fee_base rebases the under-5 fee base on the CMA residual (see "
+            "fee_base_sensitivity); as_coded pays 75% of all reported spend for "
+            "every family carrying the Tax-Free Childcare take-up flag, the "
+            "full-take-up end."
+        ),
+    }
+    implied_elasticity = _implied_price_elasticity(
+        baseline, subsidy, year, legs["subsidy"]["labour_supply"]["central"]
+    )
+
     static_cost = legs["combined"]["static_cost_bn"]
     dynamic = {}
     for bound, response in responses.items():
@@ -1149,7 +1374,13 @@ def run_year(dataset, year: int) -> dict:
         "baseline_spending": baseline_spending,
         "baseline_programmes": _baseline_programmes(baseline, year),
         "subsidy_take_up": subsidy_take_up,
-        "scope_scenarios": _scope_scenarios(dataset, baseline, free_hours, year, baseline_spending),
+        "scope_scenarios": _scope_scenarios(
+            dataset, baseline, free_hours, year, baseline_spending, claim
+        ),
+        "free_hours_take_up": free_hours_take_up,
+        "subsidy_range": subsidy_range,
+        "implied_price_elasticity": implied_elasticity,
+        "take_up_rates_under_5": _take_up_rates_under_5(baseline, year),
         "subsidy_by_country": _subsidy_by_country(baseline, subsidy, year),
         "uc_childcare_fiscal_cost": uc_childcare,
         "benchmarks": _benchmark_comparison(
@@ -1170,13 +1401,27 @@ def run(args: argparse.Namespace) -> None:
     dataset = _dataset()
 
     print("Step 2: Costing each year ...")
-    by_year = {str(year): run_year(dataset, year) for year in years}
+    if getattr(args, "parallel", False) and len(years) > 1:
+        # One process per year. Each year is independent, so the results are
+        # identical to a serial run and are merged here before writing.
+        from concurrent.futures import ProcessPoolExecutor
+
+        with ProcessPoolExecutor(max_workers=len(years)) as pool:
+            by_year = dict(
+                zip(
+                    (str(year) for year in years),
+                    pool.map(run_year, [dataset] * len(years), years),
+                    strict=True,
+                )
+            )
+    else:
+        by_year = {str(year): run_year(dataset, year) for year in years}
 
     print("Step 3: Writing results JSON ...")
     output = {
         "years": years,
         "currency": "GBP",
-        "dataset": "PolicyEngine UK Enhanced FRS (enhanced_frs_2024_25)",
+        "dataset": DATASET_LABEL,
         "dataset_revision": DATASET_REVISION,
         "policyengine_uk_version": importlib.metadata.version("policyengine-uk"),
         "policyengine_version": importlib.metadata.version("policyengine"),
@@ -1198,10 +1443,8 @@ def run(args: argparse.Namespace) -> None:
         "by_year": by_year,
     }
 
-    for destination in [
-        REPO_ROOT / "data" / "free_childcare_reform_results.json",
-        REPO_ROOT / "dashboard" / "public" / "data" / "free_childcare_reform_results.json",
-    ]:
+    add_quintiles(output)
+    for destination in RESULT_PATHS:
         destination.parent.mkdir(parents=True, exist_ok=True)
         # allow_nan=False: Python emits bare NaN and Infinity, which every
         # browser's JSON.parse rejects. Failing here beats shipping a file the
@@ -1216,3 +1459,110 @@ def run(args: argparse.Namespace) -> None:
             f"dynamic £{result['dynamic_cost']['central']['dynamic_cost_bn']:.2f}bn "
             f"({result['dynamic_cost']['central']['net_entrants']:,} net entrants)."
         )
+
+
+# Quintiles are folded from the decile rows rather than computed separately, so
+# the two breakdowns cannot disagree: Q1 is D1 and D2, and so on.
+DECILE_PREFIX = "by_income_decile"
+QUINTILE_PREFIX = "by_income_quintile"
+
+
+def _decile_row_sums(row: dict) -> dict:
+    """The additive quantities behind one decile row.
+
+    Rows written since the fold was added carry them exactly. Older rows carry
+    only the rounded published fields, from which they are reconstructed.
+    """
+    if "households" in row:
+        return {
+            "households": row["households"],
+            "gain_gbp": row["total_gain_gbp"],
+            "gainers": row["gainers_households"],
+            "gainers_gain_gbp": row["gainers_total_gain_gbp"],
+            "baseline_income_gbp": row["baseline_income_gbp"],
+        }
+    households = row["households_m"] * 1e6
+    # The published total, so quintile totals are the decile totals' sum.
+    gain = row["total_gain_bn"] * 1e9
+    gainers = row["share_gaining"] * households
+    pct = row["average_gain_pct_of_income"]
+    return {
+        "households": households,
+        "gain_gbp": gain,
+        "gainers": gainers,
+        "gainers_gain_gbp": row["average_gain_gbp_among_gainers"] * gainers,
+        "baseline_income_gbp": gain / (pct / 100) if pct else None,
+    }
+
+
+def fold_deciles_to_quintiles(rows: list[dict]) -> list[dict]:
+    """Quintile rows from decile rows: sum the totals, recompute the ratios."""
+    by_decile = {int(row["group"][1:]): _decile_row_sums(row) for row in rows}
+    exact = all("households" in row for row in rows)
+    out = []
+    for quintile in range(1, 6):
+        parts = [by_decile[d] for d in (2 * quintile - 1, 2 * quintile) if d in by_decile]
+        if not parts:
+            continue
+        households = sum(p["households"] for p in parts)
+        gain = sum(p["gain_gbp"] for p in parts)
+        gainers = sum(p["gainers"] for p in parts)
+        gainers_gain = sum(p["gainers_gain_gbp"] for p in parts)
+        incomes = [p["baseline_income_gbp"] for p in parts]
+        income = None if any(i is None for i in incomes) else sum(incomes)
+        row = {
+            "group": f"Q{quintile}",
+            "households_m": round(households / 1e6, 3),
+            "total_gain_bn": round(gain / 1e9, 4),
+            "average_gain_gbp": round(gain / households, 2) if households else 0.0,
+            "average_gain_gbp_among_gainers": round(gainers_gain / gainers, 2) if gainers else 0.0,
+            "share_gaining": round(gainers / households, 4) if households else 0.0,
+            "average_gain_pct_of_income": round(gain / income * 100, 4) if income else 0.0,
+        }
+        if exact:
+            row.update(
+                {
+                    "households": households,
+                    "total_gain_gbp": gain,
+                    "gainers_households": gainers,
+                    "gainers_total_gain_gbp": gainers_gain,
+                    "baseline_income_gbp": income,
+                }
+            )
+        out.append(row)
+    return out
+
+
+def add_quintiles(node):
+    """Add a by_income_quintile* list beside every by_income_decile* list, in place."""
+    if isinstance(node, dict):
+        for key in list(node):
+            value = node[key]
+            if key.startswith(DECILE_PREFIX) and isinstance(value, list):
+                node[QUINTILE_PREFIX + key[len(DECILE_PREFIX) :]] = fold_deciles_to_quintiles(value)
+            else:
+                add_quintiles(value)
+    elif isinstance(node, list):
+        for item in node:
+            add_quintiles(item)
+    return node
+
+
+def fold_quintiles_into_results() -> None:
+    """Add the quintile breakdowns to results written before the fold existed.
+
+    The same fold run() applies at write time. The digest of the source that
+    produced the run is kept, and the digest of the source that folded it is
+    recorded beside it.
+    """
+    # One record for both files, so they stay byte-identical.
+    postprocess = {
+        "step": "fold_deciles_to_quintiles",
+        "source_digest": _source_digest(),
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+    }
+    for destination in RESULT_PATHS:
+        output = json.loads(destination.read_text())
+        add_quintiles(output)
+        output["provenance"]["postprocess"] = postprocess
+        destination.write_text(json.dumps(output, indent=2, default=str, allow_nan=False))

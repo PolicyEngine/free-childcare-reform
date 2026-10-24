@@ -65,12 +65,12 @@ def test_elasticity_bounds_order_the_response(results):
         assert low <= central <= high
 
 
-def test_quintiles_are_complete_and_gains_are_non_negative(results):
+def test_deciles_are_complete_and_gains_are_non_negative(results):
     for year in YEARS:
         effects = results["by_year"][year]["legs"]["combined"]["household_effects"]
-        for key in ["by_income_quintile", "by_income_quintile_families_with_under_5s"]:
+        for key in ["by_income_decile", "by_income_decile_families_with_under_5s"]:
             rows = effects[key]
-            assert [row["group"] for row in rows] == ["Q1", "Q2", "Q3", "Q4", "Q5"]
+            assert [row["group"] for row in rows] == [f"D{d}" for d in range(1, 11)]
             # Nobody loses: the reform only adds support.
             assert all(row["average_gain_gbp"] >= 0 for row in rows)
 
@@ -120,8 +120,9 @@ def test_the_known_gaps_are_flagged_rather_than_hidden(results):
     # Was an award gap; the like-for-like 2024 comparison closed it.
     assert kinds["Tax-Free Childcare"] == "Like-for-like"
     # It became comparable once measured as a counterfactual rather than by
-    # summing a maximum-amount component; what remains is a caseload gap.
-    assert kinds["Universal Credit childcare element"] == "Caseload gap"
+    # summing a maximum-amount component. The caseload gap it showed on the
+    # Enhanced FRS closed on Microcosm, which calibrates the element's caseload.
+    assert kinds["Universal Credit childcare element"] == "Independent check"
     assert kinds["Non-entitlement provider income, England, under-5s"] == "Fee base check"
     assert kinds["Childcare spending, all children, UK"] == "Unbenchmarked"
 
@@ -200,7 +201,7 @@ def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
 
     Dividing a 2027 model figure by a January 2025 census measures the gap
     between the two dates as much as the model: on the working-parent
-    entitlement that reads 1.61x, almost all of it the September 2025
+    entitlement that reads 1.75x, much of it the September 2025
     expansion to 30 hours for under-threes, which the census predates.
     """
     rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
@@ -211,10 +212,14 @@ def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
     # earlier version of this analysis wrongly concluded it did not.
     for programme in rows:
         assert rows[programme]["official_spending_bn"] > 0, programme
-    # The entitlement figures are the DSG early years block allocations for
-    # 2024-25, which is the year the model is read at.
-    assert rows["universal"]["official_spending_bn"] == pytest.approx(1.7)
-    assert rows["extended"]["official_spending_bn"] == pytest.approx(2.5)
+    # The entitlement figures are from DfE's 2024-25 early years national
+    # funding formulae technical note, the year the model is read at: £2.6bn
+    # for all universal hours, and about £2.69bn for the working-parent hours
+    # (£1.1bn at 3-4, the working-parent share of £1.5bn at 2, £0.65bn under
+    # 2). An earlier version used £1.7bn and £2.5bn from the DSG allocations,
+    # which could not be reproduced.
+    assert rows["universal"]["official_spending_bn"] == pytest.approx(2.6)
+    assert rows["extended"]["official_spending_bn"] == pytest.approx(2.69)
     for programme, row in rows.items():
         assert row["comparison_year"] < row["costed_year"], programme
         # The costed-year figures are reported for context and must never be
@@ -228,27 +233,41 @@ def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
             assert row["spending_ratio"] == pytest.approx(expected), programme
 
 
-def test_the_baseline_agrees_with_the_data_builds_own_release_check(results):
-    """The four ratios must match what policyengine-uk-data checks its release on.
+def test_the_universal_comparator_counts_working_parent_children(results):
+    """policyengine-uk stacks universal hours under the working-parent hours.
 
-    Same published figures, same model years. If these drift apart, one of the
-    two is comparing against something the other is not, which is the failure
-    this whole analysis has hit twice.
+    A working-parent 3-4 year old's first 15 hours are universal hours, so
+    the model's universal caseload includes those children and the comparator
+    must too: all 778,327 registered excluding reception, not the 416,537 left
+    after netting off working-parent children, which matched an engine that
+    treated the two schemes as alternatives.
     """
     rows = {row["programme"]: row for row in results["by_year"]["2027"]["baseline_programmes"]}
-    # Release 1.57.2, from the push.yaml calibration log. The entitlements
-    # total row has no caseload: a child can hold more than one entitlement.
-    expected_caseload = {"universal": 0.93, "extended": 1.16, "targeted": 0.78, "tfc": 1.01}
-    for programme, ratio in expected_caseload.items():
-        assert rows[programme]["caseload_ratio"] == pytest.approx(ratio, abs=0.02), programme
-    assert rows["tfc"]["spending_ratio"] == pytest.approx(0.99, abs=0.02)
+    assert rows["universal"]["official_caseload"] == 778_327
+
+
+def test_tax_free_childcare_is_close_to_hmrc_on_both_measures(results):
+    """The one scheme here whose spending the data build calibrates on.
+
+    Microcosm calibrates it at 2025 on HMRC's March 2026 release; this row is
+    an independent check at 2024 on the 2024-25 outturn, so it need not match
+    the calibration fit. A gap beyond 10% on either measure would mean the two
+    have drifted apart, which is the failure this analysis has hit twice.
+    """
+    row = next(
+        row
+        for row in results["by_year"]["2027"]["baseline_programmes"]
+        if row["programme"] == "tfc"
+    )
+    assert 0.9 <= row["spending_ratio"] <= 1.1
+    assert 0.9 <= row["caseload_ratio"] <= 1.1
 
 
 def test_the_uc_childcare_element_is_measured_by_abolishing_it(results):
     """Summing the variable gives an entitlement component, not spending.
 
     `uc_childcare_element` is part of the UC maximum amount, before the
-    earnings taper. Its sum is £8.69bn against DWP's £611m outturn — a 14x
+    earnings taper. Its sum is £2.19bn against DWP's £611m outturn — a 3.6x
     gap that is an artefact of the comparison. The comparable figure is what
     abolishing it costs.
     """
@@ -276,13 +295,13 @@ def test_household_effects_respond_to_the_labour_supply_assumption(results):
 
     The participation response is an expected value per person — a probability
     of entering or leaving work times the gain to work — so it allocates to
-    households and can be read by quintile. An earlier version of this
+    households and can be read by decile. An earlier version of this
     dashboard claimed it could not, and showed static figures under every
     assumption.
     """
     breakdowns = (
-        "by_income_quintile_families_with_under_5s",
-        "by_income_quintile",
+        "by_income_decile_families_with_under_5s",
+        "by_income_decile",
         "by_family_type_families_with_under_5s",
         "by_family_type",
     )
@@ -327,18 +346,163 @@ def test_leavers_are_converted_to_ftes_at_their_own_hours(results):
     """Leavers give up observed hours, which are longer than an entrant's.
 
     Using the entrant assumption for both overstated the net full-time
-    equivalent. The free-hours leg produces only leavers, so its FTE loss must
-    exceed what the entrant-hours conversion would give.
+    equivalent. The free-hours leg produces mostly leavers, so its leaver FTE
+    loss must exceed what the entrant-hours conversion would give.
+
+    It is not leavers only. A parent whose youngest child is 2 and whose family
+    would qualify for, and claim, the disadvantaged 2-year-old offer out of
+    work, but not in work, gains the universal hours only in work, so the leg
+    raises their gain to work. That group is small next to the leavers.
     """
     from free_childcare_reform.labour_supply import FULL_TIME_HOURS, HOURS_FOR_NEW_ENTRANTS
 
     entrant_rate = HOURS_FOR_NEW_ENTRANTS / FULL_TIME_HOURS
     for year in YEARS:
         leg = results["by_year"][year]["legs"]["free_hours"]["labour_supply"]["central"]
-        # Effectively zero: the free-hours leg cannot raise the gain to work,
-        # so it produces leavers only.
-        assert leg["entrants"] < 1, year
-        naive = -leg["leavers"] * entrant_rate
-        assert leg["net_ftes"] < naive, (
+        assert leg["entrants"] < 0.1 * leg["leavers"], year
+        leaver_ftes = leg["entrants"] * entrant_rate - leg["net_ftes"]
+        naive = leg["leavers"] * entrant_rate
+        assert leaver_ftes > naive, (
             f"{year}: leaver FTEs should exceed the entrant-hours conversion"
         )
+
+
+def test_the_free_hours_leg_is_reported_as_a_take_up_range(results):
+    """The new hours' take-up is the leg's largest uncertainty, so it is a range.
+
+    Low and high bracket the central case on both the cost and the take-up
+    rate, and the central case is the leg's own headline.
+    """
+    for year in YEARS:
+        block = results["by_year"][year]
+        take_up = block["free_hours_take_up"]
+        cases = take_up["cases"]
+        assert take_up["central_case"] == "central"
+        assert (
+            cases["low"]["static_cost_bn"]
+            < cases["central"]["static_cost_bn"]
+            < cases["high"]["static_cost_bn"]
+        )
+        rates = [
+            cases[c]["take_up_rate_outside_working_parent_hours"]
+            for c in ("low", "central", "high")
+        ]
+        assert rates == sorted(rates)
+        assert cases["central"]["static_cost_bn"] == block["legs"]["free_hours"]["static_cost_bn"]
+
+
+def test_the_subsidy_leg_is_reported_as_a_range(results):
+    for year in YEARS:
+        block = results["by_year"][year]
+        r = block["subsidy_range"]
+        assert r["current_behaviour_bn"] < r["cma_fee_base_bn"] < r["as_coded_bn"]
+        assert r["as_coded_bn"] == block["legs"]["subsidy"]["static_cost_bn"]
+        assert r["cma_fee_base_bn"] == block["fee_base_sensitivity"]["subsidy_cost_bn"]
+
+
+def test_the_implied_price_elasticity_is_reported(results):
+    """The central run does not apply -0.15; the elasticity it implies is stated."""
+    for year in YEARS:
+        implied = results["by_year"][year]["implied_price_elasticity"]
+        assert implied["entrant_price_change_pct"] < 0
+        assert implied["subsidy_leg"] is not None
+        # A price fall raises employment, so the elasticity is negative and
+        # well inside the literature's range.
+        assert -0.35 < implied["subsidy_leg"] < 0
+
+
+def test_costs_are_emitted_to_four_decimal_places(results):
+    """Three places then rounding to two in prose gave £3.45bn for 3.4449."""
+    leg = results["by_year"]["2027"]["legs"]["free_hours"]
+    assert leg["static_cost_bn"] == pytest.approx(leg["static_cost_by_country_bn"]["uk"], abs=1e-3)
+    assert round(leg["static_cost_bn"], 4) == leg["static_cost_bn"]
+
+
+def test_under_5_take_up_rates_carry_their_population(results):
+    rates = results["by_year"]["2027"]["take_up_rates_under_5"]
+    assert set(rates) == {"tax_free_childcare", "working_parent", "universal", "targeted"}
+    for name, row in rates.items():
+        assert 0 < row["rate"] <= 1, name
+        assert "under 5" in row["population"], name
+
+
+def _quintile_pairs(effects):
+    for key, deciles in effects.items():
+        if key.startswith("by_income_decile"):
+            quintiles = effects["by_income_quintile" + key[len("by_income_decile") :]]
+            yield key, deciles, quintiles
+
+
+def _household_effect_blocks(node):
+    if isinstance(node, dict):
+        if any(k.startswith("by_income_decile") for k in node):
+            yield node
+        for value in node.values():
+            yield from _household_effect_blocks(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from _household_effect_blocks(item)
+
+
+def test_quintiles_are_folded_from_the_deciles(results):
+    """Every decile breakdown has a quintile one whose totals are the decile sums."""
+    blocks = list(_household_effect_blocks(results["by_year"]))
+    assert blocks
+    for effects in blocks:
+        for key, deciles, quintiles in _quintile_pairs(effects):
+            assert [row["group"] for row in quintiles] == [f"Q{q}" for q in range(1, 6)], key
+            for q, row in enumerate(quintiles, start=1):
+                pair = [d for d in deciles if d["group"] in (f"D{2 * q - 1}", f"D{2 * q}")]
+                # Published fields are rounded, so the sums agree to rounding.
+                assert row["households_m"] == pytest.approx(
+                    sum(d["households_m"] for d in pair), abs=2e-3
+                ), key
+                assert row["total_gain_bn"] == pytest.approx(
+                    sum(d["total_gain_bn"] for d in pair), abs=5e-4
+                ), key
+
+
+def test_the_fold_sums_totals_and_recomputes_ratios():
+    from free_childcare_reform.pipeline import fold_deciles_to_quintiles
+
+    def decile(group, households, gain, gainers, gainers_gain, income):
+        return {
+            "group": group,
+            "households_m": round(households / 1e6, 3),
+            "total_gain_bn": round(gain / 1e9, 4),
+            "average_gain_gbp": round(gain / households, 2),
+            "average_gain_gbp_among_gainers": round(gainers_gain / gainers, 2),
+            "share_gaining": round(gainers / households, 4),
+            "average_gain_pct_of_income": round(gain / income * 100, 4),
+            "households": households,
+            "total_gain_gbp": gain,
+            "gainers_households": gainers,
+            "gainers_total_gain_gbp": gainers_gain,
+            "baseline_income_gbp": income,
+        }
+
+    rows = [
+        decile("D1", 1_000_000, 1e8, 500_000, 1e8, 2e10),
+        decile("D2", 3_000_000, 9e8, 1_000_000, 9e8, 9e10),
+    ]
+    (q1,) = fold_deciles_to_quintiles(rows)
+    assert q1["group"] == "Q1"
+    assert q1["households"] == 4_000_000
+    assert q1["total_gain_gbp"] == 1e9
+    assert q1["average_gain_gbp"] == 250.0
+    assert q1["share_gaining"] == pytest.approx(0.375)
+    assert q1["average_gain_gbp_among_gainers"] == pytest.approx(1e9 / 1_500_000, abs=0.01)
+    assert q1["average_gain_pct_of_income"] == pytest.approx(1e9 / 1.1e11 * 100, abs=1e-4)
+    # Rows without the exact sums are rebuilt from the rounded fields.
+    for row in rows:
+        for key in (
+            "households",
+            "total_gain_gbp",
+            "gainers_households",
+            "gainers_total_gain_gbp",
+            "baseline_income_gbp",
+        ):
+            del row[key]
+    (rebuilt,) = fold_deciles_to_quintiles(rows)
+    assert rebuilt["average_gain_gbp"] == pytest.approx(250.0, abs=0.01)
+    assert rebuilt["share_gaining"] == pytest.approx(0.375, abs=1e-4)

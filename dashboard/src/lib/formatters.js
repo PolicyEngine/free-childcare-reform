@@ -1,7 +1,7 @@
 function getSignedPrefix(value) {
   const amount = Number(value);
   if (amount > 0) {
-    return "";
+    return "+";
   }
   if (amount < 0) {
     return "\u2212";
@@ -53,14 +53,22 @@ export function formatCompactCurrency(value) {
   return `\u00A3${formatter.format(Number(value))}`;
 }
 
+// Signed figures use a true minus sign (U+2212) and an explicit "+", so a
+// positive change never reads as an unsigned level.
 export function formatCount(value) {
   const num = Number(value);
+  const magnitude = Math.abs(num);
   // Counts of 100k+ are shown in millions with two decimals; smaller counts
   // (e.g. the poverty headcount) are shown in thousands.
-  if (num >= 1e5) {
-    return `${(num / 1e6).toFixed(2)}m`;
-  }
-  return `${(num / 1e3).toFixed(1)}k`;
+  const text =
+    magnitude >= 1e5 ? `${(magnitude / 1e6).toFixed(2)}m` : `${(magnitude / 1e3).toFixed(1)}k`;
+  return num < 0 ? `\u2212${text}` : text;
+}
+
+// A change in a count (net entrants, FTEs), always with its sign.
+export function formatSignedCount(value) {
+  const num = Number(value);
+  return `${getSignedPrefix(num)}${formatCount(Math.abs(num))}`;
 }
 
 // UK fiscal years run April to April, so the model's 2027 is 2027-28. Every

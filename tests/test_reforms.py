@@ -78,8 +78,8 @@ def test_the_widened_universal_entitlement_does_not_stack_on_the_targeted_offer(
 
 
 # Behavioural tests of the reform variables. These build a household and read
-# what the model pays, rather than inspecting source text — the age-floor
-# limitation below was found by writing them.
+# what the model pays, rather than inspecting source text — the whole-year
+# age-floor limitation, since fixed, was found by writing them.
 
 YEAR = 2027
 
@@ -125,17 +125,31 @@ def test_the_reform_pays_a_one_year_old_of_a_non_working_family():
     assert reform["universal_childcare_entitlement"] > 6_000
 
 
-def test_the_reform_pays_nothing_to_a_child_recorded_as_age_zero():
-    """A known limitation, pinned so it cannot change unnoticed.
+def test_an_age_zero_child_gets_universal_hours_from_the_term_after_nine_months():
+    """The 9-month floor is read from the date of birth, not the whole-year age.
 
-    The reform covers children from 9 months, but FRS ages are whole years, so
-    the 0.75 age floor evaluates as `age >= 1` and the 9-to-12-month cohort
-    gets nothing. Measured directly, the whole age-zero group is worth £1.76bn
-    and a three-month share about £0.44bn — 22% of the free-hours leg. If a future
-    dataset carries sub-year ages this test fails, which is the signal to
-    re-cost the leg rather than a regression.
+    A child gets universal hours from the first term after it reaches 9
+    months, the rule the engine applies to the working-parent hours. Aged 0 at
+    the start of the year and 11 months past its birthday, it reaches 9 months
+    before the first term and gets hours; 6 months past it, the default, it
+    reaches 9 months only after the last term starts and gets none.
     """
-    assert _free_entitlement(0, reform=True)["universal_childcare_entitlement"] == 0
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.pipeline import PARAMETER_YEARS
+    from free_childcare_reform.reforms import free_hours_scenario
+
+    def universal(months_since_last_birthday: int) -> float:
+        situation = _situation(0)
+        situation["people"]["child"]["months_since_last_birthday"] = {
+            YEAR: months_since_last_birthday
+        }
+        sim = Simulation(situation=situation, scenario=free_hours_scenario(PARAMETER_YEARS))
+        return float(sim.calculate("universal_childcare_entitlement", YEAR).sum())
+
+    assert universal(6) == 0
+    assert universal(11) > 0
+    assert universal(11) < _free_entitlement(1, reform=True)["universal_childcare_entitlement"]
 
 
 def test_a_two_year_old_on_qualifying_benefits_gets_fifteen_hours_not_thirty():
@@ -330,13 +344,12 @@ def test_quintiles_are_placed_against_thresholds_not_ranked():
 
 
 def test_the_age_floor_is_the_extended_scheme_floor():
-    """0.75 evaluates as age 1 on whole-year ages; 1.0 would hide that."""
+    """9 months, applied from the date of birth like the working-parent hours."""
     from free_childcare_reform.reforms import UNIVERSAL_ENTITLEMENT_AGE_MIN
 
     assert UNIVERSAL_ENTITLEMENT_AGE_MIN == 0.75, (
-        "the floor is the extended scheme's, and the fact that whole-year ages "
-        "make it behave as age 1 is a documented limitation, not a reason to "
-        "write 1.0"
+        "the floor is the extended scheme's 9 months; writing 1.0 would drop "
+        "the age-0 children who reach 9 months before a term starts"
     )
 
 
@@ -399,3 +412,90 @@ def test_a_non_worker_carries_no_recorded_support_to_project():
     year, situation = _reform_situation(child_expenses=0, employment_income=0)
     sim = Simulation(situation=situation, scenario=subsidy_scenario())
     assert _support_per_adult(sim, year).tolist() == [0.0, 0.0]
+
+
+# Take-up of the newly covered hours (María's review of PR #12). Families
+# outside the working-parent hours claim the new under-3 hours on the 2-year-old
+# offer's flag; families on the working-parent hours keep the universal flag,
+# so the leavers are unchanged.
+
+
+def _with_flags(child_age, employment_income=0, universal=True, targeted=True):
+    situation = _situation(child_age, employment_income)
+    situation["benunits"]["bu"]["would_claim_universal_childcare"] = {YEAR: universal}
+    situation["benunits"]["bu"]["would_claim_targeted_childcare"] = {YEAR: targeted}
+    return situation
+
+
+def _new_hours(situation, case):
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.pipeline import PARAMETER_YEARS
+    from free_childcare_reform.reforms import free_hours_scenario, new_hours_claim
+
+    baseline = Simulation(situation=situation)
+    claim = {YEAR: new_hours_claim(baseline, YEAR, case)}
+    sim = Simulation(situation=situation, scenario=free_hours_scenario(PARAMETER_YEARS, claim))
+    return {
+        "claim": claim[YEAR],
+        "universal": float(sim.calculate("universal_childcare_entitlement", YEAR).sum()),
+        "total": float(
+            sum(
+                sim.calculate(v, YEAR).sum()
+                for v in (
+                    "universal_childcare_entitlement",
+                    "extended_childcare_entitlement",
+                    "targeted_childcare_entitlement",
+                )
+            )
+        ),
+    }
+
+
+def test_a_non_working_family_claims_the_new_hours_on_the_targeted_flag():
+    # The universal flag says yes; in the central case it no longer decides.
+    declines = _new_hours(_with_flags(1, universal=True, targeted=False), "central")
+    claims = _new_hours(_with_flags(1, universal=False, targeted=True), "central")
+    assert declines["universal"] == 0
+    assert claims["universal"] > 6_000
+    # The high case is the engine's reading: the universal flag decides.
+    assert _new_hours(_with_flags(1, universal=True, targeted=False), "high")["universal"] > 6_000
+
+
+def test_a_working_parent_familys_new_hours_do_not_depend_on_the_targeted_flag():
+    """Families on the working-parent hours keep the universal flag in every case."""
+    for universal in (True, False):
+        results = [
+            _new_hours(_with_flags(1, 40_000, universal=universal, targeted=t), case)["total"]
+            for t in (True, False)
+            for case in ("central", "high", "low")
+        ]
+        assert max(results) == pytest.approx(min(results)), universal
+        assert results[0] > 0
+
+
+def test_the_flag_for_working_parent_families_equals_the_universal_flag():
+    """The leavers are working-parent families, so their flag cannot move."""
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.reforms import new_hours_claim, on_working_parent_hours
+
+    for universal in (True, False):
+        baseline = Simulation(situation=_with_flags(1, 40_000, universal=universal, targeted=False))
+        assert on_working_parent_hours(baseline, YEAR).all()
+        for case in ("central", "low", "high"):
+            assert (new_hours_claim(baseline, YEAR, case) == universal).all(), case
+
+
+def test_children_the_baseline_already_covers_keep_the_universal_flag():
+    """A 3-year-old outside work is not newly covered, so the targeted flag is moot."""
+    for targeted in (True, False):
+        result = _new_hours(_with_flags(3, universal=True, targeted=targeted), "central")
+        assert result["universal"] > 0, targeted
+
+
+def test_the_low_case_is_sixty_percent_of_dfe_working_family_take_up():
+    from free_childcare_reform import reforms
+
+    assert reforms.NEW_HOURS_LOW_SHARE == 0.6
+    assert reforms.DFE_WORKING_FAMILY_TAKE_UP_BY_AGE == {0: 0.46, 1: 0.76, 2: 0.92}
