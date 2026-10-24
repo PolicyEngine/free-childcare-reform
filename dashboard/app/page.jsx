@@ -21,6 +21,8 @@ function getInitialTab(tabParam) {
 const SELECT_CLASS =
   "h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)] focus:ring-2 focus:ring-[color:var(--pe-color-primary-100)]";
 
+const FIELD_LABEL_CLASS = "mb-1 block text-xs font-medium text-slate-500";
+
 // A labelled switch. Tinted when on, so the state reads at a glance, unlike
 // two pills that both look "selected".
 function Toggle({ on, onChange, label, hint }) {
@@ -41,20 +43,8 @@ function Toggle({ on, onChange, label, hint }) {
           }`}
         />
       </button>
-      <span className={on ? "font-semibold text-slate-900" : "text-slate-500"}>{label}</span>
+      <span className={on ? "font-medium text-slate-800" : "text-slate-500"}>{label}</span>
     </label>
-  );
-}
-
-function TabLink({ onSelect, children }) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className="font-semibold text-[color:var(--pe-color-primary-600)] underline decoration-1 underline-offset-2 transition-opacity hover:opacity-80"
-    >
-      {children}
-    </button>
   );
 }
 
@@ -113,7 +103,7 @@ function Dashboard() {
     <div className="app-shell min-h-screen">
       <header className="title-row">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4 md:px-8">
-          <h1>Two childcare reforms: free hours and a 75% subsidy</h1>
+          <h1>A two-part childcare reform: free hours and a 75% subsidy</h1>
         </div>
       </header>
 
@@ -123,21 +113,10 @@ function Dashboard() {
           <a href="https://policyengine.org" target="_blank" rel="noreferrer" className="underline">
             PolicyEngine
           </a>{" "}
-          UK&apos;s microsimulation to cost a two-part childcare reform for{" "}
-          <strong>2027-28 to 2029-30</strong>. The first replaces today&apos;s split — 30
-          free hours for working parents earning under £100,000, 15 hours for 3-4 year
-          olds — with <strong>15 hours free for every child</strong> from 9 months to
-          school age, plus a further 15 hours where parents work and earn under £100,000.
-          The second replaces Tax-Free Childcare with a{" "}
-          <strong>75% subsidy of childcare costs for all</strong>, keeping the Universal
-          Credit childcare element. The{" "}
-          <TabLink onSelect={() => handleTabChange("reform")}>Reform</TabLink> tab reports
-          what each leg costs and who gains;{" "}
-          <TabLink onSelect={() => handleTabChange("baseline")}>Baseline</TabLink> sets the
-          modelled baseline against published figures, and is the place to judge how much
-          weight the headline bears;{" "}
-          <TabLink onSelect={() => handleTabChange("methodology")}>Methodology</TabLink>{" "}
-          explains how each result is computed, with a source for every assumption.
+          UK to cost a two-part childcare reform for <strong>2027-28 to 2029-30</strong>.
+          The first leg gives <strong>15 free hours to every child</strong> from 9 months,
+          plus 15 more for working parents under £100,000; the second replaces Tax-Free
+          Childcare with a <strong>75% subsidy of childcare costs</strong>.
         </p>
 
         <div className="mb-8 mt-8 flex w-fit flex-wrap border-b-2 border-slate-200">
@@ -167,102 +146,112 @@ function Dashboard() {
           <>
             {activeTab === "reform" && (
               <div>
-                <div className="mb-5 flex flex-wrap gap-3">
-                  <label className="w-36 shrink-0">
-                    <span className="mb-1 block text-xs font-medium text-slate-500">
-                      Year
-                    </span>
-                    <select
-                      value={year}
-                      onChange={(event) => setYear(Number(event.target.value))}
-                      className={SELECT_CLASS}
-                    >
-                      {data.years.map((y) => (
-                        <option key={y} value={y}>
-                          {formatFiscalYear(y)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <div className="min-w-0">
-                    <span className="mb-1 block text-xs font-medium text-slate-500">
-                      Labour supply
-                    </span>
-                    <div className="flex h-10 items-center gap-4 rounded-lg border border-slate-200 bg-white px-3 text-sm">
-                      <Toggle
-                        on={extensive}
-                        onChange={setExtensive}
-                        label="Extensive margin"
-                        hint="Participation: OBR elasticities on the gain to work"
-                      />
-                      {extensive ? (
-                        <select
-                          value={bound}
-                          onChange={(event) => setBound(event.target.value)}
-                          className="h-7 rounded-md border border-slate-200 bg-slate-50 px-1.5 text-sm text-slate-700"
-                          aria-label="Extensive margin elasticity"
-                        >
-                          <option value="central">
-                            Central ({(data.assumptions || {}).price_elasticity_central})
-                          </option>
-                          <option value="low">
-                            Low ({(data.assumptions || {}).price_elasticity_low})
-                          </option>
-                          <option value="high">
-                            High ({(data.assumptions || {}).price_elasticity_high})
-                          </option>
-                        </select>
-                      ) : null}
-                      <span className="h-5 w-px bg-slate-200" aria-hidden />
-                      <Toggle
-                        on={intensive}
-                        onChange={setIntensive}
-                        label="Intensive margin"
-                        hint={`Hours: elasticity ${(data.assumptions || {}).hours_price_elasticity}, one setting`}
-                      />
+                <div className="mb-6">
+                  {/* One row: the view switch first, then the filters; wraps on phones. */}
+                  <div className="flex flex-wrap items-end gap-x-5 gap-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="w-full sm:w-auto">
+                      <span className={FIELD_LABEL_CLASS}>View</span>
+                      <div
+                        role="tablist"
+                        aria-label="Reform view"
+                        className="grid h-10 w-full grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 sm:inline-grid sm:w-auto"
+                      >
+                        {[
+                          { id: "budget", label: "Budget impact" },
+                          { id: "households", label: "Household effects" },
+                        ].map((view) => (
+                          <button
+                            key={view.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={reformView === view.id}
+                            onClick={() => setReformView(view.id)}
+                            className={`h-full whitespace-nowrap rounded-md px-3 text-sm font-semibold transition-colors sm:px-4 ${
+                              reformView === view.id
+                                ? "bg-white text-[color:var(--pe-color-primary-700)] shadow-sm ring-1 ring-slate-200"
+                                : "text-slate-500 hover:text-slate-700"
+                            }`}
+                          >
+                            {view.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <label className="w-36 shrink-0">
-                    <span className="mb-1 block text-xs font-medium text-slate-500">
-                      Area
-                    </span>
-                    <select
-                      value={area}
-                      onChange={(event) => setArea(event.target.value)}
-                      className={SELECT_CLASS}
-                    >
-                      <option value="uk">UK</option>
-                      <option value="england">England</option>
-                    </select>
-                  </label>
-                  <div className="min-w-0">
-                    <span className="mb-1 block text-xs font-medium text-slate-500">
-                      View
-                    </span>
-                    <div className="flex h-10 w-fit gap-1 rounded-lg bg-slate-100 p-1">
-                      {[
-                        { id: "budget", label: "Budget impact" },
-                        { id: "households", label: "Household effects" },
-                      ].map((view) => (
-                        <button
-                          key={view.id}
-                          type="button"
-                          onClick={() => setReformView(view.id)}
-                          className={`rounded-md px-3 text-sm font-semibold transition-colors ${
-                            reformView === view.id
-                              ? "bg-white text-slate-900 shadow-sm"
-                              : "text-slate-500 hover:text-slate-700"
-                          }`}
-                        >
-                          {view.label}
-                        </button>
-                      ))}
+                    <span className="hidden h-10 w-px self-end bg-slate-200 sm:block" aria-hidden />
+                    <label className="w-28 shrink-0">
+                      <span className={FIELD_LABEL_CLASS}>Year</span>
+                      <select
+                        value={year}
+                        onChange={(event) => setYear(Number(event.target.value))}
+                        className={SELECT_CLASS}
+                      >
+                        {data.years.map((y) => (
+                          <option key={y} value={y}>
+                            {formatFiscalYear(y)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="w-28 shrink-0">
+                      <span className={FIELD_LABEL_CLASS}>Area</span>
+                      <select
+                        value={area}
+                        onChange={(event) => setArea(event.target.value)}
+                        className={SELECT_CLASS}
+                      >
+                        <option value="uk">UK</option>
+                        <option value="england">England</option>
+                      </select>
+                    </label>
+                    <div className="min-w-0 max-w-full">
+                      <span className={FIELD_LABEL_CLASS}>Labour supply response</span>
+                      <div className="flex min-h-10 flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm sm:py-0">
+                        <Toggle
+                          on={extensive}
+                          onChange={setExtensive}
+                          label="Participation"
+                          hint="Extensive margin: whether parents work, using OBR elasticities on the gain to work"
+                        />
+                        {extensive ? (
+                          <select
+                            value={bound}
+                            onChange={(event) => setBound(event.target.value)}
+                            className="h-7 rounded-md border-0 bg-slate-100 px-2 text-xs font-medium text-slate-700 outline-none focus:border-[color:var(--pe-color-primary-500)]"
+                            aria-label="Participation elasticity"
+                            title="Participation (extensive margin) elasticity"
+                          >
+                            <option value="central">
+                              Central (OBR as published)
+                            </option>
+                            <option value="low">
+                              Low ({Number((data.assumptions || {}).elasticity_scale_low ?? 0.33).toFixed(2)}×)
+                            </option>
+                            <option value="high">
+                              High ({Number((data.assumptions || {}).elasticity_scale_high ?? 2)}×)
+                            </option>
+                          </select>
+                        ) : null}
+                        <span className="hidden h-5 w-px bg-slate-200 sm:block" aria-hidden />
+                        <Toggle
+                          on={intensive}
+                          onChange={setIntensive}
+                          label="Hours"
+                          hint={`Intensive margin: hours worked by parents already in work, elasticity ${(data.assumptions || {}).hours_price_elasticity}`}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {reformView === "budget" ? (
-                  <CostTab data={data} year={year} bound={effectiveBound} intensive={intensive} area={area} />
+                  <CostTab
+                    data={data}
+                    year={year}
+                    bound={effectiveBound}
+                    intensive={intensive}
+                    area={area}
+                    onTabChange={handleTabChange}
+                  />
                 ) : (
                   <DistributionTab
                     data={data}
@@ -270,12 +259,13 @@ function Dashboard() {
                     bound={effectiveBound}
                     intensive={intensive}
                     area={area}
+                    onTabChange={handleTabChange}
                   />
                 )}
               </div>
             )}
             {activeTab === "baseline" && <BaselineTab data={data} year={year} />}
-            {activeTab === "methodology" && <MethodologyTab data={data} year={year} />}
+            {activeTab === "methodology" && <MethodologyTab data={data} year={year} onTabChange={handleTabChange} />}
           </>
         )}
 
@@ -293,8 +283,7 @@ function Dashboard() {
             <a href="https://pypi.org/project/policyengine/" target="_blank" rel="noreferrer">
               policyengine.py
             </a>{" "}
-            v{data?.policyengine_version} and policyengine-uk v
-            {data?.policyengine_uk_version}, on {data?.dataset ?? "Microcosm UK 2024-25"}.
+            v{data?.policyengine_version}
           </p>
         </footer>
       </main>
