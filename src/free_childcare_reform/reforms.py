@@ -72,8 +72,8 @@ from policyengine_uk.utils.scenario import Scenario
 # 1 September) after it reaches 9 months, the same rule the engine uses for the
 # working-parent hours (extended_childcare_entitlement_term_share). See
 # _term_share_after_minimum_age. On Microcosm a133f37a in 2027-28 the leg's
-# new hours by age are £0.40bn at age 0, £1.95bn at age 1 and £1.09bn at age 2,
-# for about 155,000, 350,000 and 212,000 children.
+# new hours by age, at the central take-up, are £0.34bn at age 0, £1.65bn at
+# age 1 and £0.81bn at age 2, for about 132,000, 308,000 and 180,000 children.
 UNIVERSAL_ENTITLEMENT_AGE_MIN = 0.75
 # The subsidy that replaces Tax-Free Childcare: 75% of childcare costs, with no
 # work test, no £100k cliff and no per-child cap.
@@ -162,7 +162,8 @@ def _universal_excludes_targeted():
     non-working family on qualifying benefits with a 2-year-old draws 570
     hours from the targeted offer *and* 570 from the universal one — 30 free
     hours a week where the reform gives 15. On Microcosm a133f37a in 2027-28
-    that is 47,010 children and £0.19bn on the leg.
+    that was 47,010 children and £0.19bn on the leg, measured on the dataset's
+    universal flag before the central take-up case was added.
 
     It applies only where the family claims the targeted offer: the engine's
     targeted eligibility is legal eligibility, and a family that does not

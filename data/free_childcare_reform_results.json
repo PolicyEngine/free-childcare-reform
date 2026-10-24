@@ -17,8 +17,8 @@
     "generated_at": "2026-10-24T23:13:37+00:00",
     "postprocess": {
       "step": "fold_deciles_to_quintiles",
-      "source_digest": "f0ecd3c06d62b14d26cf6dcb60aa66e713ebc2b01aacaff6cc9c7585f6f2b16c",
-      "generated_at": "2026-10-24T23:17:20+00:00"
+      "source_digest": "1af4d3f26ca1edba47e4621477a26b303fc380c8a14d5a70641202b0488d9f2e",
+      "generated_at": "2026-10-24T23:19:33+00:00"
     }
   },
   "reform_definition": {

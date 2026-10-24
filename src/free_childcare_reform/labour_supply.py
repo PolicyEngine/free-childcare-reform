@@ -330,7 +330,7 @@ def responds_to_childcare(sim, year: int) -> np.ndarray:
 
     The cost side no longer has that restriction: the reform pays universal
     hours from the term after a child reaches 9 months, read from the date of
-    birth (see ``reforms.py``), so some age-0 children get them — £0.40bn of
+    birth (see ``reforms.py``), so some age-0 children get them — £0.34bn of
     new hours in 2027-28 on Microcosm a133f37a. The participation response
     omits their parents, so it leaves out any response from that cohort.
     """

@@ -48,8 +48,9 @@ class Source:
 # matters less than that range suggests, because displacement is separately
 # capped at what a family actually spends and that cap binds for many
 # newly-eligible families, who are not working and buy little paid care.
-# On Microcosm a133f37a, running at 71% instead of 90% raises the 2027-28
-# combined cost by £0.08bn, about 1%. Displacement applies only to the combined
+# On Microcosm a133f37a, running at 71% instead of 90% raised the 2027-28
+# combined cost by £0.08bn, about 1%, on the dataset's universal take-up flag
+# for the new hours (before the central take-up case). Displacement applies only to the combined
 # run, so neither leg on its own moves.
 FREE_HOURS_ADDITIONALITY = 54 / 570  # ~0.095
 FREE_HOURS_DISPLACEMENT = 1 - FREE_HOURS_ADDITIONALITY  # ~0.905
