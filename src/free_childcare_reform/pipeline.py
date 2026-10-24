@@ -55,6 +55,10 @@ from .reforms import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+RESULT_PATHS = (
+    REPO_ROOT / "data" / "free_childcare_reform_results.json",
+    REPO_ROOT / "dashboard" / "public" / "data" / "free_childcare_reform_results.json",
+)
 # Microcosm UK 2024-25, the national release of 23 October 2026 (a133f37a),
 # pinned by the commit of its immutable cut tag and checked against the sha256
 # in its release manifest. Its manifest pins policyengine-uk 2.147.2.
@@ -260,6 +264,13 @@ def _household_effects(
                 else 0.0,
                 4,
             ),
+            # The unrounded sums behind the ratios above, so groups can be
+            # combined exactly (see fold_deciles_to_quintiles).
+            "households": float(weight),
+            "total_gain_gbp": float((group["gain"] * group["weight"]).sum()),
+            "gainers_households": float(gaining["weight"].sum()),
+            "gainers_total_gain_gbp": float((gaining["gain"] * gaining["weight"]).sum()),
+            "baseline_income_gbp": float((group["baseline_income"] * group["weight"]).sum()),
         }
 
     ranked = frame[frame["decile"] > 0]
@@ -1390,7 +1401,21 @@ def run(args: argparse.Namespace) -> None:
     dataset = _dataset()
 
     print("Step 2: Costing each year ...")
-    by_year = {str(year): run_year(dataset, year) for year in years}
+    if getattr(args, "parallel", False) and len(years) > 1:
+        # One process per year. Each year is independent, so the results are
+        # identical to a serial run and are merged here before writing.
+        from concurrent.futures import ProcessPoolExecutor
+
+        with ProcessPoolExecutor(max_workers=len(years)) as pool:
+            by_year = dict(
+                zip(
+                    (str(year) for year in years),
+                    pool.map(run_year, [dataset] * len(years), years),
+                    strict=True,
+                )
+            )
+    else:
+        by_year = {str(year): run_year(dataset, year) for year in years}
 
     print("Step 3: Writing results JSON ...")
     output = {
@@ -1418,10 +1443,8 @@ def run(args: argparse.Namespace) -> None:
         "by_year": by_year,
     }
 
-    for destination in [
-        REPO_ROOT / "data" / "free_childcare_reform_results.json",
-        REPO_ROOT / "dashboard" / "public" / "data" / "free_childcare_reform_results.json",
-    ]:
+    add_quintiles(output)
+    for destination in RESULT_PATHS:
         destination.parent.mkdir(parents=True, exist_ok=True)
         # allow_nan=False: Python emits bare NaN and Infinity, which every
         # browser's JSON.parse rejects. Failing here beats shipping a file the
@@ -1436,3 +1459,110 @@ def run(args: argparse.Namespace) -> None:
             f"dynamic £{result['dynamic_cost']['central']['dynamic_cost_bn']:.2f}bn "
             f"({result['dynamic_cost']['central']['net_entrants']:,} net entrants)."
         )
+
+
+# Quintiles are folded from the decile rows rather than computed separately, so
+# the two breakdowns cannot disagree: Q1 is D1 and D2, and so on.
+DECILE_PREFIX = "by_income_decile"
+QUINTILE_PREFIX = "by_income_quintile"
+
+
+def _decile_row_sums(row: dict) -> dict:
+    """The additive quantities behind one decile row.
+
+    Rows written since the fold was added carry them exactly. Older rows carry
+    only the rounded published fields, from which they are reconstructed.
+    """
+    if "households" in row:
+        return {
+            "households": row["households"],
+            "gain_gbp": row["total_gain_gbp"],
+            "gainers": row["gainers_households"],
+            "gainers_gain_gbp": row["gainers_total_gain_gbp"],
+            "baseline_income_gbp": row["baseline_income_gbp"],
+        }
+    households = row["households_m"] * 1e6
+    # The published total, so quintile totals are the decile totals' sum.
+    gain = row["total_gain_bn"] * 1e9
+    gainers = row["share_gaining"] * households
+    pct = row["average_gain_pct_of_income"]
+    return {
+        "households": households,
+        "gain_gbp": gain,
+        "gainers": gainers,
+        "gainers_gain_gbp": row["average_gain_gbp_among_gainers"] * gainers,
+        "baseline_income_gbp": gain / (pct / 100) if pct else None,
+    }
+
+
+def fold_deciles_to_quintiles(rows: list[dict]) -> list[dict]:
+    """Quintile rows from decile rows: sum the totals, recompute the ratios."""
+    by_decile = {int(row["group"][1:]): _decile_row_sums(row) for row in rows}
+    exact = all("households" in row for row in rows)
+    out = []
+    for quintile in range(1, 6):
+        parts = [by_decile[d] for d in (2 * quintile - 1, 2 * quintile) if d in by_decile]
+        if not parts:
+            continue
+        households = sum(p["households"] for p in parts)
+        gain = sum(p["gain_gbp"] for p in parts)
+        gainers = sum(p["gainers"] for p in parts)
+        gainers_gain = sum(p["gainers_gain_gbp"] for p in parts)
+        incomes = [p["baseline_income_gbp"] for p in parts]
+        income = None if any(i is None for i in incomes) else sum(incomes)
+        row = {
+            "group": f"Q{quintile}",
+            "households_m": round(households / 1e6, 3),
+            "total_gain_bn": round(gain / 1e9, 4),
+            "average_gain_gbp": round(gain / households, 2) if households else 0.0,
+            "average_gain_gbp_among_gainers": round(gainers_gain / gainers, 2) if gainers else 0.0,
+            "share_gaining": round(gainers / households, 4) if households else 0.0,
+            "average_gain_pct_of_income": round(gain / income * 100, 4) if income else 0.0,
+        }
+        if exact:
+            row.update(
+                {
+                    "households": households,
+                    "total_gain_gbp": gain,
+                    "gainers_households": gainers,
+                    "gainers_total_gain_gbp": gainers_gain,
+                    "baseline_income_gbp": income,
+                }
+            )
+        out.append(row)
+    return out
+
+
+def add_quintiles(node):
+    """Add a by_income_quintile* list beside every by_income_decile* list, in place."""
+    if isinstance(node, dict):
+        for key in list(node):
+            value = node[key]
+            if key.startswith(DECILE_PREFIX) and isinstance(value, list):
+                node[QUINTILE_PREFIX + key[len(DECILE_PREFIX) :]] = fold_deciles_to_quintiles(value)
+            else:
+                add_quintiles(value)
+    elif isinstance(node, list):
+        for item in node:
+            add_quintiles(item)
+    return node
+
+
+def fold_quintiles_into_results() -> None:
+    """Add the quintile breakdowns to results written before the fold existed.
+
+    The same fold run() applies at write time. The digest of the source that
+    produced the run is kept, and the digest of the source that folded it is
+    recorded beside it.
+    """
+    # One record for both files, so they stay byte-identical.
+    postprocess = {
+        "step": "fold_deciles_to_quintiles",
+        "source_digest": _source_digest(),
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+    }
+    for destination in RESULT_PATHS:
+        output = json.loads(destination.read_text())
+        add_quintiles(output)
+        output["provenance"]["postprocess"] = postprocess
+        destination.write_text(json.dumps(output, indent=2, default=str, allow_nan=False))

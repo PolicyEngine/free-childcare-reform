@@ -424,3 +424,85 @@ def test_under_5_take_up_rates_carry_their_population(results):
     for name, row in rates.items():
         assert 0 < row["rate"] <= 1, name
         assert "under 5" in row["population"], name
+
+
+def _quintile_pairs(effects):
+    for key, deciles in effects.items():
+        if key.startswith("by_income_decile"):
+            quintiles = effects["by_income_quintile" + key[len("by_income_decile") :]]
+            yield key, deciles, quintiles
+
+
+def _household_effect_blocks(node):
+    if isinstance(node, dict):
+        if any(k.startswith("by_income_decile") for k in node):
+            yield node
+        for value in node.values():
+            yield from _household_effect_blocks(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from _household_effect_blocks(item)
+
+
+def test_quintiles_are_folded_from_the_deciles(results):
+    """Every decile breakdown has a quintile one whose totals are the decile sums."""
+    blocks = list(_household_effect_blocks(results["by_year"]))
+    assert blocks
+    for effects in blocks:
+        for key, deciles, quintiles in _quintile_pairs(effects):
+            assert [row["group"] for row in quintiles] == [f"Q{q}" for q in range(1, 6)], key
+            for q, row in enumerate(quintiles, start=1):
+                pair = [d for d in deciles if d["group"] in (f"D{2 * q - 1}", f"D{2 * q}")]
+                # Published fields are rounded, so the sums agree to rounding.
+                assert row["households_m"] == pytest.approx(
+                    sum(d["households_m"] for d in pair), abs=2e-3
+                ), key
+                assert row["total_gain_bn"] == pytest.approx(
+                    sum(d["total_gain_bn"] for d in pair), abs=5e-4
+                ), key
+
+
+def test_the_fold_sums_totals_and_recomputes_ratios():
+    from free_childcare_reform.pipeline import fold_deciles_to_quintiles
+
+    def decile(group, households, gain, gainers, gainers_gain, income):
+        return {
+            "group": group,
+            "households_m": round(households / 1e6, 3),
+            "total_gain_bn": round(gain / 1e9, 4),
+            "average_gain_gbp": round(gain / households, 2),
+            "average_gain_gbp_among_gainers": round(gainers_gain / gainers, 2),
+            "share_gaining": round(gainers / households, 4),
+            "average_gain_pct_of_income": round(gain / income * 100, 4),
+            "households": households,
+            "total_gain_gbp": gain,
+            "gainers_households": gainers,
+            "gainers_total_gain_gbp": gainers_gain,
+            "baseline_income_gbp": income,
+        }
+
+    rows = [
+        decile("D1", 1_000_000, 1e8, 500_000, 1e8, 2e10),
+        decile("D2", 3_000_000, 9e8, 1_000_000, 9e8, 9e10),
+    ]
+    (q1,) = fold_deciles_to_quintiles(rows)
+    assert q1["group"] == "Q1"
+    assert q1["households"] == 4_000_000
+    assert q1["total_gain_gbp"] == 1e9
+    assert q1["average_gain_gbp"] == 250.0
+    assert q1["share_gaining"] == pytest.approx(0.375)
+    assert q1["average_gain_gbp_among_gainers"] == pytest.approx(1e9 / 1_500_000, abs=0.01)
+    assert q1["average_gain_pct_of_income"] == pytest.approx(1e9 / 1.1e11 * 100, abs=1e-4)
+    # Rows without the exact sums are rebuilt from the rounded fields.
+    for row in rows:
+        for key in (
+            "households",
+            "total_gain_gbp",
+            "gainers_households",
+            "gainers_total_gain_gbp",
+            "baseline_income_gbp",
+        ):
+            del row[key]
+    (rebuilt,) = fold_deciles_to_quintiles(rows)
+    assert rebuilt["average_gain_gbp"] == pytest.approx(250.0, abs=0.01)
+    assert rebuilt["share_gaining"] == pytest.approx(0.375, abs=1e-4)

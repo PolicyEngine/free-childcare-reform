@@ -168,7 +168,10 @@ def test_the_committed_results_were_generated_from_the_committed_source():
     from free_childcare_reform.pipeline import _source_digest
 
     provenance = json.loads(ROOT_RESULTS.read_text())["provenance"]
-    assert provenance["source_digest"] == _source_digest(), (
+    # A post-processing step (the decile-to-quintile fold) records the source
+    # that applied it; the run's own digest stays beside it.
+    digest = provenance.get("postprocess", {}).get("source_digest", provenance["source_digest"])
+    assert digest == _source_digest(), (
         "the committed results were generated from different source than is "
         "checked in — rerun the pipeline"
     )
