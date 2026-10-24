@@ -322,20 +322,27 @@ BENCHMARKS = [
     },
 ]
 
-# Comparable published costings of this reform's first leg. NEF's is a direct
-# analogue: 15 hours free for all children from 9 months to 4, no work test.
+# Published costings of related proposals. None matches this reform: the
+# nearest cost parts of it, and several are kept for their take-up
+# assumptions, which drive both legs.
 COMPARABLE_COSTINGS = [
     {
-        "proposal": "15 hours free for all children 9 months to 4, no work test",
+        "proposal": (
+            "15 hours free for all children 9 months to 4, with hours above that "
+            "capped at 5% of family earnings"
+        ),
         "source": "New Economics Foundation, with Pregnant Then Screwed and JRF",
         "date": "July 2025",
         "cost_bn": "3.0-3.4 net",
         "geography": "England",
         "note": (
-            "The closest published analogue to this reform's free-hours leg. NEF "
-            "cost it at roughly cost-neutral at current usage, rising to £3-3.4bn "
-            "net at expanded usage, and about 11% lower again once labour supply "
-            "is allowed for."
+            "A whole-system package rather than an analogue of either leg: a "
+            "15-hour universal core plus a cap on the cost of further hours, "
+            "replacing the funded-hours model and support through Universal "
+            "Credit. NEF put it as initially cost-neutral at current usage, and "
+            "£3-3.4bn net above the fully expanded funded-hours system at full "
+            "expansion, at current provider rates. NEF says net costs fall by as "
+            "much as 11% once more hours worked are allowed for."
         ),
         "url": "https://neweconomics.org/2025/07/the-universal-family-childcare-promise",
     },
@@ -348,7 +355,10 @@ COMPARABLE_COSTINGS = [
         "note": (
             "Predates the under-3 expansion entirely, so it cannot be scaled to "
             "today's system, but it is the only IFS-authored costing of removing "
-            "a work test."
+            "a work test. It is also a take-up anchor: £115m in the low take-up "
+            "scenario and £560m in the high one, around the £250m central "
+            "estimate — a range of nearly five times from the take-up of newly "
+            "eligible families alone."
         ),
         "url": "https://www.suttontrust.com/our-research/a-fair-start-equalising-access-to-early-education/",
     },
@@ -361,11 +371,65 @@ COMPARABLE_COSTINGS = [
         "note": (
             "Costed with about 60,000 entrants to employment by 2027-28, on a "
             "central estimate — the government's own labour supply assumption, "
-            "and a cost anchor. Outturn ran above it: take-up 26% above the "
-            "December 2023 estimate by March 2025, spending about 28% above "
-            "budget in 2024-25."
+            "and a cost anchor. Outturn ran above it on two separate measures: "
+            "take-up was 26% above the December 2023 estimate by March 2025, "
+            "and spending was about 28% above budget in 2024-25."
         ),
         "url": "https://www.gov.uk/government/publications/spring-budget-2023",
+    },
+    {
+        "proposal": "Take-up of the 2023 expansion's new hours, by age",
+        "source": "Department for Education, Spring Budget 2023 policy costing note",
+        "date": "July 2023",
+        "cost_bn": None,
+        "geography": "England",
+        "note": (
+            "Not a costing of this reform but its take-up anchor. DfE costed the "
+            "working-parent expansion on take-up of around 75% at age 2, 60% at "
+            "age 1 and 35% at 9-12 months, from a range of 30-90% driven by "
+            "parents' use of formal childcare. Those are working families; "
+            "families outside work use less formal childcare."
+        ),
+        "url": "https://dera.ioe.ac.uk/id/eprint/40058/1/Spring_Budget_2023_Childcare_Expansion_Policy_costing_information_note_July_2023.pdf",
+    },
+    {
+        "proposal": "Universal 30 hours for 3-4 year olds, and options for 2-year-olds and a 20-hour core",
+        "source": "BCG for the Sutton Trust, Opportunity for All: technical appendix",
+        "date": "May 2024",
+        "cost_bn": "0.27-0.51 (3-4 year olds), 1.6-2.0 (20-hour core)",
+        "geography": "England",
+        "note": (
+            "2024-25 run costs. The 3-4 year old option applies take-up of "
+            "about 45-75% by demographic group to children newly eligible, the "
+            "20-hour universal core with a 30-hour sliding subsidy 0-100%. Both "
+            "ranges are driven mainly by the take-up assumption."
+        ),
+        "url": "https://www.suttontrust.com/wp-content/uploads/2024/05/Opportunity-for-all-TechnicalAppendix.pdf",
+    },
+    {
+        "proposal": "One subsidy merging UC childcare support, Tax-Free Childcare and the 30 hours",
+        "source": "Early Education and Childcare Coalition, with the LSE",
+        "date": "2026",
+        "cost_bn": None,
+        "geography": "England",
+        "note": (
+            "The closest published analogue to the subsidy leg. The coalition "
+            "reports the merged scheme could raise lower-income families' "
+            "support without a comparable rise in spending at current take-up, "
+            "and that support for low-income households would rise further if "
+            "take-up improved. The summary page publishes no cost at higher "
+            "take-up."
+        ),
+        "url": "https://www.earlyeducationchildcare.org/reforming-childcare-subsidies",
+    },
+    {
+        "proposal": "A childcare guarantee for England",
+        "source": "IPPR (Statham, Parkes and Nanda), Towards a childcare guarantee",
+        "date": "September 2022",
+        "cost_bn": None,
+        "geography": "England",
+        "note": "Proposal-level paper; the cost is not restated here.",
+        "url": "https://www.ippr.org/research/publications/towards-a-childcare-guarantee",
     },
     {
         "proposal": "Nordic-style universal childcare, 40 hours, 6 months to school age",
@@ -394,7 +458,8 @@ IFS_FREE_CHILDCARE = Source(
     "England, 2005-2013. Regression discontinuity. Moving from 15 to 30-35 hours "
     "raised maternal participation 5.7pp and employment 3.5pp — about 12,000 more "
     "mothers a year — only where the youngest child was eligible. For every 570 free "
-    "hours offered, only about 163 extra hours of subsidisable care were used.",
+    "hours offered, only about 54 were additional care rather than care families "
+    "already used — the rest displaced paid or informal care.",
     "https://www.iser.essex.ac.uk/wp-content/uploads/files/misoc/reports/BN189%20free%20childcare.pdf",
 )
 
@@ -524,7 +589,7 @@ def as_json(model_parameters: dict[str, Any]) -> dict:
 #
 # These are independent checks, not the data build's own targets. Microcosm UK
 # 2024-25 calibrates the four schemes at 2025 on later releases — HMRC's March
-# 2026 Tax-Free Childcare statistics and DfE's 2026 census, including a
+# 2026 Tax-Free Childcare statistics and DfE's January 2025 counts, including a
 # universal-only count — so a row here can differ from the calibration fit
 # without either being wrong.
 #
@@ -543,14 +608,14 @@ BASELINE_PROGRAMMES = [
         "label": "Universal entitlement (15 hours, 3-4 year olds)",
         "spending_variable": "universal_childcare_entitlement",
         "caseload_variable": "is_child_receiving_universal_childcare",
-        "official_spending_bn": 1.7,
-        "official_spending_label": "£1.7bn, England, 2024-25, from the dedicated schools grant early years block allocations",
+        "official_spending_bn": 2.6,
+        "official_spending_label": "DfE £2.6bn, England, 2024-25, early years national funding formulae technical note (784,144 part-time equivalents)",
         "official_caseload": 778_327,
         "official_caseload_label": "DfE, January 2024: 778,327 registered excluding reception, working-parent children included",
         "period": "January 2024",
         "comparison_year": 2024,
         "geography": "England",
-        "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
+        "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2024-to-2025/2024-to-2025-early-years-national-funding-formulae-technical-note",
         "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2026",
         "note": (
             "The comparator includes children on the working-parent "
@@ -561,7 +626,11 @@ BASELINE_PROGRAMMES = [
             "children off, which matched an engine that treated the schemes "
             "as alternatives. The model count is annual, so a child who "
             "starts reception in September still counts for the summer term, "
-            "while the census is a January count that excludes reception."
+            "while the census is a January count that excludes reception, "
+            "which is why the caseload ratio sits above the spending one. An "
+            "earlier version of this row used £1.7bn from the dedicated schools "
+            "grant allocations, which could not be reproduced; DfE's own "
+            "technical note puts all universal hours at £2.6bn."
         ),
     },
     {
@@ -569,14 +638,14 @@ BASELINE_PROGRAMMES = [
         "label": "Working-parent entitlement (30 hours, under £100k)",
         "spending_variable": "extended_childcare_entitlement",
         "caseload_variable": "is_child_receiving_extended_childcare",
-        "official_spending_bn": 2.5,
-        "official_spending_label": "£2.5bn, England, 2024-25, from the dedicated schools grant early years block allocations",
+        "official_spending_bn": 2.69,
+        "official_spending_label": "About £2.69bn, England, 2024-25, derived from DfE's early years national funding formulae technical note: £1.1bn of additional 3-4 year old hours, £0.94bn of the £1.5bn for 2-year-olds by part-time equivalents (200,571 of 321,335), and £0.65bn for under-2s",
         "official_caseload": 621_500,
         "official_caseload_label": "DfE, January 2025: 379,000 three- and four-year-olds plus 242,500 two-year-olds",
         "period": "January 2025",
         "comparison_year": 2024,
         "geography": "England",
-        "spending_url": "https://skillsfunding.service.gov.uk/view-latest-funding/national-funding-allocations/DSG/2024-to-2025",
+        "spending_url": "https://www.gov.uk/government/publications/early-years-funding-2024-to-2025/2024-to-2025-early-years-national-funding-formulae-technical-note",
         "url": "https://explore-education-statistics.service.gov.uk/find-statistics/funded-early-education-and-childcare/2025",
         "note": (
             "The model's spending here is the working-parent hours above the "
@@ -611,7 +680,11 @@ BASELINE_PROGRAMMES = [
         "note": (
             "Registrations have been falling year on year as the working-parent "
             "entitlement absorbs families who would previously have taken this "
-            "offer, so the direction of travel is downward."
+            "offer, so the direction of travel is downward. The analysis runs on "
+            "policyengine-uk 2.153.4, while Microcosm fitted this offer's take-up "
+            "on 2.147.2; from 2.148.1 the engine tests the offer on Universal "
+            "Credit earnings before the work allowance, which is stricter and "
+            "lowers the modelled count."
         ),
     },
     {
