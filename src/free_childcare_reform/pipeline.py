@@ -879,7 +879,7 @@ def _free_hours_take_up_range(
     for the central case only. The central figures repeat the leg's own.
     """
     age = np.asarray(baseline.calculate("age", year).values, float)
-    country = np.asarray(baseline.calculate("country", year).values).astype(str)
+    country = np.asarray(baseline.calculate("country", year, map_to="person").values).astype(str)
     weights = np.asarray(baseline.calculate("person_weight", year).values, float)
     newly_covered = (age < reforms.BASELINE_UNIVERSAL_MIN_AGE) & (country == "ENGLAND")
     outside = newly_covered & ~on_working_parent_hours(baseline, year)
@@ -985,7 +985,13 @@ def _take_up_rates_under_5(baseline, year: int) -> dict:
     bu_ids = np.asarray(baseline.calculate("benunit_id", year).values)
     order = np.searchsorted(ids, bu_ids)
     has_under_5 = has_under_5[order]
-    country = np.asarray(baseline.calculate("country", year, map_to="benunit").values).astype(str)
+    # country is a household variable and an enum, so it cannot be mapped to
+    # the benefit unit directly; read it from each benefit unit's first member.
+    person_country = np.asarray(baseline.calculate("country", year, map_to="person").values).astype(
+        str
+    )
+    first_member = np.unique(index, return_index=True)[1]
+    country = person_country[first_member][order]
     weights = np.asarray(baseline.calculate("benunit_weight", year).values, float)
     out = {}
     for name, flag, england in (
