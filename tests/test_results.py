@@ -212,10 +212,14 @@ def test_the_baseline_is_compared_at_the_published_figures_own_year(results):
     # earlier version of this analysis wrongly concluded it did not.
     for programme in rows:
         assert rows[programme]["official_spending_bn"] > 0, programme
-    # The entitlement figures are the DSG early years block allocations for
-    # 2024-25, which is the year the model is read at.
-    assert rows["universal"]["official_spending_bn"] == pytest.approx(1.7)
-    assert rows["extended"]["official_spending_bn"] == pytest.approx(2.5)
+    # The entitlement figures are from DfE's 2024-25 early years national
+    # funding formulae technical note, the year the model is read at: £2.6bn
+    # for all universal hours, and about £2.69bn for the working-parent hours
+    # (£1.1bn at 3-4, the working-parent share of £1.5bn at 2, £0.65bn under
+    # 2). An earlier version used £1.7bn and £2.5bn from the DSG allocations,
+    # which could not be reproduced.
+    assert rows["universal"]["official_spending_bn"] == pytest.approx(2.6)
+    assert rows["extended"]["official_spending_bn"] == pytest.approx(2.69)
     for programme, row in rows.items():
         assert row["comparison_year"] < row["costed_year"], programme
         # The costed-year figures are reported for context and must never be
@@ -361,3 +365,62 @@ def test_leavers_are_converted_to_ftes_at_their_own_hours(results):
         assert leaver_ftes > naive, (
             f"{year}: leaver FTEs should exceed the entrant-hours conversion"
         )
+
+
+def test_the_free_hours_leg_is_reported_as_a_take_up_range(results):
+    """The new hours' take-up is the leg's largest uncertainty, so it is a range.
+
+    Low and high bracket the central case on both the cost and the take-up
+    rate, and the central case is the leg's own headline.
+    """
+    for year in YEARS:
+        block = results["by_year"][year]
+        take_up = block["free_hours_take_up"]
+        cases = take_up["cases"]
+        assert take_up["central_case"] == "central"
+        assert (
+            cases["low"]["static_cost_bn"]
+            < cases["central"]["static_cost_bn"]
+            < cases["high"]["static_cost_bn"]
+        )
+        rates = [
+            cases[c]["take_up_rate_outside_working_parent_hours"]
+            for c in ("low", "central", "high")
+        ]
+        assert rates == sorted(rates)
+        assert cases["central"]["static_cost_bn"] == block["legs"]["free_hours"]["static_cost_bn"]
+
+
+def test_the_subsidy_leg_is_reported_as_a_range(results):
+    for year in YEARS:
+        block = results["by_year"][year]
+        r = block["subsidy_range"]
+        assert r["current_behaviour_bn"] < r["cma_fee_base_bn"] < r["as_coded_bn"]
+        assert r["as_coded_bn"] == block["legs"]["subsidy"]["static_cost_bn"]
+        assert r["cma_fee_base_bn"] == block["fee_base_sensitivity"]["subsidy_cost_bn"]
+
+
+def test_the_implied_price_elasticity_is_reported(results):
+    """The central run does not apply -0.15; the elasticity it implies is stated."""
+    for year in YEARS:
+        implied = results["by_year"][year]["implied_price_elasticity"]
+        assert implied["entrant_price_change_pct"] < 0
+        assert implied["subsidy_leg"] is not None
+        # A price fall raises employment, so the elasticity is negative and
+        # well inside the literature's range.
+        assert -0.35 < implied["subsidy_leg"] < 0
+
+
+def test_costs_are_emitted_to_four_decimal_places(results):
+    """Three places then rounding to two in prose gave £3.45bn for 3.4449."""
+    leg = results["by_year"]["2027"]["legs"]["free_hours"]
+    assert leg["static_cost_bn"] == pytest.approx(leg["static_cost_by_country_bn"]["uk"], abs=1e-3)
+    assert round(leg["static_cost_bn"], 4) == leg["static_cost_bn"]
+
+
+def test_under_5_take_up_rates_carry_their_population(results):
+    rates = results["by_year"]["2027"]["take_up_rates_under_5"]
+    assert set(rates) == {"tax_free_childcare", "working_parent", "universal", "targeted"}
+    for name, row in rates.items():
+        assert 0 < row["rate"] <= 1, name
+        assert "under 5" in row["population"], name

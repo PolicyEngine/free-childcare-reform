@@ -36,16 +36,21 @@ from policyengine_uk.utils.scenario import Scenario
 from . import reforms, sources
 from .hours_response import hours_response, realised_uc_childcare_support
 from .labour_supply import (
+    _excluded,
     childcare_cost_when_working,
     participation_response,
     prepare,
     responds_to_childcare,
 )
 from .reforms import (
+    NEW_HOURS_TAKE_UP,
+    NEW_HOURS_TAKE_UP_CASES,
     SUBSIDY_RATE,
     UNIVERSAL_ENTITLEMENT_AGE_MIN,
     displaced_childcare_expenses,
     free_hours_scenario,
+    new_hours_claim,
+    on_working_parent_hours,
     subsidy_scenario,
 )
 
@@ -358,7 +363,7 @@ def _spending(sim, year: int) -> dict:
     out["uc_childcare_element_maximum_bn"] = round(
         float(sim.calculate("uc_childcare_element", year).sum()) / 1e9, 4
     )
-    out["gov_spending_bn"] = round(float(sim.calculate("gov_spending", year).sum()) / 1e9, 3)
+    out["gov_spending_bn"] = round(float(sim.calculate("gov_spending", year).sum()) / 1e9, 4)
     out["childcare_expenses_bn"] = round(
         float(sim.calculate("childcare_expenses", year).sum()) / 1e9, 4
     )
@@ -613,7 +618,7 @@ def _dynamic_cost(static_cost_bn: float, participation: dict, hours: dict) -> di
         "labour_supply_offset_bn": round(participation_bn, 4),
         "hours_offset_bn": round(hours_bn, 4),
         "total_offset_bn": round(participation_bn + hours_bn, 4),
-        "dynamic_cost_bn": round(static_cost_bn - participation_bn - hours_bn, 3),
+        "dynamic_cost_bn": round(static_cost_bn - participation_bn - hours_bn, 4),
         "net_entrants": round(participation["net_entrants"]),
         "net_ftes": round(participation["net_ftes"]),
         "hours_ftes": round(hours["ftes"]),
@@ -648,7 +653,9 @@ def _subsidy_by_country(baseline, reform_sim, year: int) -> dict:
     return out
 
 
-def _scope_scenarios(dataset, baseline, free_hours, year: int, baseline_spending: dict) -> dict:
+def _scope_scenarios(
+    dataset, baseline, free_hours, year: int, baseline_spending: dict, free_hours_claim: dict
+) -> dict:
     """Combined-run totals for each scope dimension, separately and together.
 
     An earlier version of this analysis reported these as standalone legs
@@ -671,7 +678,7 @@ def _scope_scenarios(dataset, baseline, free_hours, year: int, baseline_spending
     def combined(include_uc: bool, full_take_up: bool) -> float:
         sim = _build(
             dataset,
-            scenario=free_hours_scenario(PARAMETER_YEARS)
+            scenario=free_hours_scenario(PARAMETER_YEARS, free_hours_claim)
             + subsidy_scenario(include_uc_families=include_uc),
             childcare_expenses=displaced,
             year=year,
@@ -757,7 +764,13 @@ def _take_up_among_qualifying(baseline, year: int, claims: np.ndarray) -> float:
 
 
 def _extended_take_up_scenario(
-    dataset, baseline, year: int, displaced_expenses, baseline_spending: dict, responses_against
+    dataset,
+    baseline,
+    year: int,
+    displaced_expenses,
+    baseline_spending: dict,
+    responses_against,
+    free_hours_claim: dict,
 ) -> dict:
     """The subsidy leg and both legs with take-up on the extended entitlement's flag.
 
@@ -769,7 +782,8 @@ def _extended_take_up_scenario(
     subsidy = _build(dataset, scenario=subsidy_scenario(take_up_flag=flag))
     combined = _build(
         dataset,
-        scenario=free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(take_up_flag=flag),
+        scenario=free_hours_scenario(PARAMETER_YEARS, free_hours_claim)
+        + subsidy_scenario(take_up_flag=flag),
         childcare_expenses=displaced_expenses,
         year=year,
     )
@@ -779,7 +793,7 @@ def _extended_take_up_scenario(
         responses = responses_against(sim)
         legs[name] = {
             "static_cost_bn": round(
-                _spending(sim, year)["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 3
+                _spending(sim, year)["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 4
             ),
             "static_cost_by_country_bn": _cost_by_country(baseline, sim, year),
             "labour_supply": {
@@ -855,12 +869,158 @@ def _source_digest() -> str:
     return digest.hexdigest()
 
 
+def _free_hours_take_up_range(
+    dataset, baseline, year: int, baseline_spending: dict, central_leg: dict, responses_against
+) -> dict:
+    """The free-hours leg at each take-up case for the newly covered hours.
+
+    See ``reforms.NEW_HOURS_TAKE_UP``. Each case is its own run, with the
+    participation response rerun against it; the hours response is reported
+    for the central case only. The central figures repeat the leg's own.
+    """
+    age = np.asarray(baseline.calculate("age", year).values, float)
+    country = np.asarray(baseline.calculate("country", year).values).astype(str)
+    weights = np.asarray(baseline.calculate("person_weight", year).values, float)
+    newly_covered = (age < reforms.BASELINE_UNIVERSAL_MIN_AGE) & (country == "ENGLAND")
+    outside = newly_covered & ~on_working_parent_hours(baseline, year)
+    cases = {}
+    for case in NEW_HOURS_TAKE_UP_CASES:
+        claims = new_hours_claim(baseline, year, case)
+        rate = round(
+            float(MicroSeries(claims[outside].astype(float), weights=weights[outside]).mean()), 4
+        )
+        if case == NEW_HOURS_TAKE_UP:
+            static = central_leg["static_cost_bn"]
+            response = central_leg["labour_supply"]["central"]
+        else:
+            sim = _build(dataset, scenario=free_hours_scenario(PARAMETER_YEARS, {year: claims}))
+            static = round(
+                _spending(sim, year)["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 4
+            )
+            response = responses_against(sim)["central"]
+        cases[case] = {
+            "static_cost_bn": static,
+            "take_up_rate_outside_working_parent_hours": rate,
+            "net_entrants": round(response["net_entrants"]),
+            "labour_supply_offset_bn": round(response["net_revenue_gbp"] / 1e9, 4),
+            "participation_only_dynamic_cost_bn": round(
+                static - response["net_revenue_gbp"] / 1e9, 4
+            ),
+        }
+    return {
+        "central_case": NEW_HOURS_TAKE_UP,
+        "cases": cases,
+        "children_newly_covered_outside_working_parent_hours": round(float(weights[outside].sum())),
+        "note": (
+            "Take-up of the new under-3 hours in England by families outside the "
+            "working-parent hours. low: 60% of DfE's January 2026 take-up among "
+            "working families by age (46% at 9-11 months, 76% at 1, 92% at 2). "
+            "central: the 2-year-old offer's take-up flag. high: the dataset's "
+            "universal flag, which Microcosm nests under the working-parent flag. "
+            "Families on the working-parent hours keep the universal flag in "
+            "every case. The rate is over children under 3 in those families "
+            "and does not apply the usage draw, which also gates the hours."
+        ),
+    }
+
+
+def _implied_price_elasticity(baseline, subsidy, year: int, response: dict) -> dict:
+    """The subsidy leg's participation response read as a childcare price elasticity.
+
+    The central run applies the OBR participation elasticities unscaled;
+    PRICE_ELASTICITY_CENTRAL only sets the width of the low and high band.
+    This states what elasticity of employment with respect to the childcare
+    price the central response amounts to: the percentage change in employment
+    among responding parents in work, over the percentage change in the
+    childcare price a potential entrant faces.
+    """
+    responding = responds_to_childcare(baseline, year) & ~_excluded(baseline, year)
+    employment = np.asarray(baseline.calculate("employment_income", year), float)
+    weights = np.asarray(
+        baseline.calculate("household_weight", year, map_to="person").values, float
+    )
+    working = responding & (employment > 0)
+    not_working = responding & (employment == 0)
+    base_cost = childcare_cost_when_working(
+        baseline, year, responding, _childcare_cost_per_person(baseline, year)
+    )
+    reform_cost = childcare_cost_when_working(
+        subsidy, year, responding, _childcare_cost_per_person(subsidy, year)
+    )
+    base_total = float((base_cost * weights * not_working).sum())
+    price_change = (
+        float(((reform_cost - base_cost) * weights * not_working).sum()) / base_total
+        if base_total
+        else 0.0
+    )
+    employed = float((weights * working).sum())
+    employment_change = response["net_entrants"] / employed if employed else 0.0
+    return {
+        "subsidy_leg": round(employment_change / price_change, 4) if price_change else None,
+        "employment_change_pct": round(employment_change * 100, 4),
+        "entrant_price_change_pct": round(price_change * 100, 4),
+        "responding_parents_in_work": round(employed),
+        "note": (
+            "Percentage change in employment among responding parents in work, "
+            "over the percentage change in the out-of-pocket childcare price a "
+            "potential entrant faces, central run. The central run applies the "
+            "OBR participation elasticities unscaled; the price elasticities "
+            "-0.05, -0.15 and -0.30 only set the ratio of the low and high "
+            "bounds to it."
+        ),
+    }
+
+
+def _take_up_rates_under_5(baseline, year: int) -> dict:
+    """Weighted share of benefit units with a child under 5 carrying each take-up flag.
+
+    England only for the three DfE entitlements, the UK for Tax-Free
+    Childcare. Flags are dataset inputs; whether the family is eligible or
+    uses any hours is not applied.
+    """
+    age = np.asarray(baseline.calculate("age", year).values, float)
+    benunit_id = np.asarray(baseline.calculate("benunit_id", year, map_to="person").values)
+    ids, index = np.unique(benunit_id, return_inverse=True)
+    has_under_5 = np.bincount(index, weights=(age < 5)) > 0
+    bu_ids = np.asarray(baseline.calculate("benunit_id", year).values)
+    order = np.searchsorted(ids, bu_ids)
+    has_under_5 = has_under_5[order]
+    country = np.asarray(baseline.calculate("country", year, map_to="benunit").values).astype(str)
+    weights = np.asarray(baseline.calculate("benunit_weight", year).values, float)
+    out = {}
+    for name, flag, england in (
+        ("tax_free_childcare", "would_claim_tfc", False),
+        ("working_parent", "would_claim_extended_childcare", True),
+        ("universal", "would_claim_universal_childcare", True),
+        ("targeted", "would_claim_targeted_childcare", True),
+    ):
+        mask = has_under_5 & ((country == "ENGLAND") if england else True)
+        flags = np.asarray(baseline.calculate(flag, year).values, float)
+        out[name] = {
+            "rate": round(float(MicroSeries(flags[mask], weights=weights[mask]).mean()), 4),
+            "flag": flag,
+            "population": (
+                "benefit units with a child under 5, "
+                + ("England" if england else "UK")
+                + "; flag only, before eligibility and usage"
+            ),
+        }
+    return out
+
+
 def run_year(dataset, year: int) -> dict:
     print(f"  {year}: baseline ...")
     baseline = _build(dataset)
 
+    # Take-up of the newly covered hours, fixed from the baseline so that the
+    # labour supply response cannot move it (see reforms.NEW_HOURS_TAKE_UP).
+    claim = {year: new_hours_claim(baseline, year, NEW_HOURS_TAKE_UP)}
+
+    def fh() -> Scenario:
+        return free_hours_scenario(PARAMETER_YEARS, claim)
+
     print(f"  {year}: leg 1 — 15 free hours for all from 9 months ...")
-    free_hours = _build(dataset, scenario=free_hours_scenario(PARAMETER_YEARS))
+    free_hours = _build(dataset, scenario=fh())
 
     print(f"  {year}: leg 2 — 75% childcare subsidy replacing Tax-Free Childcare ...")
     subsidy = _build(dataset, scenario=subsidy_scenario())
@@ -880,7 +1040,7 @@ def run_year(dataset, year: int) -> dict:
     )
     combined = _build(
         dataset,
-        scenario=free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(),
+        scenario=fh() + subsidy_scenario(),
         childcare_expenses=displaced_expenses,
         year=year,
     )
@@ -899,7 +1059,7 @@ def run_year(dataset, year: int) -> dict:
             "label": label,
             "spending": spending,
             "static_cost_bn": round(
-                spending["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 3
+                spending["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 4
             ),
             "static_cost_by_country_bn": _cost_by_country(baseline, sim, year),
             "household_effects": _household_effects(baseline, sim, year),
@@ -958,7 +1118,13 @@ def run_year(dataset, year: int) -> dict:
     print(f"  {year}: subsidy on the extended entitlement's take-up flag ...")
     subsidy_take_up = _subsidy_take_up_scenario(dataset, baseline, year)
     subsidy_take_up["extended_entitlement_flag"] = _extended_take_up_scenario(
-        dataset, baseline, year, displaced_expenses, baseline_spending, _responses_against
+        dataset,
+        baseline,
+        year,
+        displaced_expenses,
+        baseline_spending,
+        _responses_against,
+        claim,
     )
 
     responses_full = _responses_against(combined)
@@ -979,14 +1145,14 @@ def run_year(dataset, year: int) -> dict:
     print(f"  {year}: intensive-margin hours response ...")
     leg_builders = {
         "free_hours": lambda earnings: _build_with_earnings(
-            dataset, free_hours_scenario(PARAMETER_YEARS), displaced_expenses, year, earnings
+            dataset, fh(), displaced_expenses, year, earnings
         ),
         "subsidy": lambda earnings: _build_with_earnings(
             dataset, subsidy_scenario(), None, year, earnings
         ),
         "combined": lambda earnings: _build_with_earnings(
             dataset,
-            free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(),
+            fh() + subsidy_scenario(),
             displaced_expenses,
             year,
             earnings,
@@ -1002,7 +1168,7 @@ def run_year(dataset, year: int) -> dict:
     # the earnings.
     free_hours_displaced = _build(
         dataset,
-        scenario=free_hours_scenario(PARAMETER_YEARS),
+        scenario=fh(),
         childcare_expenses=displaced_expenses,
         year=year,
     )
@@ -1015,9 +1181,9 @@ def run_year(dataset, year: int) -> dict:
         baseline, _build(dataset, scenario=no_uc_childcare), year
     )
     leg_scenarios = {
-        "free_hours": (free_hours_scenario(PARAMETER_YEARS), displaced_expenses),
+        "free_hours": (fh(), displaced_expenses),
         "subsidy": (subsidy_scenario(), None),
-        "combined": (free_hours_scenario(PARAMETER_YEARS) + subsidy_scenario(), displaced_expenses),
+        "combined": (fh() + subsidy_scenario(), displaced_expenses),
     }
 
     def _hours_against(name: str, reform_sim) -> dict:
@@ -1138,9 +1304,9 @@ def run_year(dataset, year: int) -> dict:
         "under_5_slice_ratio": round(slice_ratio, 3),
         "rebased_childcare_expenses_bn": round(rebased_base, 3),
         "ratio": round(fee_base_ratio, 3),
-        "subsidy_cost_bn": round(legs["subsidy"]["static_cost_bn"] * fee_base_ratio, 3),
+        "subsidy_cost_bn": round(legs["subsidy"]["static_cost_bn"] * fee_base_ratio, 4),
         "combined_cost_bn": round(
-            legs["free_hours"]["static_cost_bn"] + subsidy_only_cost * fee_base_ratio, 3
+            legs["free_hours"]["static_cost_bn"] + subsidy_only_cost * fee_base_ratio, 4
         ),
         "note": (
             "Only the under-5 slice is rebased, on the England benchmark of "
@@ -1157,6 +1323,33 @@ def run_year(dataset, year: int) -> dict:
         ),
     }
 
+    print(f"  {year}: free-hours leg at low and high take-up of the new hours ...")
+    free_hours_take_up = _free_hours_take_up_range(
+        dataset, baseline, year, baseline_spending, legs["free_hours"], _responses_against
+    )
+
+    print(f"  {year}: subsidy leg at current claiming behaviour ...")
+    routed = _build(dataset, scenario=subsidy_scenario(routed_share=True))
+    subsidy_range = {
+        "current_behaviour_bn": round(
+            _spending(routed, year)["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 4
+        ),
+        "cma_fee_base_bn": fee_base_sensitivity["subsidy_cost_bn"],
+        "as_coded_bn": legs["subsidy"]["static_cost_bn"],
+        "note": (
+            "Static costs of the subsidy leg on its own. current_behaviour pays "
+            "75% only on the share of spend families route through a Tax-Free "
+            "Childcare account today (tax_free_childcare_spend_routed_share); "
+            "cma_fee_base rebases the under-5 fee base on the CMA residual (see "
+            "fee_base_sensitivity); as_coded pays 75% of all reported spend for "
+            "every family carrying the Tax-Free Childcare take-up flag, the "
+            "full-take-up end."
+        ),
+    }
+    implied_elasticity = _implied_price_elasticity(
+        baseline, subsidy, year, legs["subsidy"]["labour_supply"]["central"]
+    )
+
     static_cost = legs["combined"]["static_cost_bn"]
     dynamic = {}
     for bound, response in responses.items():
@@ -1171,7 +1364,13 @@ def run_year(dataset, year: int) -> dict:
         "baseline_spending": baseline_spending,
         "baseline_programmes": _baseline_programmes(baseline, year),
         "subsidy_take_up": subsidy_take_up,
-        "scope_scenarios": _scope_scenarios(dataset, baseline, free_hours, year, baseline_spending),
+        "scope_scenarios": _scope_scenarios(
+            dataset, baseline, free_hours, year, baseline_spending, claim
+        ),
+        "free_hours_take_up": free_hours_take_up,
+        "subsidy_range": subsidy_range,
+        "implied_price_elasticity": implied_elasticity,
+        "take_up_rates_under_5": _take_up_rates_under_5(baseline, year),
         "subsidy_by_country": _subsidy_by_country(baseline, subsidy, year),
         "uc_childcare_fiscal_cost": uc_childcare,
         "benchmarks": _benchmark_comparison(
