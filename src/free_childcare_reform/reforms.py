@@ -1,4 +1,4 @@
-"""The reform legs, expressed against policyengine-uk 2.148.
+"""The reform legs, expressed against policyengine-uk 2.153.
 
 The reform has two independent parts, which the pipeline also runs separately
 so their costs can be attributed:
@@ -19,9 +19,11 @@ so their costs can be attributed:
    and the first tier is delivered by widening the universal scheme's age band
    from 3 down to 9 months. A working family's total is unchanged; its first 15
    hours move from the working-parent line to the universal one. The universal
-   eligibility and amount formulas are overridden for two things: the 9-month
-   floor is applied from the date of birth, term by term, and the exclusion
-   described in ``_universal_excludes_targeted`` is added.
+   eligibility and amount formulas are overridden for three things: the 9-month
+   floor is applied from the date of birth, term by term, the exclusion
+   described in ``_universal_excludes_targeted`` is added, and take-up of the
+   newly covered under-3 hours is read from ``free_hours_new_claim`` rather
+   than the universal flag (see ``NEW_HOURS_TAKE_UP``).
 
 2. **Childcare subsidy.** Replace Tax-Free Childcare with a 75% subsidy of
    childcare costs for all. This *is* structural. TFC's formula pays 20% of
@@ -91,6 +93,57 @@ SUBSIDY_INCLUDES_UC_FAMILIES = False
 # the switch lowers the leg rather than raising it.
 SUBSIDY_TAKE_UP_FLAG = "would_claim_tfc"
 SUBSIDY_TAKE_UP_FLAG_EXTENDED = "would_claim_extended_childcare"
+
+# Take-up of the newly covered hours (children under 3) in families outside
+# the working-parent hours. Microcosm draws universal take-up nested under the
+# working-parent flag and fits the conditional rate to zero, so every family
+# with that flag — about 0.84 of families — takes up universal hours whatever
+# its work status. No 15-hour offer for under-3s outside work exists today, so
+# the data cannot calibrate that rate, and read off the nested flag 78% of
+# 1-year-olds outside the working-parent hours would take the new hours up.
+#
+# - "central": such families claim on ``would_claim_targeted_childcare``, the
+#   flag for the existing 15-hour offer to 2-year-olds outside work (0.655 in
+#   the data, against DfE's 65.2% in January 2025).
+# - "low": 60% of DfE's January 2026 take-up among *working* families by
+#   age — 46% at 9-11 months, 76% at age 1, 92% at age 2 — drawn once per
+#   benefit unit with a fixed seed.
+# - "high": the dataset's universal flag, as the engine reads it.
+#
+# Families on the working-parent hours in the baseline keep the universal
+# flag in every case, so the working parents who would leave work under the
+# reform (the leavers) are unchanged. The flag is set from the baseline run
+# and passed in, so the labour supply response cannot move it.
+NEW_HOURS_TAKE_UP = "central"
+NEW_HOURS_TAKE_UP_CASES = ("low", "central", "high")
+NEW_HOURS_LOW_SHARE = 0.6
+DFE_WORKING_FAMILY_TAKE_UP_BY_AGE = {0: 0.46, 1: 0.76, 2: 0.92}
+NEW_HOURS_LOW_SEED = 20261024
+# The universal entitlement's baseline minimum age. Children below it are the
+# ones the reform newly covers.
+BASELINE_UNIVERSAL_MIN_AGE = 3
+
+
+def _new_claim_variable(new_claim: dict[int, np.ndarray] | None):
+    """Person-level take-up of the newly covered hours, fixed from the baseline.
+
+    ``new_claim`` maps a year to a boolean array over people. Years without an
+    entry, or ``None``, fall back to the universal flag, which is the "high"
+    case and the engine's own reading.
+    """
+
+    class free_hours_new_claim(Variable):
+        value_type = bool
+        entity = Person
+        label = "would take up the reform's newly covered free hours"
+        definition_period = YEAR
+
+        def formula(person, period, parameters):
+            if new_claim is not None and period.start.year in new_claim:
+                return new_claim[period.start.year]
+            return person.benunit("would_claim_universal_childcare", period)
+
+    return free_hours_new_claim
 
 
 def _universal_excludes_targeted():
@@ -184,7 +237,15 @@ def _universal_excludes_targeted():
                 * _term_share_after_minimum_age(person, period, parameters)
                 * p.childcare_funding_rate.calc(age)
             )
-            standalone_claim = person.benunit("would_claim_universal_childcare", period)
+            # Children the baseline already covers claim on the universal
+            # flag as before; the newly covered under-3s claim on
+            # free_hours_new_claim (see NEW_HOURS_TAKE_UP).
+            newly_covered = age < BASELINE_UNIVERSAL_MIN_AGE
+            standalone_claim = where(
+                newly_covered,
+                person("free_hours_new_claim", period),
+                person.benunit("would_claim_universal_childcare", period),
+            )
             working_parent_total = person("extended_childcare_entitlement_total_per_child", period)
             # base_value already covers only the terms after the minimum age,
             # the same terms as the working-parent hours, so the engine's
@@ -209,25 +270,92 @@ def _term_share_after_minimum_age(person, period, parameters):
     return sum(reaches_minimum_age < start for start in starts) / len(starts)
 
 
-def free_hours_scenario(years: list[int]) -> Scenario:
-    """15 free hours from 9 months for all children, keeping the 30-hour tier."""
+def free_hours_scenario(
+    years: list[int], new_claim: dict[int, np.ndarray] | None = None
+) -> Scenario:
+    """15 free hours from 9 months for all children, keeping the 30-hour tier.
+
+    ``new_claim`` is the take-up of the newly covered hours, from
+    ``new_hours_claim``; ``None`` reads the universal flag (the "high" case).
+    """
+
+    def modifier(simulation) -> None:
+        simulation.tax_benefit_system.update_variable(_new_claim_variable(new_claim))
+        for variable in _universal_excludes_targeted():
+            simulation.tax_benefit_system.update_variable(variable)
+        simulation.reset_calculations()
+
     return Scenario(
         parameter_changes={
             "gov.dfe.universal_childcare_entitlement.age.min": {
                 year: UNIVERSAL_ENTITLEMENT_AGE_MIN for year in years
             }
         },
-        simulation_modifier=_no_stacking_modifier,
+        simulation_modifier=modifier,
     )
 
 
-def _no_stacking_modifier(simulation) -> None:
-    for variable in _universal_excludes_targeted():
-        simulation.tax_benefit_system.update_variable(variable)
-    simulation.reset_calculations()
+def _array(values, dtype=None) -> np.ndarray:
+    """A calculation as a plain array, from a microsimulation or a situation."""
+    return np.asarray(getattr(values, "values", values), dtype=dtype)
 
 
-def _subsidy_variables(rate: float, include_uc_families: bool, take_up_flag: str):
+def on_working_parent_hours(baseline_sim, year: int) -> np.ndarray:
+    """Benefit units on the working-parent hours in the baseline, at person level.
+
+    The parent and any partner meet the work condition and the family carries
+    the working-parent take-up flag. Read on the family, not the child, so a
+    working family whose child is under 9 months still counts.
+    """
+    work = _array(
+        baseline_sim.calculate("extended_childcare_entitlement_work_condition", year), bool
+    )
+    adult = _array(baseline_sim.calculate("is_claimant_or_partner", year), bool)
+    benunit_id = _array(baseline_sim.calculate("benunit_id", year, map_to="person"))
+    _, index = np.unique(benunit_id, return_inverse=True)
+    adults = np.bincount(index, weights=adult)
+    failing = np.bincount(index, weights=adult & ~work)
+    meets = (adults > 0) & (failing == 0)
+    claims = _array(
+        baseline_sim.calculate("would_claim_extended_childcare", year, map_to="person"), bool
+    )
+    return meets[index] & claims
+
+
+def new_hours_claim(baseline_sim, year: int, case: str = NEW_HOURS_TAKE_UP) -> np.ndarray:
+    """Person-level take-up of the newly covered hours for one ``case``.
+
+    See ``NEW_HOURS_TAKE_UP``. Families on the working-parent hours keep the
+    universal flag; only the rest change.
+    """
+    universal = _array(
+        baseline_sim.calculate("would_claim_universal_childcare", year, map_to="person"), bool
+    )
+    if case == "high":
+        return universal
+    if case == "central":
+        other = _array(
+            baseline_sim.calculate("would_claim_targeted_childcare", year, map_to="person"), bool
+        )
+    elif case == "low":
+        age = _array(baseline_sim.calculate("age", year), float)
+        rate = np.select(
+            [age < 1, age < 2, age < 3],
+            [NEW_HOURS_LOW_SHARE * DFE_WORKING_FAMILY_TAKE_UP_BY_AGE[a] for a in (0, 1, 2)],
+            default=0.0,
+        )
+        benunit_id = _array(baseline_sim.calculate("benunit_id", year, map_to="person"))
+        ids, index = np.unique(benunit_id, return_inverse=True)
+        draw = np.random.default_rng(NEW_HOURS_LOW_SEED + year).random(len(ids))[index]
+        other = draw < rate
+    else:
+        raise ValueError(f"unknown take-up case {case!r}")
+    return np.where(on_working_parent_hours(baseline_sim, year), universal, other)
+
+
+def _subsidy_variables(
+    rate: float, include_uc_families: bool, take_up_flag: str, routed_share: bool = False
+):
     class tax_free_childcare_eligible(Variable):
         value_type = bool
         entity = BenUnit
@@ -263,6 +391,12 @@ def _subsidy_variables(rate: float, include_uc_families: bool, take_up_flag: str
             expenses = person("childcare_expenses", period) * person(
                 "tax_free_childcare_uses_qualifying_provider", period
             )
+            if routed_share:
+                # Only the spend families route through a Tax-Free Childcare
+                # account today: the subsidy at current claiming behaviour.
+                expenses = expenses * min_(
+                    max_(person("tax_free_childcare_spend_routed_share", period), 0), 1
+                )
             # A flat share of costs, uncapped — not TFC's rate/(1-rate) top-up
             # on parental spend, and not restricted to four declaration periods.
             return expenses * is_qualifying_child * rate
@@ -274,13 +408,18 @@ def subsidy_scenario(
     rate: float = SUBSIDY_RATE,
     include_uc_families: bool = SUBSIDY_INCLUDES_UC_FAMILIES,
     take_up_flag: str = SUBSIDY_TAKE_UP_FLAG,
+    routed_share: bool = False,
 ) -> Scenario:
     """Replace Tax-Free Childcare with a flat ``rate`` subsidy of childcare costs.
 
     ``take_up_flag`` names the benefit-unit take-up input the subsidy is
-    defined for; see ``SUBSIDY_TAKE_UP_FLAG``.
+    defined for; see ``SUBSIDY_TAKE_UP_FLAG``. ``routed_share`` pays only on the
+    share of spend routed through a Tax-Free Childcare account today
+    (``tax_free_childcare_spend_routed_share``), the low end of the leg's range.
     """
-    eligible_variable, amount_variable = _subsidy_variables(rate, include_uc_families, take_up_flag)
+    eligible_variable, amount_variable = _subsidy_variables(
+        rate, include_uc_families, take_up_flag, routed_share
+    )
 
     def modifier(simulation) -> None:
         simulation.tax_benefit_system.update_variable(eligible_variable)
@@ -311,10 +450,10 @@ def displaced_childcare_expenses(
     return max_(baseline_expenses - min_(displaced, baseline_expenses), 0)
 
 
-def combined_scenario(years: list[int]) -> Scenario:
+def combined_scenario(years: list[int], new_claim: dict[int, np.ndarray] | None = None) -> Scenario:
     """Both legs at once, without the displacement adjustment.
 
     The pipeline applies displacement separately, so that the adjustment is
     visible as its own line rather than buried inside a scenario.
     """
-    return free_hours_scenario(years) + subsidy_scenario()
+    return free_hours_scenario(years, new_claim) + subsidy_scenario()

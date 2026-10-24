@@ -412,3 +412,90 @@ def test_a_non_worker_carries_no_recorded_support_to_project():
     year, situation = _reform_situation(child_expenses=0, employment_income=0)
     sim = Simulation(situation=situation, scenario=subsidy_scenario())
     assert _support_per_adult(sim, year).tolist() == [0.0, 0.0]
+
+
+# Take-up of the newly covered hours (María's review of PR #12). Families
+# outside the working-parent hours claim the new under-3 hours on the 2-year-old
+# offer's flag; families on the working-parent hours keep the universal flag,
+# so the leavers are unchanged.
+
+
+def _with_flags(child_age, employment_income=0, universal=True, targeted=True):
+    situation = _situation(child_age, employment_income)
+    situation["benunits"]["bu"]["would_claim_universal_childcare"] = {YEAR: universal}
+    situation["benunits"]["bu"]["would_claim_targeted_childcare"] = {YEAR: targeted}
+    return situation
+
+
+def _new_hours(situation, case):
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.pipeline import PARAMETER_YEARS
+    from free_childcare_reform.reforms import free_hours_scenario, new_hours_claim
+
+    baseline = Simulation(situation=situation)
+    claim = {YEAR: new_hours_claim(baseline, YEAR, case)}
+    sim = Simulation(situation=situation, scenario=free_hours_scenario(PARAMETER_YEARS, claim))
+    return {
+        "claim": claim[YEAR],
+        "universal": float(sim.calculate("universal_childcare_entitlement", YEAR).sum()),
+        "total": float(
+            sum(
+                sim.calculate(v, YEAR).sum()
+                for v in (
+                    "universal_childcare_entitlement",
+                    "extended_childcare_entitlement",
+                    "targeted_childcare_entitlement",
+                )
+            )
+        ),
+    }
+
+
+def test_a_non_working_family_claims_the_new_hours_on_the_targeted_flag():
+    # The universal flag says yes; in the central case it no longer decides.
+    declines = _new_hours(_with_flags(1, universal=True, targeted=False), "central")
+    claims = _new_hours(_with_flags(1, universal=False, targeted=True), "central")
+    assert declines["universal"] == 0
+    assert claims["universal"] > 6_000
+    # The high case is the engine's reading: the universal flag decides.
+    assert _new_hours(_with_flags(1, universal=True, targeted=False), "high")["universal"] > 6_000
+
+
+def test_a_working_parent_familys_new_hours_do_not_depend_on_the_targeted_flag():
+    """Families on the working-parent hours keep the universal flag in every case."""
+    for universal in (True, False):
+        results = [
+            _new_hours(_with_flags(1, 40_000, universal=universal, targeted=t), case)["total"]
+            for t in (True, False)
+            for case in ("central", "high", "low")
+        ]
+        assert max(results) == pytest.approx(min(results)), universal
+        assert results[0] > 0
+
+
+def test_the_flag_for_working_parent_families_equals_the_universal_flag():
+    """The leavers are working-parent families, so their flag cannot move."""
+    from policyengine_uk import Simulation
+
+    from free_childcare_reform.reforms import new_hours_claim, on_working_parent_hours
+
+    for universal in (True, False):
+        baseline = Simulation(situation=_with_flags(1, 40_000, universal=universal, targeted=False))
+        assert on_working_parent_hours(baseline, YEAR).all()
+        for case in ("central", "low", "high"):
+            assert (new_hours_claim(baseline, YEAR, case) == universal).all(), case
+
+
+def test_children_the_baseline_already_covers_keep_the_universal_flag():
+    """A 3-year-old outside work is not newly covered, so the targeted flag is moot."""
+    for targeted in (True, False):
+        result = _new_hours(_with_flags(3, universal=True, targeted=targeted), "central")
+        assert result["universal"] > 0, targeted
+
+
+def test_the_low_case_is_sixty_percent_of_dfe_working_family_take_up():
+    from free_childcare_reform import reforms
+
+    assert reforms.NEW_HOURS_LOW_SHARE == 0.6
+    assert reforms.DFE_WORKING_FAMILY_TAKE_UP_BY_AGE == {0: 0.46, 1: 0.76, 2: 0.92}
