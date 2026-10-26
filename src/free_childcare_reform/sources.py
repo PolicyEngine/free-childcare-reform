@@ -682,10 +682,10 @@ BASELINE_PROGRAMMES = [
             "Registrations have been falling year on year as the working-parent "
             "entitlement absorbs families who would previously have taken this "
             "offer, so the direction of travel is downward. The analysis runs on "
-            "policyengine-uk 2.153.4, while Microcosm fitted this offer's take-up "
-            "on 2.147.2; from 2.148.1 the engine tests the offer on Universal "
-            "Credit earnings before the work allowance, which is stricter and "
-            "lowers the modelled count."
+            "policyengine-uk 2.151.0, the version Microcosm built this release "
+            "and fitted this offer's take-up on, so the fit already sees the "
+            "stricter test on Universal Credit earnings before the work "
+            "allowance that the engine has applied since 2.148.1."
         ),
     },
     {

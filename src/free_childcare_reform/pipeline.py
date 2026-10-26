@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from microdf import MicroSeries
-from policyengine.tax_benefit_models.uk import managed_microsimulation
+from policyengine.tax_benefit_models.uk import managed_microsimulation, uk_latest
 from policyengine_uk.utils.scenario import Scenario
 
 from . import reforms, sources
@@ -59,14 +59,17 @@ RESULT_PATHS = (
     REPO_ROOT / "data" / "free_childcare_reform_results.json",
     REPO_ROOT / "dashboard" / "public" / "data" / "free_childcare_reform_results.json",
 )
-# Microcosm UK 2024-25, the national release of 23 October 2026 (a133f37a),
-# pinned by the commit of its immutable cut tag and checked against the sha256
-# in its release manifest. Its manifest pins policyengine-uk 2.147.2.
+# Microcosm UK 2024-25, the national release of 25 October 2026 (a6299504),
+# built on policyengine-uk 2.151.0 and certified with it by policyengine.py
+# 6.11.1. Pinned by the commit of its immutable cut tag and checked
+# against the sha256 in its release manifest, which must also be the bundle's
+# certified artifact.
 DATASET = "microcosm_uk_2024_25.h5"
-DATASET_LABEL = "Microcosm UK 2024-25 (national release a133f37a, 23 October 2026)"
+DATASET_LABEL = "Microcosm UK 2024-25 (national release a6299504, 25 October 2026)"
 PRIVATE_REPO = "policyengine/populace-uk-private"
-DATASET_REVISION = "c3a751d911ac82e482d298dda0b6f2c949f4ed4d"
-DATASET_SHA256 = "64f83900ca3a1242fb017585234844ce89f743d32e41cd2b6558057777f914aa"
+DATASET_BUILD = "microcosm-uk-2024-25-national-20261025T091414Z-a6299504"
+DATASET_REVISION = "994cac89d902af9a985af7c1182d74717a582ce0"
+DATASET_SHA256 = "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e"
 YEARS = [2027, 2028, 2029]
 # The parameter changes need to be in force from before the first costed year.
 PARAMETER_YEARS = [2026, 2027, 2028, 2029, 2030]
@@ -75,6 +78,12 @@ PARAMETER_YEARS = [2026, 2027, 2028, 2029, 2030]
 def _dataset() -> str:
     from huggingface_hub import get_token, hf_hub_download
 
+    certified = uk_latest.release_manifest.certified_data_artifact
+    if (certified.build_id, certified.sha256) != (DATASET_BUILD, DATASET_SHA256):
+        raise ValueError(
+            f"policyengine.py certifies {certified.build_id} ({certified.sha256[:8]}), "
+            f"not the pinned {DATASET_BUILD} ({DATASET_SHA256[:8]})"
+        )
     token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_TOKEN") or get_token()
     path = hf_hub_download(
         repo_id=PRIVATE_REPO,
@@ -588,8 +597,9 @@ def _new_free_hours_value(baseline_sim, free_hours_sim, year: int) -> np.ndarray
 
 
 def _build(dataset, scenario=None, childcare_expenses=None, year=None):
-    # policyengine.py builds the simulation; this module, not its bundle, pins
-    # the data, since no policyengine.py release registers this Microcosm.
+    # policyengine.py builds the simulation. This module downloads the data
+    # itself, to the Hugging Face cache rather than the bundle's ./data, and
+    # _dataset checks it is the bundle's certified artifact.
     sim = managed_microsimulation(dataset=dataset, allow_unmanaged=True, scenario=scenario)
     if childcare_expenses is not None:
         sim.set_input("childcare_expenses", year, childcare_expenses)
@@ -1422,7 +1432,9 @@ def run(args: argparse.Namespace) -> None:
         "years": years,
         "currency": "GBP",
         "dataset": DATASET_LABEL,
+        "dataset_build": DATASET_BUILD,
         "dataset_revision": DATASET_REVISION,
+        "data_certification": uk_latest.data_certification.compatibility_basis,
         "policyengine_uk_version": importlib.metadata.version("policyengine-uk"),
         "policyengine_version": importlib.metadata.version("policyengine"),
         "provenance": _provenance(),
