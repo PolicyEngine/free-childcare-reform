@@ -230,8 +230,14 @@ def test_every_output_can_be_read_for_england_alone(results):
 COUNTRIES = ("england", "scotland", "wales", "northern_ireland")
 
 
-def _number(value, path):
-    """A finite number, and not a bool — `isinstance(True, int)` is True."""
+def _number(value, path, withheld=False):
+    """A finite number, and not a bool — `isinstance(True, int)` is True.
+
+    With ``withheld``, null is allowed too: the figure rests on one or two
+    survey households and is withheld for disclosure control.
+    """
+    if withheld and value is None:
+        return
     assert not isinstance(value, bool), f"{path} is a boolean, not a number"
     assert isinstance(value, (int, float)), f"{path} is {type(value).__name__}"
     assert math.isfinite(value), f"{path} is {value}"
@@ -288,7 +294,7 @@ def test_geography_and_distribution_blocks_are_fully_typed(results):
                 response = responses[area]
                 assert isinstance(response, dict), (year, bound, area)
                 for field in ("entrants", "leavers", "net_entrants", "net_revenue_gbp"):
-                    _number(response[field], f"{year}/{bound}/{area}/{field}")
+                    _number(response[field], f"{year}/{bound}/{area}/{field}", withheld=True)
 
         for leg in ("free_hours", "subsidy", "combined"):
             leg_block = block["legs"][leg]

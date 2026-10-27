@@ -13,39 +13,21 @@ def test_one_or_two_survey_households_are_too_few_and_copies_count_once():
     assert not disclosure.too_few(["a", "b", "c"])
 
 
-def test_a_lone_small_row_takes_the_smallest_other_row_with_it():
-    rows = {name: {"value": 1.0} for name in ("big", "small", "medium", "empty")}
+def test_only_rows_on_one_or_two_households_are_withheld():
+    rows = {name: {"value": 1.0, "other": 2.0} for name in ("big", "small", "three", "empty")}
     sources = {
         "big": list("abcdefghij"),
         "small": ["k", "k"],
-        "medium": ["l", "m", "n"],
+        "three": ["l", "m", "n"],
         "empty": [],
     }
     disclosure.withhold_rows(rows, sources, ("value",))
-    # Alone, the small row would come back as the total less the others.
-    assert rows["small"]["value"] is None
-    assert rows["medium"]["value"] is None
+    assert rows["small"] == {"value": None, "other": 2.0}
+    # Three survey households is enough once noised; no partner row is withheld.
+    assert rows["three"]["value"] == 1.0
     assert rows["big"]["value"] == 1.0
-    # A row resting on no household gives nothing away and protects nothing.
+    # A row resting on no household gives nothing away.
     assert rows["empty"]["value"] == 1.0
-
-
-def test_partners_are_added_until_the_withheld_rows_rest_on_three_households():
-    rows = {name: {"value": 1.0} for name in ("one", "two", "many", "more")}
-    sources = {
-        "one": ["a"],
-        "two": ["a", "b"],
-        "many": list("cdefghij"),
-        "more": list("klmnopqrstuv"),
-    }
-    disclosure.withhold_rows(rows, sources, ("value",))
-    assert [name for name, row in rows.items() if row["value"] is None] == ["one", "two", "many"]
-
-
-def test_rows_on_three_or_more_households_are_left_alone():
-    rows = {"x": {"value": 1.0}, "y": {"value": 2.0}}
-    disclosure.withhold_rows(rows, {"x": ["a", "b", "c"], "y": ["d", "e", "f"]}, ("value",))
-    assert rows == {"x": {"value": 1.0}, "y": {"value": 2.0}}
 
 
 def test_a_quintile_with_a_withheld_decile_is_withheld_in_that_field():
@@ -127,12 +109,12 @@ def test_the_country_split_is_noised_and_small_cells_are_withheld():
     assert by_country["england"]["entrants"] == pytest.approx(
         float((100 * 0.1 * factor[entering]).sum()), abs=1e-3
     )
-    # Wales's leaver is withheld, with net entrants, which would give it back;
-    # Scotland, the next smallest, is withheld beside it so the UK total
-    # cannot. Entrants rest on ten households everywhere and stay.
-    for name in ("wales", "scotland"):
-        assert by_country[name]["leavers"] is None
-        assert by_country[name]["net_entrants"] is None
-        assert by_country[name]["entrants"] is not None
+    # Wales's leavers rest on one survey household and are withheld; its net
+    # entrants rest on eleven and stay. Scotland's five leavers are noised and
+    # published.
+    assert by_country["wales"]["leavers"] is None
+    assert by_country["wales"]["net_entrants"] is not None
+    assert by_country["wales"]["entrants"] is not None
+    assert by_country["scotland"]["leavers"] is not None
     assert by_country["england"]["leavers"] is not None
     assert by_country["ni"]["leavers"] == 0.0

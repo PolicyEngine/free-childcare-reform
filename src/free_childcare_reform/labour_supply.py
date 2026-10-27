@@ -595,14 +595,12 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     # govern the whole view. The free-hours leg is England-only by
     # construction, so its non-England figures are zero rather than omitted.
     # A country can rest on few survey households, so its figures are noised,
-    # and withheld where they rest on one or two (see ``disclosure``). Net
-    # entrants go with whichever of entrants or leavers is withheld, since
-    # the other one would give it back.
+    # and withheld where they rest on one or two (see ``disclosure``).
     country = prepared["country"]
     noise = prepared["noise"]
     noised = weights * noise.person_factor
     by_country = {}
-    rests_on = {"entrants": {}, "leavers": {}, "net_revenue_gbp": {}}
+    rests_on = {"entrants": {}, "leavers": {}, "net": {}}
     for name in sorted(set(country)):
         mask = country == name
         entered = float(MicroSeries(entry_probability[mask], weights=noised[mask]).sum())
@@ -625,12 +623,12 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
         }
         rests_on["entrants"][key] = noise.person_source[mask & (entry_probability > 0)]
         rests_on["leavers"][key] = noise.person_source[mask & (exit_probability > 0)]
-        rests_on["net_revenue_gbp"][key] = noise.person_source[
+        rests_on["net"][key] = noise.person_source[
             mask & ((entry_probability > 0) | (exit_probability > 0))
         ]
-    disclosure.withhold_rows(by_country, rests_on["entrants"], ("entrants", "net_entrants"))
-    disclosure.withhold_rows(by_country, rests_on["leavers"], ("leavers", "net_entrants"))
-    disclosure.withhold_rows(by_country, rests_on["net_revenue_gbp"], ("net_revenue_gbp",))
+    disclosure.withhold_rows(by_country, rests_on["entrants"], ("entrants",))
+    disclosure.withhold_rows(by_country, rests_on["leavers"], ("leavers",))
+    disclosure.withhold_rows(by_country, rests_on["net"], ("net_entrants", "net_revenue_gbp"))
 
     return {
         "expected_net_income_change_per_person": expected_net_income_change,

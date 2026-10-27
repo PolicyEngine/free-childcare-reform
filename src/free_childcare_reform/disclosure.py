@@ -4,8 +4,7 @@ Microcosm UK is built from Family Resources Survey households, and the UK
 Data Service End User Licence binds every published figure to the disclosure
 control rules of its Research data handling and security guide (CD171,
 section 5.2.1). Household effects are published by group — income decile,
-family type, country — and some groups rest on few survey households, or can
-be recovered as the difference of two published groups that do.
+family type, country — and some groups rest on few survey households.
 
 So those figures carry keyed noise. Each survey household's change is scaled
 by one fixed factor 8-12% from 1, which policyengine.disclosure derives from
@@ -77,24 +76,10 @@ def withhold_rows(rows: dict, sources: dict, fields: tuple[str, ...]) -> None:
     """Withhold ``fields`` in rows resting on one or two survey households, in place.
 
     ``rows`` and ``sources`` share their keys; ``sources`` holds the survey
-    households each row's ``fields`` rest on. The rows partition a published
-    total, so a single withheld row would come back by subtraction: the row
-    with the fewest households among the rest is withheld beside it, until the
-    withheld rows together rest on at least MIN_SOURCES survey households.
+    households each row's ``fields`` rest on. Only those rows are withheld:
+    what a reader derives from the published rows by subtraction is noised too.
     """
-    withheld = [name for name in rows if too_few(sources[name])]
-    if not withheld:
-        return
-
-    def households(names) -> int:
-        return pd.unique(np.concatenate([np.asarray(sources[n], dtype=object) for n in names])).size
-
-    rest = sorted(
-        (name for name in rows if name not in withheld and len(sources[name])),
-        key=lambda name: households([name]),
-    )
-    while (len(withheld) < 2 or households(withheld) < MIN_SOURCES) and rest:
-        withheld.append(rest.pop(0))
-    for name in withheld:
-        for field in fields:
-            rows[name][field] = None
+    for name, row in rows.items():
+        if too_few(sources[name]):
+            for field in fields:
+                row[field] = None

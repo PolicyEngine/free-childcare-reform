@@ -1473,10 +1473,7 @@ def run(args: argparse.Namespace) -> None:
                 "the same in every table. Household counts and incomes are exact, "
                 "and changes of £1 a year or less count as no change."
             ),
-            "withheld": (
-                "A figure resting on one or two survey households is null, with a "
-                "second one where a published total would give it back."
-            ),
+            "withheld": "A figure resting on one or two survey households is null.",
             "min_survey_households": disclosure.MIN_SOURCES,
             "noise_distance": list(disclosure.NOISE_DISTANCE),
         },
@@ -1571,8 +1568,7 @@ def fold_deciles_to_quintiles(rows: list[dict]) -> list[dict]:
         income = _sum_or_withheld(p["baseline_income_gbp"] for p in parts)
 
         def ratio(numerator, denominator, scale=1.0, digits=2):
-            # A quintile with a withheld decile is withheld in the same field,
-            # or the published decile beside it would give that decile back.
+            # A quintile with a withheld decile is withheld in the same field.
             if numerator is None or denominator is None:
                 return None
             return round(numerator / denominator * scale, digits) if denominator else 0.0
