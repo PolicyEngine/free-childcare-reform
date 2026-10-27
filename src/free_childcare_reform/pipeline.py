@@ -1258,6 +1258,7 @@ def run_year(dataset, year: int) -> dict:
                 baseline_uc_support,
                 reform_uc_support,
                 elasticity_scale=scale,
+                noise=noise,
             )
             for bound, scale in [
                 ("central", sources.ELASTICITY_SCALE_CENTRAL),
@@ -1467,11 +1468,12 @@ def run(args: argparse.Namespace) -> None:
         "provenance": _provenance(),
         "disclosure_control": {
             "noise": (
-                "Household effects, and the country split of the participation "
-                "response, carry keyed noise: each survey household's change is "
-                "scaled by one fixed factor 8-12% from 1 (policyengine.disclosure), "
-                "the same in every table. Household counts and incomes are exact, "
-                "and changes of £1 a year or less count as no change."
+                "Household effects, the participation response and the country split "
+                "of the hours response carry keyed noise: each survey household's "
+                "change is scaled by one fixed factor 8-12% from 1 "
+                "(policyengine.disclosure), the same in every table. Static costs, "
+                "household counts and incomes are exact, and changes of £1 a year or "
+                "less count as no change."
             ),
             "withheld": "A figure resting on one or two survey households is null.",
             "min_survey_households": disclosure.MIN_SOURCES,

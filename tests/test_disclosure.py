@@ -103,8 +103,10 @@ def test_the_country_split_is_noised_and_small_cells_are_withheld():
     result = participation_response(prepared)
     by_country = result["by_country"]
 
-    # Noise is on the country split only: the totals stay exact.
-    assert result["entrants"] == pytest.approx(40 * 100 * 0.1)
+    # Every figure of the response is noised, totals included.
+    assert result["entrants"] == pytest.approx(
+        float((100 * 0.1 * factor[~np.asarray(working)]).sum()), abs=1e-3
+    )
     entering = (np.asarray(country) == "ENGLAND") & ~np.asarray(working)
     assert by_country["england"]["entrants"] == pytest.approx(
         float((100 * 0.1 * factor[entering]).sum()), abs=1e-3
@@ -118,3 +120,20 @@ def test_the_country_split_is_noised_and_small_cells_are_withheld():
     assert by_country["scotland"]["leavers"] is not None
     assert by_country["england"]["leavers"] is not None
     assert by_country["ni"]["leavers"] == 0.0
+
+
+def test_totals_resting_on_one_or_two_households_are_withheld():
+    from free_childcare_reform.labour_supply import participation_response
+
+    # Twenty entrants from twenty households, and one leaver household with
+    # two people in it.
+    country = ["ENGLAND"] * 22
+    source = [f"entrant-{i}" for i in range(20)] + ["leaver", "leaver"]
+    working = [False] * 20 + [True, True]
+    change = [0.2] * 20 + [-0.2, -0.2]
+    prepared = _prepared(country, source, np.ones(22), working=working, change=change)
+    result = participation_response(prepared)
+    for field in ("leavers", "earnings_lost_gbp", "revenue_lost_to_leavers_gbp"):
+        assert result[field] is None, field
+    for field in ("entrants", "net_entrants", "net_ftes", "net_revenue_gbp"):
+        assert result[field] is not None, field

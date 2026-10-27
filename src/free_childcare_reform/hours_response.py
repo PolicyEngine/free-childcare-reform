@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 from microdf import MicroSeries
 
-from . import sources
+from . import disclosure, sources
 from .labour_supply import (
     FULL_TIME_HOURS,
     WEEKS_PER_YEAR,
@@ -92,6 +92,7 @@ def hours_response(
     reform_uc_support: np.ndarray,
     elasticity_scale: float = 1.0,
     count_adults: int = 2,
+    noise: disclosure.Noise | None = None,
 ) -> dict:
     """Hours, earnings and revenue from parents in work changing their hours.
 
@@ -101,7 +102,10 @@ def hours_response(
     ``employment_income`` array, so the revenue on the extra hours is computed
     by the model rather than at an assumed marginal rate.
     ``elasticity_scale`` is the same low/central/high multiplier as the
-    extensive margin, so one control moves both.
+    extensive margin, so one control moves both. ``noise`` goes on the country
+    split, which is withheld where it rests on one or two survey households
+    (see ``disclosure``); the pipeline always passes it, and only synthetic
+    tests leave it out.
     """
     employment_income = np.asarray(baseline_sim.calculate("employment_income", year), float)
     hours = np.asarray(baseline_sim.calculate("hours_worked", year).values, float)
@@ -168,7 +172,7 @@ def hours_response(
     earnings_total = float(MicroSeries(extra_earnings, weights=weights).sum())
     net_income_total = float(MicroSeries(household_gain, weights=household_weights).sum())
 
-    def _aggregate(mask: np.ndarray) -> dict:
+    def _aggregate(mask: np.ndarray, weights: np.ndarray = weights) -> dict:
         earnings = float(MicroSeries(extra_earnings[mask], weights=weights[mask]).sum())
         net_income = float(
             MicroSeries(expected_net_income_change[mask], weights=weights[mask]).sum()
@@ -196,7 +200,34 @@ def hours_response(
             "net_revenue_gbp": round(earnings - net_income, 2),
         }
 
-    by_country = {name.lower(): _aggregate(country == name) for name in sorted(set(country))}
+    split_weights = weights if noise is None else weights * noise.person_factor
+    by_country = {
+        name.lower(): _aggregate(country == name, split_weights) for name in sorted(set(country))
+    }
+    if noise is not None:
+        changing = responding & (price_change != 0)
+        disclosure.withhold_rows(
+            by_country,
+            {
+                name.lower(): noise.person_source[(country == name) & responding]
+                for name in set(country)
+            },
+            tuple(next(iter(by_country.values()))),
+        )
+        disclosure.withhold_rows(
+            by_country,
+            {
+                name.lower(): noise.person_source[(country == name) & changing]
+                for name in set(country)
+            },
+            (
+                "workers_with_price_change",
+                "extra_weekly_hours",
+                "ftes",
+                "earnings_gbp",
+                "net_revenue_gbp",
+            ),
+        )
     result = _aggregate(np.ones_like(responding, bool))
     # The UK revenue from the household-level rerun directly, so the country
     # allocation above can be checked against it rather than defining it.

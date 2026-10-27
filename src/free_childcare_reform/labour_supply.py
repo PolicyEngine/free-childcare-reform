@@ -528,7 +528,12 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     employment_income = prepared["employment_income"]
     imputed_wages = prepared["imputed_wages"]
     reform_gain = prepared["reform_gain"]
-    weights = prepared["weights"]
+    # The response rests on few survey households where few people move, so
+    # every figure of it is noised, and withheld where it rests on one or two
+    # (see ``disclosure``). Counts of adults in scope stay exact.
+    exact_weights = prepared["weights"]
+    noise = prepared["noise"]
+    weights = exact_weights * noise.person_factor
     elasticity = prepared["elasticity_wrt_gain_to_work"] * elasticity_scale
 
     # Proportional change in each person's probability of working.
@@ -594,11 +599,8 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     # The same aggregates restricted to each country, so one control can
     # govern the whole view. The free-hours leg is England-only by
     # construction, so its non-England figures are zero rather than omitted.
-    # A country can rest on few survey households, so its figures are noised,
-    # and withheld where they rest on one or two (see ``disclosure``).
     country = prepared["country"]
-    noise = prepared["noise"]
-    noised = weights * noise.person_factor
+    noised = weights
     by_country = {}
     rests_on = {"entrants": {}, "leavers": {}, "net": {}}
     for name in sorted(set(country)):
@@ -630,7 +632,7 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     disclosure.withhold_rows(by_country, rests_on["leavers"], ("leavers",))
     disclosure.withhold_rows(by_country, rests_on["net"], ("net_entrants", "net_revenue_gbp"))
 
-    return {
+    result = {
         "expected_net_income_change_per_person": expected_net_income_change,
         "by_country": by_country,
         "entrants": entrants,
@@ -644,13 +646,22 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
         "revenue_lost_to_leavers_gbp": revenue_lost_to_leavers,
         "net_revenue_gbp": net_revenue,
         "elasticity_scale": elasticity_scale,
-        "responding_adults_m": float(MicroSeries(eligible, weights=weights).sum()) / 1e6,
+        "responding_adults_m": float(MicroSeries(eligible, weights=exact_weights).sum()) / 1e6,
         "mean_gain_to_work_change_pct": float(
-            MicroSeries(gtw_pct_change[eligible], weights=weights[eligible]).mean()
+            MicroSeries(gtw_pct_change[eligible], weights=exact_weights[eligible]).mean()
         )
-        if float(np.sum(weights[eligible]))
+        if float(np.sum(exact_weights[eligible]))
         else 0.0,
     }
+    rests_on = {
+        ("entrants", "earnings_gained_gbp", "revenue_from_entrants_gbp"): entry_probability > 0,
+        ("leavers", "earnings_lost_gbp", "revenue_lost_to_leavers_gbp"): exit_probability > 0,
+        ("net_entrants", "net_ftes", "net_earnings_gbp", "net_revenue_gbp"): (entry_probability > 0)
+        | (exit_probability > 0),
+    }
+    for fields, moving in rests_on.items():
+        disclosure.withhold_rows({"uk": result}, {"uk": noise.person_source[moving]}, fields)
+    return result
 
 
 def _effective_subsidy_rate(sim, year: int, working: np.ndarray) -> float:

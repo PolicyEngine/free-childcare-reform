@@ -135,12 +135,17 @@ The second correction matters because `childcare_expenses` is a fixed input: wit
 
 The central run applies the OBR participation elasticities as published. A price elasticity of −0.15, with bounds of −0.05 and −0.30, sets only the ratio of the low and high runs to it (one third and twice), from Akgündüz and Plantenga's meta-analysis adjusted downward for the UK (publication bias; a European mean of −0.19 against a US mean of −0.35; and significantly smaller elasticities in high part-time, high participation countries). The response is confined to parents whose *youngest* child is in the eligible band, following the IFS. The hours response uses the same population, restricted to those in work with a positive out-of-pocket childcare cost, and scales with the same low/central/high multiplier.
 
+## Disclosure control
+
+Microcosm UK is built from Family Resources Survey households, and the UK Data Service licence binds every published figure to its disclosure control rules. Household effects, the participation response and the country split of the hours response carry keyed noise from `policyengine.disclosure`: each survey household's change is scaled by one fixed factor 8-12% from 1, derived from a key kept out of the repository, so a household moves the same way in every table and every rerun. Static costs, household counts and incomes are exact, and a change of £1 a year or less counts as no change. A figure resting on one or two survey households is published as null, shown as a dash on the dashboard. Survey households are counted by Microcosm's source id, once each, because its records are copies of them. `disclosure.py` holds the rules, and each results file records them under `disclosure_control`.
+
 ## Layout
 
 - `src/free_childcare_reform/reforms.py` — the two legs, and the displacement adjustment.
 - `src/free_childcare_reform/labour_supply.py` — the extensive-margin participation response.
 - `src/free_childcare_reform/hours_response.py` — the intensive-margin hours response for parents in work.
 - `src/free_childcare_reform/sources.py` — every non-PolicyEngine number, with a source URL.
+- `src/free_childcare_reform/disclosure.py` — the noise and the withholding rule for published figures.
 - `src/free_childcare_reform/pipeline.py` — orchestration and results JSON.
 - `dashboard/` — Next.js dashboard: Reform (budget impact and household effects), Baseline and Methodology.
 - `data/` and `dashboard/public/data/` — generated results JSON.
@@ -154,12 +159,13 @@ The central run applies the OBR participation elasticities as published. A price
 ```bash
 uv sync --frozen --extra dev
 export HF_TOKEN=hf_xxx  # needs read access to policyengine/populace-uk-private
+export POLICYENGINE_DISCLOSURE_NOISE_KEY=...  # the disclosure noise key; never commit it
 uv run --frozen python -m free_childcare_reform
 ```
 
 `--frozen` is deliberate: `pip install -e` resolved fresh dependency versions and ignored the lockfile, so the documented command produced a different environment from the one the committed results were built in.
 
-Costs 2027, 2028 and 2029 by default; `--years 2027` for one. Microcosm UK 2024-25 is read from `policyengine/populace-uk-private` at the commit of the a133f37a release's cut tag (`c3a751d9`) and checked against the sha256 in its release manifest, so the run fails rather than silently using a different file. The manifest pins policyengine-uk 2.147.2; the analysis runs on 2.153.4 through policyengine.py's `managed_microsimulation(allow_unmanaged=True)` (see *What moved*). `--parallel` costs each year in its own process. `--fold-quintiles` adds the quintile breakdowns to existing results by folding their decile rows.
+Costs 2027, 2028 and 2029 by default; `--years 2027` for one. Microcosm UK 2024-25 is read from `policyengine/populace-uk-private` at the commit of the a6299504 release's cut tag (`994cac89`) and checked against the sha256 in its release manifest, which must also be the artifact policyengine.py 6.11.1 certifies, so the run fails rather than silently using a different file. The release was built on policyengine-uk 2.151.0, the version installed. The run also needs the disclosure noise key, and fails before costing anything without it (see *Disclosure control*). `--parallel` costs each year in its own process. `--fold-quintiles` adds the quintile breakdowns to existing results by folding their decile rows.
 
 ```bash
 cd dashboard

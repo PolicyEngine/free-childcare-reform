@@ -167,11 +167,10 @@ export default function MethodologyTab({ data, year }) {
             </li>
           ) : null}
           <li>
-            Household figures, and the country split of the participation response, carry
-            statistical noise: each survey household&apos;s change is scaled by a fixed factor
-            8-12% from 1, so the households behind a small group cannot be identified. Costs
-            and UK totals are exact. A figure resting on one or two survey households is
-            withheld.
+            Household figures and the labour supply response carry statistical noise: each
+            survey household&apos;s change is scaled by a fixed factor 8-12% from 1, so the
+            households behind a small group cannot be identified. Static costs are exact. A
+            figure resting on one or two survey households is withheld.
           </li>
           <li>
             Early years is devolved: there is no UK free-hours figure, and Barnett
