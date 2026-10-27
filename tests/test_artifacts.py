@@ -142,7 +142,11 @@ def test_the_results_carry_the_shape_the_dashboard_expects(results):
                     assert isinstance(rows, list) and rows, (leg, bound, breakdown)
                     for row in rows:
                         assert isinstance(row["group"], str)
-                        assert isinstance(row["average_gain_gbp"], (int, float))
+                        # Null where the row rests on one or two survey
+                        # households and is withheld for disclosure control.
+                        assert row["average_gain_gbp"] is None or isinstance(
+                            row["average_gain_gbp"], (int, float)
+                        )
 
 
 def test_the_results_record_what_produced_them(results):
