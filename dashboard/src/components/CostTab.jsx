@@ -166,8 +166,8 @@ export default function CostTab({ data, year, bound, intensive, area, onTabChang
       hasExtensive ? legResponse(result, leg) : null,
       hasIntensive ? legHours(result, leg) : null,
     )}.`;
-  // "Microcosm UK 2024-25 (national release a133f37a, 23 October 2026)" →
-  // "Microcosm UK 2024-25 (a133f37a)".
+  // "Microcosm UK 2024-25 (national release a6299504, 25 October 2026)" →
+  // "Microcosm UK 2024-25 (a6299504)".
   const datasetLabel = (data.dataset ?? "Microcosm UK 2024-25").replace(
     /\(national release (\w+)[^)]*\)/,
     "($1)",

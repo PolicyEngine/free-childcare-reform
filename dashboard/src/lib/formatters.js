@@ -1,3 +1,7 @@
+// A null figure is withheld for disclosure control: it rests on too few survey
+// households to publish. Shown as a dash, never as zero.
+export const WITHHELD = "\u2013";
+
 function getSignedPrefix(value) {
   const amount = Number(value);
   if (amount > 0) {
@@ -10,41 +14,50 @@ function getSignedPrefix(value) {
 }
 
 export function formatCurrency(value) {
+  if (value == null) return WITHHELD;
   return `\u00A3${Math.round(Number(value)).toLocaleString("en-GB")}`;
 }
 
 export function formatSignedCurrency(value) {
+  if (value == null) return WITHHELD;
   const amount = Math.round(Number(value));
   return `${getSignedPrefix(amount)}\u00A3${Math.abs(amount).toLocaleString("en-GB")}`;
 }
 
 export function formatBn(value) {
+  if (value == null) return WITHHELD;
   return `\u00A3${Number(value).toFixed(2)}bn`;
 }
 
 export function formatSignedBn(value) {
+  if (value == null) return WITHHELD;
   const amount = Number(value);
   return `${getSignedPrefix(amount)}\u00A3${Math.abs(amount).toFixed(2)}bn`;
 }
 
 export function formatMn(value) {
+  if (value == null) return WITHHELD;
   return `\u00A3${Math.round(Number(value)).toLocaleString("en-GB")}m`;
 }
 
 export function formatSignedMn(value) {
+  if (value == null) return WITHHELD;
   const amount = Math.round(Number(value));
   return `${getSignedPrefix(amount)}\u00A3${Math.abs(amount).toLocaleString("en-GB")}m`;
 }
 
 export function formatPct(value, digits = 1) {
+  if (value == null) return WITHHELD;
   return `${Number(value).toFixed(digits)}%`;
 }
 
 export function formatSignedPct(value, digits = 1) {
+  if (value == null) return WITHHELD;
   return `${getSignedPrefix(value)}${formatPct(Math.abs(Number(value)), digits)}`;
 }
 
 export function formatCompactCurrency(value) {
+  if (value == null) return WITHHELD;
   const formatter = new Intl.NumberFormat("en-GB", {
     notation: "compact",
     maximumFractionDigits: 1,
@@ -56,6 +69,7 @@ export function formatCompactCurrency(value) {
 // Signed figures use a true minus sign (U+2212) and an explicit "+", so a
 // positive change never reads as an unsigned level.
 export function formatCount(value) {
+  if (value == null) return WITHHELD;
   const num = Number(value);
   const magnitude = Math.abs(num);
   // Counts of 100k+ are shown in millions with two decimals; smaller counts
@@ -67,6 +81,7 @@ export function formatCount(value) {
 
 // A change in a count (net entrants, FTEs), always with its sign.
 export function formatSignedCount(value) {
+  if (value == null) return WITHHELD;
   const num = Number(value);
   return `${getSignedPrefix(num)}${formatCount(Math.abs(num))}`;
 }

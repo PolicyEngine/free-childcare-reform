@@ -102,6 +102,7 @@ export default function DistributionTab({ data, year, bound, intensive, area, on
   const rows = effects[populationId] || [];
   const headline = effects.families_with_under_5s;
   const all = effects.all_households;
+  const anyWithheld = rows.some((row) => row[measureId] == null);
 
   return (
     <div className="space-y-10">
@@ -136,7 +137,8 @@ export default function DistributionTab({ data, year, bound, intensive, area, on
             <div className="mt-2 text-sm text-slate-500">
               average change in net income a year, across{" "}
               {headline.households_m.toFixed(2)}m households.{" "}
-              {formatPct(headline.share_gaining * 100, 0)} of them see their net income rise.
+              {formatPct(headline.share_gaining == null ? null : headline.share_gaining * 100, 0)}{" "}
+              of them see their net income rise.
             </div>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -239,7 +241,12 @@ export default function DistributionTab({ data, year, bound, intensive, area, on
           <p className="mt-4 text-sm leading-6 text-slate-500">
             {population?.grouping === "income decile" || population?.grouping === "income quintile"
               ? `${population.grouping === "income decile" ? "D1 is the lowest-income tenth" : "Q1 is the lowest-income fifth"}. In the model, lower-income households gain less in cash from the subsidy because UC already covers ${(ucCoverageRate(data) * 100).toFixed(0)}% of childcare costs and, in the data, they report fewer paid hours.`
-              : null}
+              : null}{" "}
+            Household figures carry a little statistical noise, so the survey households behind
+            them cannot be identified.
+            {anyWithheld
+              ? " A missing bar is withheld: it rests on too few survey households to publish."
+              : ""}
           </p>
         </div>
       </section>
