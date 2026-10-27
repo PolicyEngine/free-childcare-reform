@@ -51,7 +51,7 @@ import pandas as pd
 from microdf import MicroSeries
 from policyengine_uk.dynamics.participation import calculate_participation_elasticities
 
-from . import sources
+from . import disclosure, sources
 
 # Weekly hours assumed for someone entering work, matching the upstream OBR
 # implementation's default and its FTE conversion.
@@ -405,6 +405,7 @@ def prepare(
     year: int,
     baseline_childcare_cost: np.ndarray,
     reform_childcare_cost: np.ndarray,
+    noise: disclosure.Noise,
     count_adults: int = 2,
 ) -> dict:
     """Everything the response needs that does not depend on the elasticity.
@@ -416,7 +417,8 @@ def prepare(
 
     ``baseline_childcare_cost`` and ``reform_childcare_cost`` are person-level
     annual out-of-pocket childcare spend while working, mapped to the adults who
-    would bear it (the childcare-paying benefit unit's members).
+    would bear it (the childcare-paying benefit unit's members). ``noise`` is
+    applied to the country split (see ``disclosure``).
     """
     entrant_earnings = impute_entrant_earnings(baseline_sim, year)
     baseline = _net_gain_to_work(
@@ -507,6 +509,7 @@ def prepare(
         "weekly_hours_worked": weekly_hours_worked,
         "country": country,
         "weights": weights,
+        "noise": noise,
     }
 
 
@@ -525,7 +528,12 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     employment_income = prepared["employment_income"]
     imputed_wages = prepared["imputed_wages"]
     reform_gain = prepared["reform_gain"]
-    weights = prepared["weights"]
+    # The response rests on few survey households where few people move, so
+    # every figure of it is noised, and withheld where it rests on one or two
+    # (see ``disclosure``). Counts of adults in scope stay exact.
+    exact_weights = prepared["weights"]
+    noise = prepared["noise"]
+    weights = exact_weights * noise.person_factor
     elasticity = prepared["elasticity_wrt_gain_to_work"] * elasticity_scale
 
     # Proportional change in each person's probability of working.
@@ -592,12 +600,15 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     # govern the whole view. The free-hours leg is England-only by
     # construction, so its non-England figures are zero rather than omitted.
     country = prepared["country"]
+    noised = weights
     by_country = {}
+    rests_on = {"entrants": {}, "leavers": {}, "net": {}}
     for name in sorted(set(country)):
         mask = country == name
-        entered = float(MicroSeries(entry_probability[mask], weights=weights[mask]).sum())
-        left = float(MicroSeries(exit_probability[mask], weights=weights[mask]).sum())
-        by_country[name.lower()] = {
+        entered = float(MicroSeries(entry_probability[mask], weights=noised[mask]).sum())
+        left = float(MicroSeries(exit_probability[mask], weights=noised[mask]).sum())
+        key = name.lower()
+        by_country[key] = {
             "entrants": round(entered, 4),
             "leavers": round(left, 4),
             "net_entrants": round(entered - left, 4),
@@ -606,14 +617,22 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
                     MicroSeries(
                         entry_probability[mask] * (imputed_wages[mask] - reform_gain[mask])
                         - exit_probability[mask] * (employment_income[mask] - reform_gain[mask]),
-                        weights=weights[mask],
+                        weights=noised[mask],
                     ).sum()
                 ),
                 4,
             ),
         }
+        rests_on["entrants"][key] = noise.person_source[mask & (entry_probability > 0)]
+        rests_on["leavers"][key] = noise.person_source[mask & (exit_probability > 0)]
+        rests_on["net"][key] = noise.person_source[
+            mask & ((entry_probability > 0) | (exit_probability > 0))
+        ]
+    disclosure.withhold_rows(by_country, rests_on["entrants"], ("entrants",))
+    disclosure.withhold_rows(by_country, rests_on["leavers"], ("leavers",))
+    disclosure.withhold_rows(by_country, rests_on["net"], ("net_entrants", "net_revenue_gbp"))
 
-    return {
+    result = {
         "expected_net_income_change_per_person": expected_net_income_change,
         "by_country": by_country,
         "entrants": entrants,
@@ -627,13 +646,22 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
         "revenue_lost_to_leavers_gbp": revenue_lost_to_leavers,
         "net_revenue_gbp": net_revenue,
         "elasticity_scale": elasticity_scale,
-        "responding_adults_m": float(MicroSeries(eligible, weights=weights).sum()) / 1e6,
+        "responding_adults_m": float(MicroSeries(eligible, weights=exact_weights).sum()) / 1e6,
         "mean_gain_to_work_change_pct": float(
-            MicroSeries(gtw_pct_change[eligible], weights=weights[eligible]).mean()
+            MicroSeries(gtw_pct_change[eligible], weights=exact_weights[eligible]).mean()
         )
-        if float(np.sum(weights[eligible]))
+        if float(np.sum(exact_weights[eligible]))
         else 0.0,
     }
+    rests_on = {
+        ("entrants", "earnings_gained_gbp", "revenue_from_entrants_gbp"): entry_probability > 0,
+        ("leavers", "earnings_lost_gbp", "revenue_lost_to_leavers_gbp"): exit_probability > 0,
+        ("net_entrants", "net_ftes", "net_earnings_gbp", "net_revenue_gbp"): (entry_probability > 0)
+        | (exit_probability > 0),
+    }
+    for fields, moving in rests_on.items():
+        disclosure.withhold_rows({"uk": result}, {"uk": noise.person_source[moving]}, fields)
+    return result
 
 
 def _effective_subsidy_rate(sim, year: int, working: np.ndarray) -> float:

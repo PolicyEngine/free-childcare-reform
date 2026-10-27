@@ -22,13 +22,13 @@ dependencies = [
   "pandas>=2.0",
   "tables>=3.9",
   "huggingface_hub>=0.20",
-  # policyengine.py wrapper. Its [uk] extra exact-pins policyengine-uk, so
-  # policyengine-uk is installed directly instead of via the extra.
-  "policyengine==6.10.2",
-  # Microcosm a133f37a needs 2.147+ (reception term and working-parent start
-  # from the date of birth). Childcare entitlement variables and
-  # tax_free_childcare, which this analysis reforms.
-  "policyengine-uk==2.153.4",
+  # policyengine.py 6.11.1 certifies the Microcosm UK national a6299504 with
+  # policyengine-uk 2.151.0 (PolicyEngine/policyengine.py#720). Its [uk] extra
+  # installs that exact pair, with policyengine-core 3.33.3.
+  "policyengine[uk]==6.11.1",
+  # Childcare entitlement variables and tax_free_childcare, which this
+  # analysis reforms. The version the data release was built and certified on.
+  "policyengine-uk==2.151.0",
 ]
 
 [project.optional-dependencies]

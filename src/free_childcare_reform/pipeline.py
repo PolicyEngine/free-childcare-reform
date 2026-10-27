@@ -30,10 +30,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from microdf import MicroSeries
-from policyengine.tax_benefit_models.uk import managed_microsimulation
+from policyengine.tax_benefit_models.uk import managed_microsimulation, uk_latest
 from policyengine_uk.utils.scenario import Scenario
 
-from . import reforms, sources
+from . import disclosure, reforms, sources
 from .hours_response import hours_response, realised_uc_childcare_support
 from .labour_supply import (
     _excluded,
@@ -59,14 +59,17 @@ RESULT_PATHS = (
     REPO_ROOT / "data" / "free_childcare_reform_results.json",
     REPO_ROOT / "dashboard" / "public" / "data" / "free_childcare_reform_results.json",
 )
-# Microcosm UK 2024-25, the national release of 23 October 2026 (a133f37a),
-# pinned by the commit of its immutable cut tag and checked against the sha256
-# in its release manifest. Its manifest pins policyengine-uk 2.147.2.
+# Microcosm UK 2024-25, the national release of 25 October 2026 (a6299504),
+# built on policyengine-uk 2.151.0 and certified with it by policyengine.py
+# 6.11.1. Pinned by the commit of its immutable cut tag and checked
+# against the sha256 in its release manifest, which must also be the bundle's
+# certified artifact.
 DATASET = "microcosm_uk_2024_25.h5"
-DATASET_LABEL = "Microcosm UK 2024-25 (national release a133f37a, 23 October 2026)"
+DATASET_LABEL = "Microcosm UK 2024-25 (national release a6299504, 25 October 2026)"
 PRIVATE_REPO = "policyengine/populace-uk-private"
-DATASET_REVISION = "c3a751d911ac82e482d298dda0b6f2c949f4ed4d"
-DATASET_SHA256 = "64f83900ca3a1242fb017585234844ce89f743d32e41cd2b6558057777f914aa"
+DATASET_BUILD = "microcosm-uk-2024-25-national-20261025T091414Z-a6299504"
+DATASET_REVISION = "994cac89d902af9a985af7c1182d74717a582ce0"
+DATASET_SHA256 = "b96a8cd625b645a409c063b1de5158532708a2f0d3c3897a794a8fb0bbd5064e"
 YEARS = [2027, 2028, 2029]
 # The parameter changes need to be in force from before the first costed year.
 PARAMETER_YEARS = [2026, 2027, 2028, 2029, 2030]
@@ -75,6 +78,12 @@ PARAMETER_YEARS = [2026, 2027, 2028, 2029, 2030]
 def _dataset() -> str:
     from huggingface_hub import get_token, hf_hub_download
 
+    certified = uk_latest.release_manifest.certified_data_artifact
+    if (certified.build_id, certified.sha256) != (DATASET_BUILD, DATASET_SHA256):
+        raise ValueError(
+            f"policyengine.py certifies {certified.build_id} ({certified.sha256[:8]}), "
+            f"not the pinned {DATASET_BUILD} ({DATASET_SHA256[:8]})"
+        )
     token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_TOKEN") or get_token()
     path = hf_hub_download(
         repo_id=PRIVATE_REPO,
@@ -155,10 +164,22 @@ def _childcare_cost_per_person(sim, year: int) -> np.ndarray:
     return _benunit_variable_per_person(sim, year, "childcare_expenses")
 
 
+# The fields of a household-effects row that rest on households whose income
+# changes, and on households that gain. Withheld together where too few.
+GAIN_FIELDS = ("total_gain_bn", "average_gain_gbp", "average_gain_pct_of_income", "total_gain_gbp")
+GAINER_FIELDS = (
+    "average_gain_gbp_among_gainers",
+    "share_gaining",
+    "gainers_households",
+    "gainers_total_gain_gbp",
+)
+
+
 def _household_effects(
     baseline_sim,
     reform_sim,
     year: int,
+    noise: disclosure.Noise,
     extra_person_income: np.ndarray | None = None,
     country: str | None = None,
 ) -> dict:
@@ -168,6 +189,10 @@ def _household_effects(
     supply response, per person. It is added to the household's static gain so
     the distribution can be read on the same behavioural assumption as the
     cost, rather than only statically.
+
+    Every gain carries ``noise``, and a figure resting on one or two survey
+    households is withheld (see ``disclosure``). Household counts and incomes
+    are exact.
     """
     baseline_income = np.asarray(baseline_sim.calculate("household_net_income", year).values, float)
     reform_income = np.asarray(reform_sim.calculate("household_net_income", year).values, float)
@@ -221,9 +246,12 @@ def _household_effects(
     family_type = collapsed["family_type"].to_numpy().astype(str)
     has_young_child = collapsed["youngest_child_age"].to_numpy() <= 4
 
+    gain = reform_income - baseline_income
     frame = pd.DataFrame(
         {
-            "gain": reform_income - baseline_income,
+            "gain": np.where(np.abs(gain) > disclosure.CHANGE_TOLERANCE, gain, 0.0),
+            "factor": noise.household_factor,
+            "source": noise.household_source,
             "baseline_income": baseline_income,
             "weight": weights,
             "decile": np.where(decile >= 1, np.clip(decile, 1, 10), 0).astype(int),
@@ -240,75 +268,78 @@ def _household_effects(
 
     def summarise(group: pd.DataFrame) -> dict:
         weight = group["weight"].sum()
-        gaining = group[group["gain"] > 1]
-        return {
+        # Gains and gainers are noised; household counts and incomes are not.
+        noised = group["weight"] * group["factor"]
+        total = float((group["gain"] * noised).sum())
+        gaining = group["gain"] > 1
+        gainers = float(noised[gaining].sum())
+        gainers_gain = float((group["gain"] * noised)[gaining].sum())
+        income = float((group["baseline_income"] * group["weight"]).sum())
+        row = {
             "households_m": round(float(weight) / 1e6, 3),
-            "total_gain_bn": round(float((group["gain"] * group["weight"]).sum()) / 1e9, 4),
-            "average_gain_gbp": round(
-                float((group["gain"] * group["weight"]).sum() / weight) if weight else 0.0, 2
-            ),
-            "average_gain_gbp_among_gainers": round(
-                float((gaining["gain"] * gaining["weight"]).sum() / gaining["weight"].sum())
-                if gaining["weight"].sum()
-                else 0.0,
-                2,
-            ),
-            "share_gaining": round(float(gaining["weight"].sum() / weight) if weight else 0.0, 4),
-            "average_gain_pct_of_income": round(
-                float(
-                    (group["gain"] * group["weight"]).sum()
-                    / (group["baseline_income"] * group["weight"]).sum()
-                    * 100
-                )
-                if (group["baseline_income"] * group["weight"]).sum()
-                else 0.0,
-                4,
-            ),
+            "total_gain_bn": round(total / 1e9, 4),
+            "average_gain_gbp": round(total / weight if weight else 0.0, 2),
+            "average_gain_gbp_among_gainers": round(gainers_gain / gainers if gainers else 0.0, 2),
+            "share_gaining": round(min(gainers / weight, 1.0) if weight else 0.0, 4),
+            "average_gain_pct_of_income": round(total / income * 100 if income else 0.0, 4),
             # The unrounded sums behind the ratios above, so groups can be
             # combined exactly (see fold_deciles_to_quintiles).
             "households": float(weight),
-            "total_gain_gbp": float((group["gain"] * group["weight"]).sum()),
-            "gainers_households": float(gaining["weight"].sum()),
-            "gainers_total_gain_gbp": float((gaining["gain"] * gaining["weight"]).sum()),
-            "baseline_income_gbp": float((group["baseline_income"] * group["weight"]).sum()),
+            "total_gain_gbp": total,
+            "gainers_households": gainers,
+            "gainers_total_gain_gbp": gainers_gain,
+            "baseline_income_gbp": income,
         }
+        return row
+
+    def table(groups) -> dict:
+        """Rows for groups that partition a published total, small ones withheld.
+
+        Withheld per basis: every figure where the group rests on one or two
+        survey households, the gain figures where its changes do, and the
+        gainer figures where its gains do.
+        """
+        groups = list(groups)
+        rows = {name: {"group": name, **summarise(group)} for name, group in groups}
+        everyone = {name: group["source"] for name, group in groups}
+        changed = {name: group.loc[group["gain"] != 0, "source"] for name, group in groups}
+        gaining = {name: group.loc[group["gain"] > 1, "source"] for name, group in groups}
+        every_field = tuple(field for field in next(iter(rows.values()), {}) if field != "group")
+        disclosure.withhold_rows(rows, everyone, every_field)
+        disclosure.withhold_rows(rows, changed, GAIN_FIELDS + GAINER_FIELDS)
+        disclosure.withhold_rows(rows, gaining, GAINER_FIELDS)
+        return rows
 
     ranked = frame[frame["decile"] > 0]
-    by_decile = [{"group": f"D{d}", **summarise(group)} for d, group in ranked.groupby("decile")]
+    by_decile = table((f"D{d}", group) for d, group in ranked.groupby("decile"))
     families = frame[frame["has_young_child"]]
-    by_decile_with_children = [
-        {"group": f"D{d}", **summarise(group)}
-        for d, group in families[families["decile"] > 0].groupby("decile")
-    ]
+    by_decile_with_children = table(
+        (f"D{d}", group) for d, group in families[families["decile"] > 0].groupby("decile")
+    )
+
     # "Couple no children" survives the has_young_child filter for a handful of
     # weighted households — an artefact of family type and child presence being
     # recorded on different entities — and contributes 0.002m households. It is
     # dropped on household count rather than on gain: gain varies with the
     # labour supply assumption, so filtering on it made the row appear under
     # some assumptions and not others, and the chart's categories moved.
-    by_family_type = sorted(
-        (
-            {"group": name, **summarise(group)}
-            for name, group in families.groupby("family_type")
-            if summarise(group)["households_m"] >= 0.01
-        ),
-        key=lambda row: row["group"],
-    )
-    by_family_type_all = sorted(
-        (
-            {"group": name, **summarise(group)}
-            for name, group in frame.groupby("family_type")
-            if summarise(group)["households_m"] >= 0.01
-        ),
-        key=lambda row: row["group"],
-    )
+    def family_types(population: pd.DataFrame) -> list[dict]:
+        rows = table(
+            (name, group)
+            for name, group in population.groupby("family_type")
+            if round(group["weight"].sum() / 1e6, 3) >= 0.01
+        )
+        return sorted(rows.values(), key=lambda row: row["group"])
+
     return {
-        "by_income_decile": by_decile,
-        "by_income_decile_families_with_under_5s": by_decile_with_children,
-        "by_family_type_families_with_under_5s": by_family_type,
-        "by_family_type": by_family_type_all,
-        "all_households": {"group": "All", **summarise(frame)},
-        "families_with_under_5s": {"group": "Families with a child under 5", **summarise(families)},
+        "by_income_decile": list(by_decile.values()),
+        "by_income_decile_families_with_under_5s": list(by_decile_with_children.values()),
+        "by_family_type_families_with_under_5s": family_types(families),
+        "by_family_type": family_types(frame),
+        "all_households": table([("All", frame)])["All"],
+        "families_with_under_5s": table([("Families with a child under 5", families)])[
+            "Families with a child under 5"
+        ],
     }
 
 
@@ -588,8 +619,9 @@ def _new_free_hours_value(baseline_sim, free_hours_sim, year: int) -> np.ndarray
 
 
 def _build(dataset, scenario=None, childcare_expenses=None, year=None):
-    # policyengine.py builds the simulation; this module, not its bundle, pins
-    # the data, since no policyengine.py release registers this Microcosm.
+    # policyengine.py builds the simulation. This module downloads the data
+    # itself, to the Hugging Face cache rather than the bundle's ./data, and
+    # _dataset checks it is the bundle's certified artifact.
     sim = managed_microsimulation(dataset=dataset, allow_unmanaged=True, scenario=scenario)
     if childcare_expenses is not None:
         sim.set_input("childcare_expenses", year, childcare_expenses)
@@ -1021,6 +1053,8 @@ def _take_up_rates_under_5(baseline, year: int) -> dict:
 def run_year(dataset, year: int) -> dict:
     print(f"  {year}: baseline ...")
     baseline = _build(dataset)
+    # Fails here, before anything is costed, if the noise key is not set.
+    noise = disclosure.noise_for(baseline, dataset, year)
 
     # Take-up of the newly covered hours, fixed from the baseline so that the
     # labour supply response cannot move it (see reforms.NEW_HOURS_TAKE_UP).
@@ -1072,8 +1106,10 @@ def run_year(dataset, year: int) -> dict:
                 spending["gov_spending_bn"] - baseline_spending["gov_spending_bn"], 4
             ),
             "static_cost_by_country_bn": _cost_by_country(baseline, sim, year),
-            "household_effects": _household_effects(baseline, sim, year),
-            "household_effects_england": _household_effects(baseline, sim, year, country="england"),
+            "household_effects": _household_effects(baseline, sim, year, noise),
+            "household_effects_england": _household_effects(
+                baseline, sim, year, noise, country="england"
+            ),
         }
 
     print(f"  {year}: extensive-margin labour supply response ...")
@@ -1108,6 +1144,7 @@ def run_year(dataset, year: int) -> dict:
             childcare_cost_when_working(
                 reform_sim, year, responding, _childcare_cost_per_person(reform_sim, year)
             ),
+            noise,
         )
         return {
             bound: {
@@ -1221,6 +1258,7 @@ def run_year(dataset, year: int) -> dict:
                 baseline_uc_support,
                 reform_uc_support,
                 elasticity_scale=scale,
+                noise=noise,
             )
             for bound, scale in [
                 ("central", sources.ELASTICITY_SCALE_CENTRAL),
@@ -1266,17 +1304,17 @@ def run_year(dataset, year: int) -> dict:
         }
         for suffix, country in (("", None), ("_england", "england")):
             legs[name][f"household_effects_by_bound{suffix}"] = {
-                bound: _household_effects(baseline, sim, year, extra, country=country)
+                bound: _household_effects(baseline, sim, year, noise, extra, country=country)
                 for bound, extra in participation_income.items()
             }
             legs[name][f"household_effects_by_bound_with_hours{suffix}"] = {
                 bound: _household_effects(
-                    baseline, sim, year, extra + hours_income, country=country
+                    baseline, sim, year, noise, extra + hours_income, country=country
                 )
                 for bound, extra in participation_income.items()
             }
             legs[name][f"household_effects_hours{suffix}"] = _household_effects(
-                baseline, sim, year, hours_income, country=country
+                baseline, sim, year, noise, hours_income, country=country
             )
         legs[name]["dynamic_cost"] = {
             bound: _dynamic_cost(legs[name]["static_cost_bn"], response, leg_hours[bound])
@@ -1422,10 +1460,25 @@ def run(args: argparse.Namespace) -> None:
         "years": years,
         "currency": "GBP",
         "dataset": DATASET_LABEL,
+        "dataset_build": DATASET_BUILD,
         "dataset_revision": DATASET_REVISION,
+        "data_certification": uk_latest.data_certification.compatibility_basis,
         "policyengine_uk_version": importlib.metadata.version("policyengine-uk"),
         "policyengine_version": importlib.metadata.version("policyengine"),
         "provenance": _provenance(),
+        "disclosure_control": {
+            "noise": (
+                "Household effects, the participation response and the country split "
+                "of the hours response carry keyed noise: each survey household's "
+                "change is scaled by one fixed factor 8-12% from 1 "
+                "(policyengine.disclosure), the same in every table. Static costs, "
+                "household counts and incomes are exact, and changes of £1 a year or "
+                "less count as no change."
+            ),
+            "withheld": "A figure resting on one or two survey households is null.",
+            "min_survey_households": disclosure.MIN_SOURCES,
+            "noise_distance": list(disclosure.NOISE_DISTANCE),
+        },
         "reform_definition": {
             "free_hours": (
                 "15 hours a week of free childcare for every child from 9 months to "
@@ -1495,6 +1548,12 @@ def _decile_row_sums(row: dict) -> dict:
     }
 
 
+def _sum_or_withheld(values) -> float | None:
+    """The sum, or None where any part is withheld."""
+    values = list(values)
+    return None if any(value is None for value in values) else sum(values)
+
+
 def fold_deciles_to_quintiles(rows: list[dict]) -> list[dict]:
     """Quintile rows from decile rows: sum the totals, recompute the ratios."""
     by_decile = {int(row["group"][1:]): _decile_row_sums(row) for row in rows}
@@ -1504,20 +1563,26 @@ def fold_deciles_to_quintiles(rows: list[dict]) -> list[dict]:
         parts = [by_decile[d] for d in (2 * quintile - 1, 2 * quintile) if d in by_decile]
         if not parts:
             continue
-        households = sum(p["households"] for p in parts)
-        gain = sum(p["gain_gbp"] for p in parts)
-        gainers = sum(p["gainers"] for p in parts)
-        gainers_gain = sum(p["gainers_gain_gbp"] for p in parts)
-        incomes = [p["baseline_income_gbp"] for p in parts]
-        income = None if any(i is None for i in incomes) else sum(incomes)
+        households = _sum_or_withheld(p["households"] for p in parts)
+        gain = _sum_or_withheld(p["gain_gbp"] for p in parts)
+        gainers = _sum_or_withheld(p["gainers"] for p in parts)
+        gainers_gain = _sum_or_withheld(p["gainers_gain_gbp"] for p in parts)
+        income = _sum_or_withheld(p["baseline_income_gbp"] for p in parts)
+
+        def ratio(numerator, denominator, scale=1.0, digits=2):
+            # A quintile with a withheld decile is withheld in the same field.
+            if numerator is None or denominator is None:
+                return None
+            return round(numerator / denominator * scale, digits) if denominator else 0.0
+
         row = {
             "group": f"Q{quintile}",
-            "households_m": round(households / 1e6, 3),
-            "total_gain_bn": round(gain / 1e9, 4),
-            "average_gain_gbp": round(gain / households, 2) if households else 0.0,
-            "average_gain_gbp_among_gainers": round(gainers_gain / gainers, 2) if gainers else 0.0,
-            "share_gaining": round(gainers / households, 4) if households else 0.0,
-            "average_gain_pct_of_income": round(gain / income * 100, 4) if income else 0.0,
+            "households_m": None if households is None else round(households / 1e6, 3),
+            "total_gain_bn": None if gain is None else round(gain / 1e9, 4),
+            "average_gain_gbp": ratio(gain, households),
+            "average_gain_gbp_among_gainers": ratio(gainers_gain, gainers),
+            "share_gaining": ratio(gainers, households, digits=4),
+            "average_gain_pct_of_income": ratio(gain, income, scale=100, digits=4),
         }
         if exact:
             row.update(
