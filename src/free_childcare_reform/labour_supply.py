@@ -51,7 +51,7 @@ import pandas as pd
 from microdf import MicroSeries
 from policyengine_uk.dynamics.participation import calculate_participation_elasticities
 
-from . import sources
+from . import disclosure, sources
 
 # Weekly hours assumed for someone entering work, matching the upstream OBR
 # implementation's default and its FTE conversion.
@@ -405,6 +405,7 @@ def prepare(
     year: int,
     baseline_childcare_cost: np.ndarray,
     reform_childcare_cost: np.ndarray,
+    noise: disclosure.Noise,
     count_adults: int = 2,
 ) -> dict:
     """Everything the response needs that does not depend on the elasticity.
@@ -416,7 +417,8 @@ def prepare(
 
     ``baseline_childcare_cost`` and ``reform_childcare_cost`` are person-level
     annual out-of-pocket childcare spend while working, mapped to the adults who
-    would bear it (the childcare-paying benefit unit's members).
+    would bear it (the childcare-paying benefit unit's members). ``noise`` is
+    applied to the country split (see ``disclosure``).
     """
     entrant_earnings = impute_entrant_earnings(baseline_sim, year)
     baseline = _net_gain_to_work(
@@ -507,6 +509,7 @@ def prepare(
         "weekly_hours_worked": weekly_hours_worked,
         "country": country,
         "weights": weights,
+        "noise": noise,
     }
 
 
@@ -591,13 +594,21 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
     # The same aggregates restricted to each country, so one control can
     # govern the whole view. The free-hours leg is England-only by
     # construction, so its non-England figures are zero rather than omitted.
+    # A country can rest on few survey households, so its figures are noised,
+    # and withheld where they rest on one or two (see ``disclosure``). Net
+    # entrants go with whichever of entrants or leavers is withheld, since
+    # the other one would give it back.
     country = prepared["country"]
+    noise = prepared["noise"]
+    noised = weights * noise.person_factor
     by_country = {}
+    rests_on = {"entrants": {}, "leavers": {}, "net_revenue_gbp": {}}
     for name in sorted(set(country)):
         mask = country == name
-        entered = float(MicroSeries(entry_probability[mask], weights=weights[mask]).sum())
-        left = float(MicroSeries(exit_probability[mask], weights=weights[mask]).sum())
-        by_country[name.lower()] = {
+        entered = float(MicroSeries(entry_probability[mask], weights=noised[mask]).sum())
+        left = float(MicroSeries(exit_probability[mask], weights=noised[mask]).sum())
+        key = name.lower()
+        by_country[key] = {
             "entrants": round(entered, 4),
             "leavers": round(left, 4),
             "net_entrants": round(entered - left, 4),
@@ -606,12 +617,20 @@ def participation_response(prepared: dict, elasticity_scale: float = 1.0) -> dic
                     MicroSeries(
                         entry_probability[mask] * (imputed_wages[mask] - reform_gain[mask])
                         - exit_probability[mask] * (employment_income[mask] - reform_gain[mask]),
-                        weights=weights[mask],
+                        weights=noised[mask],
                     ).sum()
                 ),
                 4,
             ),
         }
+        rests_on["entrants"][key] = noise.person_source[mask & (entry_probability > 0)]
+        rests_on["leavers"][key] = noise.person_source[mask & (exit_probability > 0)]
+        rests_on["net_revenue_gbp"][key] = noise.person_source[
+            mask & ((entry_probability > 0) | (exit_probability > 0))
+        ]
+    disclosure.withhold_rows(by_country, rests_on["entrants"], ("entrants", "net_entrants"))
+    disclosure.withhold_rows(by_country, rests_on["leavers"], ("leavers", "net_entrants"))
+    disclosure.withhold_rows(by_country, rests_on["net_revenue_gbp"], ("net_revenue_gbp",))
 
     return {
         "expected_net_income_change_per_person": expected_net_income_change,
